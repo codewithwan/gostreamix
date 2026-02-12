@@ -1,26 +1,24 @@
-# Binaries for programs and plugins
+# Binaries and build artifacts
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
+bin/
 
 # Node modules
 node_modules/
 dist/
 .npm/
 
-# Test binary, built with `go test -c`
+# Go artifacts
 *.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
-
-# Go workspace file
 go.work
+*_templ.go
+
+# Dependencies
+# vendor/
 
 # IDE files
 .vscode/
@@ -30,15 +28,17 @@ go.work
 
 # Temporary files
 tmp/
-bin/
 
 # Environment variables
 .env
 *.env
 
-# App specific
-gostreamix.db
-gostreamix.db-shm
-gostreamix.db-wal
+# Application Data (Critical - Do Not Track)
+data/
+*.db
+*.sqlite
+*.key
+*.pem
+
+# Generated assets
 assets/css/output.css
-*_templ.go

@@ -28,7 +28,16 @@ func NewServer(
 	streamH *stream.Handler,
 	videoH *video.Handler,
 ) *Server {
-	app := fiber.New(fiber.Config{DisableStartupMessage: true, ReadBufferSize: 8192})
+	fiberConfig := fiber.Config{
+		DisableStartupMessage: true,
+		ReadBufferSize:        8192,
+	}
+
+	if cfg.ProxyHeader != "" {
+		fiberConfig.ProxyHeader = cfg.ProxyHeader
+	}
+
+	app := fiber.New(fiberConfig)
 	app.Use(recover.New())
 	app.Use(logger.New(logger.Config{Format: "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n"}))
 	app.Static("/assets", "./assets")
@@ -69,6 +78,7 @@ func NewServer(
 }
 
 func (s *Server) Start() error {
-	fmt.Printf("\n🚀 GoStreamix Engine is running!\n🌐 Control Panel: http://localhost:%s\n\n", s.Config.Port)
-	return s.App.Listen(":" + s.Config.Port)
+	addr := fmt.Sprintf("%s:%s", s.Config.Host, s.Config.Port)
+	fmt.Printf("\n🚀 GoStreamix Engine is running!\n🌐 Control Panel: http://%s\n\n", addr)
+	return s.App.Listen(addr)
 }

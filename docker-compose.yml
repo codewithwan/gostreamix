@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  gostreamix:
+    build: .
+    image: gostreamix:latest
+    container_name: gostreamix
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

@@ -1,0 +1,7 @@
+.git
+.agent
+node_modules
+tmp
+data
+.env
+*.exe

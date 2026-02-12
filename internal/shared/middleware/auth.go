@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"strings"
+
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
 	"github.com/gofiber/fiber/v2"
@@ -18,7 +20,7 @@ func NewAuthGuard(svc auth.Service, jwt *jwt.JWTService) auth.Guard {
 
 func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/setup" || (len(p) > 7 && p[:7] == "/assets") {
+	if p == "/setup" || strings.HasPrefix(p, "/assets") || strings.HasPrefix(p, "/components") {
 		return c.Next()
 	}
 	s, _ := g.svc.IsSetup(c.Context())
@@ -30,7 +32,7 @@ func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 
 func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/login" || p == "/setup" || (len(p) > 7 && p[:7] == "/assets") {
+	if p == "/login" || p == "/setup" || strings.HasPrefix(p, "/assets") || strings.HasPrefix(p, "/components") {
 		return c.Next()
 	}
 	ck := c.Cookies("jwt")
