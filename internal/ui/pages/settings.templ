@@ -1,0 +1,56 @@
+package pages
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/layouts"
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/ui/components/card"
+	"github.com/codewithwan/gostreamix/internal/shared/i18n"
+)
+
+templ Settings(username, email, lang string) {
+	@layouts.Dashboard(layouts.DashboardProps{
+        Active: "settings",
+        Username: username,
+        Email: email,
+        Lang: lang,
+        Title: "sidebar.settings",
+    }) {
+        <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div class="space-y-0.5 text-center md:text-left">
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-foreground">{ i18n.Tr(lang, "sidebar.settings") }</h1>
+                <p class="text-xs md:text-sm text-muted-foreground font-normal">Control system parameters and global engine configuration.</p>
+            </div>
+        </div>
+
+        <div class="grid gap-6">
+            @card.Card(card.Props{Class: "bg-card/40 border-border/40 w-full lg:max-w-2xl shadow-sm self-center md:self-start"}) {
+                @card.Header(card.HeaderProps{Class: "py-4 px-5 text-center md:text-left"}) {
+                    @card.Title(card.TitleProps{Class: "text-sm md:text-base font-semibold uppercase tracking-tight"}) { Engine Configuration }
+                    @card.Description(card.DescriptionProps{Class: "text-[10px] md:text-xs lowercase italic"}) { tune your stream pipeline performance }
+                }
+                @card.Content(card.ContentProps{Class: "p-4 md:p-6 space-y-4 text-[10px] md:text-xs italic opacity-40"}) {
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="space-y-1.5">
+                                <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">Default Bitrate</p>
+                                <div class="h-8 md:h-9 w-full bg-muted/20 border border-border/40 rounded-md"></div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">Log Verbosity</p>
+                                    <div class="h-8 md:h-9 w-full bg-muted/20 border border-border/40 rounded-md"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 pt-2">
+                            <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">Global API Key</p>
+                            <div class="h-8 md:h-9 w-full bg-muted/20 border border-border/40 rounded-md"></div>
+                        </div>
+                    </div>
+                    <p class="pt-4 text-center md:text-left">These modules are currently under development but will allow full control over the GoStreamix RTMP/HLS pipeline.</p>
+                }
+                @card.Footer(card.FooterProps{Class: "p-4 md:p-5 border-t border-border/20 flex justify-center md:justify-end"}) {
+                    @button.Button(button.Props{Class: "h-8 text-[9px] md:text-[10px] uppercase font-bold tracking-widest px-6", Disabled: true}) { Save Changes }
+                }
+            }
+        </div>
+	}
+}

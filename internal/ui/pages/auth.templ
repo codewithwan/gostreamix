@@ -1,0 +1,132 @@
+package pages
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/layouts"
+	"github.com/codewithwan/gostreamix/internal/ui/components"
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/ui/components/card"
+	"github.com/codewithwan/gostreamix/internal/ui/components/input"
+	"github.com/codewithwan/gostreamix/internal/shared/i18n"
+)
+
+type AuthProps struct {
+	Error string
+	Lang  string
+}
+
+templ Setup(props AuthProps) {
+	@layouts.Base(i18n.Tr(props.Lang, "auth.setup.title")) {
+		@layouts.AuthLayout() {
+			<div class="mb-6 flex flex-col items-center">
+				@components.Brand()
+			</div>
+
+			@card.Card(card.Props{Class: "shadow-2xl bg-card/80 backdrop-blur-xl border-border/60 relative overflow-hidden"}) {
+				
+				@card.Header(card.HeaderProps{Class: "space-y-1 pt-6 px-6 relative z-10"}) {
+					@card.Title(card.TitleProps{Class: "text-lg font-semibold tracking-tight text-center"}) { { i18n.Tr(props.Lang, "auth.setup.title") } }
+					@card.Description(card.DescriptionProps{Class: "text-center text-xs text-muted-foreground/80 lowercase italic"}) { { i18n.Tr(props.Lang, "auth.setup.desc") } }
+				}
+				@card.Content(card.ContentProps{Class: "p-6 relative z-10"}) {
+					if props.Error != "" {
+						<div class="mb-4 p-2 rounded bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-medium text-center italic">
+							{ props.Error }
+						</div>
+					}
+					<form action="/setup" method="POST" class="space-y-4">
+						<div class="space-y-1">
+							<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.setup.username") }</label>
+							@input.Input(input.Props{Name: "username", Class: "h-9 text-sm", Placeholder: i18n.Tr(props.Lang, "auth.setup.placeholder.username"), Attributes: templ.Attributes{"required": true, "autofocus": true}})
+						</div>
+						<div class="space-y-1">
+							<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.setup.email") }</label>
+							@input.Input(input.Props{Name: "email", Class: "h-9 text-sm", Type: input.TypeEmail, Placeholder: i18n.Tr(props.Lang, "auth.setup.placeholder.email"), Attributes: templ.Attributes{"required": true}})
+						</div>
+						<div class="space-y-3">
+							<div class="space-y-1">
+								<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.setup.password") }</label>
+								@input.Input(input.Props{Name: "password", Class: "h-9 text-sm", Type: input.TypePassword, Placeholder: i18n.Tr(props.Lang, "auth.setup.placeholder.password"), Attributes: templ.Attributes{"required": true}})
+							</div>
+							<div class="space-y-1">
+								<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.setup.confirm") }</label>
+								@input.Input(input.Props{Name: "confirm_password", Class: "h-9 text-sm", Type: input.TypePassword, Placeholder: i18n.Tr(props.Lang, "auth.setup.placeholder.confirm"), Attributes: templ.Attributes{"required": true}})
+							</div>
+						</div>
+						@button.Button(button.Props{Type: button.TypeSubmit, FullWidth: true, Class: "h-9 mt-4 font-medium text-xs tracking-wider uppercase"}) {
+							{ i18n.Tr(props.Lang, "auth.setup.submit") }
+						}
+					</form>
+				}
+			}
+
+			<div class="mt-8 flex items-center justify-center gap-4">
+				@components.ThemeToggle()
+				@components.LangToggle(props.Lang)
+			</div>
+		}
+	}
+}
+
+templ Login(props AuthProps) {
+	@layouts.Base(i18n.Tr(props.Lang, "auth.login.title")) {
+		@layouts.AuthLayout() {
+			<div class="mb-6 flex flex-col items-center">
+				@components.Brand()
+			</div>
+
+			@card.Card(card.Props{Class: "shadow-2xl bg-card/80 backdrop-blur-xl border-border/60 relative overflow-hidden"}) {
+				
+				@card.Header(card.HeaderProps{Class: "space-y-1 pt-6 px-6 relative z-10"}) {
+					@card.Title(card.TitleProps{Class: "text-lg font-semibold tracking-tight text-center"}) { { i18n.Tr(props.Lang, "auth.login.title") } }
+					@card.Description(card.DescriptionProps{Class: "text-center text-xs text-muted-foreground/80 lowercase italic"}) { { i18n.Tr(props.Lang, "auth.login.desc") } }
+				}
+				@card.Content(card.ContentProps{Class: "p-6 relative z-10"}) {
+					if props.Error != "" {
+						<div class="mb-4 p-2 rounded bg-destructive/10 border border-destructive/20 text-destructive text-[10px] font-medium text-center italic">
+							{ props.Error }
+						</div>
+					}
+					<form action="/login" method="POST" class="space-y-4">
+						<div class="space-y-1">
+							<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.login.username") }</label>
+							@input.Input(input.Props{Name: "username", Class: "h-9 text-sm", Placeholder: i18n.Tr(props.Lang, "auth.login.placeholder.username"), Attributes: templ.Attributes{"required": true, "autofocus": true}})
+						</div>
+						<div class="space-y-1">
+							<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.login.password") }</label>
+							@input.Input(input.Props{Name: "password", Class: "h-9 text-sm", Type: input.TypePassword, Placeholder: i18n.Tr(props.Lang, "auth.login.placeholder.password"), Attributes: templ.Attributes{"required": true}})
+						</div>
+						@button.Button(button.Props{Type: button.TypeSubmit, FullWidth: true, Class: "h-9 mt-4 font-medium text-xs tracking-wider uppercase"}) {
+							{ i18n.Tr(props.Lang, "auth.login.submit") }
+						}
+					</form>
+				}
+			}
+
+			<div class="mt-8 flex items-center justify-center gap-4">
+				@components.ThemeToggle()
+				@components.LangToggle(props.Lang)
+			</div>
+
+			<div id="toast-container" class="fixed bottom-6 right-6 z-[100] pointer-events-none">
+				<script>
+					if (new URLSearchParams(window.location.search).get('setup') === 'success') {
+						window.history.replaceState({}, document.title, window.location.pathname);
+						const toastDiv = document.createElement('div');
+						toastDiv.className = 'pointer-events-auto transition-all duration-500 translate-y-2 opacity-0';
+						toastDiv.id = 'setup-toast';
+						document.getElementById('toast-container').appendChild(toastDiv);
+						
+						htmx.ajax('GET', '/components/toast/setup_success', {target: '#setup-toast', swap: 'innerHTML'});
+						setTimeout(() => {
+							toastDiv.classList.remove('translate-y-2', 'opacity-0');
+						}, 100);
+						setTimeout(() => {
+							toastDiv.classList.add('translate-y-2', 'opacity-0');
+							setTimeout(() => toastDiv.remove(), 500);
+						}, 3000);
+					}
+				</script>
+			</div>
+		}
+	}
+}

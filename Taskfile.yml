@@ -1,0 +1,26 @@
+version: "3"
+
+vars:
+  TEMPL_CMD: go run github.com/a-h/templ/cmd/templ@latest
+  TAILWIND_CMD: npx -y @tailwindcss/cli@latest
+
+tasks:
+  templ:
+    desc: Run templ with integrated server and hot reload
+    cmds:
+      - "{{.TEMPL_CMD}} generate --watch --proxy='http://localhost:8080' --cmd='go run ./main.go' --open-browser=false"
+
+  tailwind:
+    desc: Watch Tailwind CSS changes
+    cmds:
+      - "{{.TAILWIND_CMD}} -i ./assets/css/input.css -o ./assets/css/output.css --watch"
+
+  dev:
+    desc: Start development server with hot reload
+    cmds:
+      - task: tailwind
+      - task: templ
+    sources:
+      - ./**/*.templ
+      - ./**/*.go
+      - ./assets/css/input.css

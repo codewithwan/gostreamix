@@ -1,0 +1,7 @@
+{
+    "componentsDir": "internal/ui/components",
+    "utilsDir": "internal/ui/utils",
+    "moduleName": "github.com/codewithwan/gostreamix",
+    "jsDir": "assets/js",
+    "jsPublicPath": "/assets/js"
+}

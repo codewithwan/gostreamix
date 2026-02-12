@@ -1,0 +1,40 @@
+package components
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/ui/components/card"
+	"github.com/codewithwan/gostreamix/internal/shared/i18n"
+)
+
+templ LogoutConfirm(lang string) {
+	<div id="logout-modal" class="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+		<div class="w-full max-w-[360px] p-4 scale-95 animate-in zoom-in-95 duration-200">
+			@card.Card(card.Props{Class: "shadow-2xl border-border/50 bg-card/90"}) {
+				@card.Header(card.HeaderProps{Class: "text-center space-y-1.5 pt-6"}) {
+					@card.Title() { { i18n.Tr(lang, "auth.logout.confirm") } }
+					@card.Description() { { i18n.Tr(lang, "auth.logout.desc") } }
+				}
+				@card.Content(card.ContentProps{Class: "p-6 pb-2"}) {
+					<div class="flex flex-col gap-3">
+						@button.Button(button.Props{
+							Variant: button.VariantDestructive,
+							FullWidth: true,
+							Href: "/logout",
+							Class: "h-11 font-bold",
+						}) {
+							{ i18n.Tr(lang, "auth.logout.yes") }
+						}
+						@button.Button(button.Props{
+							Variant: button.VariantGhost,
+							FullWidth: true,
+							Class: "h-11",
+							Attributes: templ.Attributes{"onclick": "document.getElementById('logout-modal').remove()"},
+						}) {
+							{ i18n.Tr(lang, "auth.logout.cancel") }
+						}
+					</div>
+				}
+			}
+		</div>
+	</div>
+}
