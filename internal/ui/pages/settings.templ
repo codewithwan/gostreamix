@@ -4,7 +4,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/layouts"
 	"github.com/codewithwan/gostreamix/internal/ui/components/button"
 	"github.com/codewithwan/gostreamix/internal/ui/components/card"
-	"github.com/codewithwan/gostreamix/internal/shared/i18n"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 )
 
 templ Settings(username, email, lang string) {
@@ -18,7 +18,7 @@ templ Settings(username, email, lang string) {
         <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div class="space-y-0.5 text-center md:text-left">
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight text-foreground">{ i18n.Tr(lang, "sidebar.settings") }</h1>
-                <p class="text-xs md:text-sm text-muted-foreground font-normal">Control system parameters and global engine configuration.</p>
+                <p class="text-xs md:text-sm text-muted-foreground font-normal">{ i18n.Tr(lang, "sidebar.settings_desc") }</p>
             </div>
         </div>
 

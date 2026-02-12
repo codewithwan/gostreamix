@@ -1,0 +1,77 @@
+{
+    "auth": {
+        "setup": {
+            "title": "Siapkan",
+            "desc": "buat akun anda",
+            "username": "Nama Pengguna",
+            "email": "Email",
+            "password": "Kata Sandi",
+            "confirm": "Konfirmasi Sandi",
+            "submit": "Siapkan",
+            "placeholder": {
+                "username": "misal: administrator",
+                "email": "admin@gostreamix.io",
+                "password": "minimal 8 karakter",
+                "confirm": "masukkan ulang kata sandi"
+            }
+        },
+        "login": {
+            "title": "Masuk",
+            "desc": "selamat datang kembali",
+            "username": "Nama Pengguna",
+            "password": "Kata Sandi",
+            "submit": "Masuk",
+            "success": "Berhasil Masuk!",
+            "placeholder": {
+                "username": "identitas pengguna...",
+                "password": "kata sandi anda..."
+            }
+        },
+        "logout": {
+            "confirm": "Keluar?",
+            "desc": "Apakah anda yakin?",
+            "yes": "Ya, Keluar",
+            "cancel": "Batal"
+        }
+    },
+    "dashboard": {
+        "title": "Dasbor",
+        "desc": "Memantau performa mesin inti dan metrik klaster.",
+        "overview": "Ringkasan",
+        "stats": {
+            "status": "Kesehatan Mesin",
+            "cpu": "Beban CPU",
+            "memory": "Memori",
+            "network": "Jaringan",
+            "lower_avg": "Di bawah rata-rata",
+            "stable": "Alokasi stabil",
+            "normal": "Hulu normal"
+        },
+        "stream": {
+            "quick": "Streaming Cepat",
+            "active": "Streaming Aktif"
+        },
+        "activity": {
+            "title": "Log Aktivitas",
+            "desc": "Kejadian sistem waktu nyata.",
+            "waiting": "Aliran log diinisialisasi, menunggu kejadian..."
+        },
+        "storage": {
+            "title": "Pool Penyimpanan",
+            "desc": "Penggunaan Disk & Penyimpanan Objek.",
+            "main": "Disk Utama"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Dasbor",
+        "streams": "Streaming",
+        "streams_desc": "Kelola saluran siaran langsung dan titik ingest anda.",
+        "videos": "Video",
+        "videos_desc": "Gudang untuk sesi rekaman dan aset media.",
+        "settings": "Pengaturan",
+        "settings_desc": "Kontrol parameter sistem dan konfigurasi mesin global.",
+        "footer": {
+            "copyright": "Stream Engine"
+        }
+    }
+}

@@ -1,7 +1,7 @@
 package core
 
 import (
-	"github.com/codewithwan/gostreamix/internal/server"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/server"
 	"go.uber.org/dig"
 	"go.uber.org/zap"
 )

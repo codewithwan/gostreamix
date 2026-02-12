@@ -7,9 +7,9 @@ import (
 	"os"
 	"syscall"
 
-	"github.com/codewithwan/gostreamix/internal/auth"
-	"github.com/codewithwan/gostreamix/internal/config"
-	"github.com/codewithwan/gostreamix/internal/storage"
+	"github.com/codewithwan/gostreamix/internal/domain/auth"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/database"
 	"golang.org/x/term"
 )
 
@@ -23,7 +23,7 @@ func main() {
 	}
 
 	cfg := config.NewConfig()
-	db, err := storage.NewSQLiteDB(cfg)
+	db, err := database.NewSQLiteDB(cfg)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)

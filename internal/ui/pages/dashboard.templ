@@ -4,7 +4,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/layouts"
 	"github.com/codewithwan/gostreamix/internal/ui/components/button"
 	"github.com/codewithwan/gostreamix/internal/ui/components/card"
-	"github.com/codewithwan/gostreamix/internal/shared/i18n"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 )
 
 templ Dashboard(username, email, lang string) {
@@ -18,7 +18,7 @@ templ Dashboard(username, email, lang string) {
         <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div class="space-y-0.5 text-center md:text-left">
                 <h1 class="text-xl md:text-2xl font-bold tracking-tight text-foreground">{ i18n.Tr(lang, "dashboard.title") }</h1>
-                <p class="text-xs md:text-sm text-muted-foreground font-normal">Monitoring core engine performance and cluster metrics.</p>
+                <p class="text-xs md:text-sm text-muted-foreground font-normal">{ i18n.Tr(lang, "dashboard.desc") }</p>
             </div>
             <div class="flex items-center justify-center gap-3">
                 @button.Button(button.Props{Class: "h-8 text-[10px] md:text-xs font-medium"}) {
