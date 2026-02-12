@@ -10,6 +10,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/database"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/logger"
 	"golang.org/x/term"
 )
 
@@ -23,7 +24,9 @@ func main() {
 	}
 
 	cfg := config.NewConfig()
-	db, err := database.NewSQLiteDB(cfg)
+	log, _ := logger.NewLogger()
+
+	db, err := database.NewSQLiteDB(cfg, log)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
 		os.Exit(1)

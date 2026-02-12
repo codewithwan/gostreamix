@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
@@ -13,9 +14,10 @@ import (
 	_ "github.com/glebarez/go-sqlite"
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
+	"go.uber.org/zap"
 )
 
-func NewSQLiteDB(cfg *config.Config) (*bun.DB, error) {
+func NewSQLiteDB(cfg *config.Config, log *zap.Logger) (*bun.DB, error) {
 	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0755); err != nil {
 		return nil, err
 	}
@@ -24,13 +26,15 @@ func NewSQLiteDB(cfg *config.Config) (*bun.DB, error) {
 		return nil, err
 	}
 	db := bun.NewDB(sqldb, sqlitedialect.New())
-	if err := migrate(ctx(), db); err != nil {
+	log.Info("database connected", zap.String("path", cfg.DBPath))
+
+	if err := migrate(ctx(), db, log); err != nil {
 		return nil, err
 	}
 	return db, nil
 }
 
-func migrate(ctx context.Context, db *bun.DB) error {
+func migrate(ctx context.Context, db *bun.DB, log *zap.Logger) error {
 	models := []interface{}{
 		(*auth.User)(nil),
 		(*stream.Stream)(nil),
@@ -40,6 +44,8 @@ func migrate(ctx context.Context, db *bun.DB) error {
 		if _, err := db.NewCreateTable().Model(m).IfNotExists().Exec(ctx); err != nil {
 			return err
 		}
+		name := reflect.TypeOf(m).Elem().Name()
+		log.Info("table verified", zap.String("table", name))
 	}
 	return nil
 }

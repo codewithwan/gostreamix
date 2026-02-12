@@ -11,7 +11,9 @@ import (
 	"github.com/codewithwan/gostreamix/internal/infrastructure/server"
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware"
+	"github.com/uptrace/bun"
 	"go.uber.org/dig"
+	"go.uber.org/zap"
 )
 
 func BuildContainer() *dig.Container {
@@ -21,7 +23,9 @@ func BuildContainer() *dig.Container {
 	_ = c.Provide(func(cfg *config.Config) struct{ Secret string } {
 		return struct{ Secret string }{Secret: cfg.Secret}
 	})
-	_ = c.Provide(database.NewSQLiteDB)
+	_ = c.Provide(func(cfg *config.Config, log *zap.Logger) (*bun.DB, error) {
+		return database.NewSQLiteDB(cfg, log)
+	})
 
 	_ = c.Provide(auth.NewRepository)
 	_ = c.Provide(auth.NewService)

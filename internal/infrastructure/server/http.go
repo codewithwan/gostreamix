@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
@@ -39,7 +40,11 @@ func NewServer(
 
 	app := fiber.New(fiberConfig)
 	app.Use(recover.New())
-	app.Use(logger.New(logger.Config{Format: "${time} | ${status} | ${latency} | ${ip} | ${method} | ${path}\n"}))
+	app.Use(logger.New(logger.Config{
+		Format:     "${time}	INFO	http request	{\"status\": ${status}, \"method\": \"${method}\", \"path\": \"${path}\", \"latency\": \"${latency}\", \"ip\": \"${ip}\"}\n",
+		TimeFormat: "2006-01-02T15:04:05.000Z",
+		TimeZone:   "UTC",
+	}))
 	app.Static("/assets", "./assets")
 
 	app.Use(func(c *fiber.Ctx) error {
@@ -55,9 +60,15 @@ func NewServer(
 			}
 			return c.Redirect(path)
 		}
+
 		l := c.Cookies("lang")
 		if l == "" {
-			l = "en"
+			accept := c.Get("Accept-Language")
+			if strings.Contains(accept, "id") {
+				l = "id"
+			} else {
+				l = "en"
+			}
 		}
 		c.Locals("lang", l)
 		return c.Next()
@@ -79,6 +90,6 @@ func NewServer(
 
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%s", s.Config.Host, s.Config.Port)
-	fmt.Printf("\n🚀 GoStreamix Engine is running!\n🌐 Control Panel: http://%s\n\n", addr)
+	s.Log.Info("http server listening", zap.String("address", addr))
 	return s.App.Listen(addr)
 }

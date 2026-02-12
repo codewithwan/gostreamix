@@ -64,6 +64,7 @@
     },
     "sidebar": {
         "dashboard": "Dashboard",
+        "support": "Support Me",
         "streams": "Streams",
         "streams_desc": "Manage your live broadcasting channels and ingest points.",
         "videos": "Videos",

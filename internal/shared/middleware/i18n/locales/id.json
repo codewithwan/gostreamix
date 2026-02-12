@@ -64,6 +64,7 @@
     },
     "sidebar": {
         "dashboard": "Dasbor",
+        "support": "Dukung Saya",
         "streams": "Streaming",
         "streams_desc": "Kelola saluran siaran langsung dan titik ingest anda.",
         "videos": "Video",

@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func NewConfig() *Config {
-	dbPath := getEnv("DB_PATH", "data/gostreamix.sqlite")
+	dbPath := getEnv("DB_PATH", "data/db/gostreamix.sqlite")
 	dataDir := filepath.Dir(dbPath)
 
 	secret := os.Getenv("JWT_SECRET")
