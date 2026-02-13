@@ -1,0 +1,78 @@
+package modals
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/ui/components/input"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
+	"github.com/codewithwan/gostreamix/internal/domain/video"
+	t "github.com/a-h/templ"
+	"fmt"
+)
+
+templ AddStream(lang string, videos []*video.Video) {
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" id="add-stream-modal">
+		<div class="bg-card border border-border rounded-lg shadow-lg w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
+			<div class="px-6 py-4 border-b border-border flex items-center justify-between">
+				<h3 class="text-lg font-semibold tracking-tight">{ i18n.Tr(lang, "streams.modal.title") }</h3>
+				<button class="text-muted-foreground hover:text-foreground transition-colors" onclick="this.closest('#add-stream-modal').remove()">
+					<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+				</button>
+			</div>
+			
+			<form hx-post="/dashboard/streams" hx-target="#streams-list" hx-swap="beforeend" hx-on::after-request="if(event.detail.successful) { this.closest('#add-stream-modal').remove(); }">
+				<div class="p-6 space-y-4">
+					<div class="space-y-2">
+						<label class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" for="name">{ i18n.Tr(lang, "streams.modal.name") }</label>
+						@input.Input(input.Props{Type: "text", ID: "name", Name: "name", Placeholder: i18n.Tr(lang, "streams.modal.placeholders.name"), Attributes: t.Attributes{"required": true}})
+					</div>
+
+					<div class="grid grid-cols-2 gap-4">
+						<div class="space-y-2">
+							<label class="text-sm font-medium leading-none" for="video_id">{ i18n.Tr(lang, "streams.modal.video_id") }</label>
+							<select id="video_id" name="video_id" class="flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" required>
+                                if len(videos) == 0 {
+                                    <option value="" disabled selected>{ i18n.Tr(lang, "streams.modal.no_videos") }</option>
+                                } else {
+                                    for _, v := range videos {
+                                        <option value={ v.ID.String() }>{ v.Filename } ({ fmt.Sprintf("%02d:%02d", int(v.Duration)/60, int(v.Duration)%60) })</option>
+                                    }
+                                }
+                            </select>
+						</div>
+						<div class="space-y-2">
+							<label class="text-sm font-medium leading-none" for="bitrate">{ i18n.Tr(lang, "streams.modal.bitrate") }</label>
+							@input.Input(input.Props{Type: "number", ID: "bitrate", Name: "bitrate", Placeholder: i18n.Tr(lang, "streams.modal.placeholders.bitrate"), Value: "3000", Attributes: t.Attributes{"required": true}})
+						</div>
+					</div>
+
+					<div class="space-y-2">
+						<label class="text-sm font-medium leading-none" for="resolution">{ i18n.Tr(lang, "streams.modal.resolution") }</label>
+						<select id="resolution" name="resolution" class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
+							<option value="1920x1080">1080p (FHD)</option>
+							<option value="1280x720" selected>720p (HD)</option>
+							<option value="854x480">480p (SD)</option>
+						</select>
+					</div>
+
+					<div class="space-y-2">
+						<label class="text-sm font-medium leading-none" for="rtmp_targets">{ i18n.Tr(lang, "streams.modal.targets") }</label>
+						<textarea 
+							id="rtmp_targets" 
+							name="rtmp_targets" 
+							class="flex min-h-[80px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" 
+							placeholder={ i18n.Tr(lang, "streams.modal.placeholders.targets") }
+						></textarea>
+						<p class="text-[10px] text-muted-foreground">{ i18n.Tr(lang, "streams.modal.targets_help") }</p>
+					</div>
+				</div>
+
+				<div class="px-6 py-4 bg-muted/40 border-t border-border flex items-center justify-end gap-3">
+					<button type="button" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" onclick="this.closest('#add-stream-modal').remove()">{ i18n.Tr(lang, "streams.modal.cancel") }</button>
+					@button.Button(button.Props{Variant: button.VariantDefault, Type: "submit", Attributes: t.Attributes{"class": "h-8 text-xs"}}) {
+						{ i18n.Tr(lang, "streams.modal.create") }
+					}
+				</div>
+			</form>
+		</div>
+	</div>
+}

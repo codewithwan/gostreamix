@@ -3,6 +3,7 @@ package stream
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
 
@@ -14,12 +15,12 @@ func NewRepository(db *bun.DB) Repository {
 	return &repository{db: db}
 }
 
-func (r *repository) Create(ctx context.Context, stream *Stream) error {
-	_, err := r.db.NewInsert().Model(stream).Exec(ctx)
+func (r *repository) Create(ctx context.Context, s *Stream) error {
+	_, err := r.db.NewInsert().Model(s).Exec(ctx)
 	return err
 }
 
-func (r *repository) GetByID(ctx context.Context, id int64) (*Stream, error) {
+func (r *repository) GetByID(ctx context.Context, id uuid.UUID) (*Stream, error) {
 	s := new(Stream)
 	err := r.db.NewSelect().Model(s).Where("id = ?", id).Scan(ctx)
 	return s, err
@@ -31,12 +32,12 @@ func (r *repository) List(ctx context.Context) ([]*Stream, error) {
 	return streams, err
 }
 
-func (r *repository) Update(ctx context.Context, stream *Stream) error {
-	_, err := r.db.NewUpdate().Model(stream).WherePK().Exec(ctx)
+func (r *repository) Update(ctx context.Context, s *Stream) error {
+	_, err := r.db.NewUpdate().Model(s).WherePK().Exec(ctx)
 	return err
 }
 
-func (r *repository) Delete(ctx context.Context, id int64) error {
+func (r *repository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model((*Stream)(nil)).Where("id = ?", id).Exec(ctx)
 	return err
 }

@@ -1,12 +1,15 @@
 package stream
 
+import "github.com/google/uuid"
+
 type CreateStreamDTO struct {
-	Name        string   `json:"name" validate:"required,min=3"`
-	RTMPTargets []string `json:"rtmp_targets" validate:"required"`
-	Bitrate     int      `json:"bitrate" validate:"required,min=500"`
-	Resolution  string   `json:"resolution"`
-	FPS         int      `json:"fps"`
-	Loop        bool     `json:"loop"`
+	VideoID     uuid.UUID `json:"video_id" validate:"required"`
+	Name        string    `json:"name" validate:"required,min=3"`
+	RTMPTargets []string  `json:"rtmp_targets" validate:"required"`
+	Bitrate     int       `json:"bitrate" validate:"required,min=500"`
+	Resolution  string    `json:"resolution"`
+	FPS         int       `json:"fps"`
+	Loop        bool      `json:"loop"`
 }
 
 type UpdateStreamDTO struct {

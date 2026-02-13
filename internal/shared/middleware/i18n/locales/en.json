@@ -74,5 +74,60 @@
         "footer": {
             "copyright": "Stream Engine"
         }
+    },
+    "streams": {
+        "add_new": "Add New Source",
+        "active_pipelines": "Active Pipelines",
+        "monitoring_desc": "monitoring your stream health in real-time",
+        "table": {
+            "source_name": "Source Name",
+            "resolution": "Resolution",
+            "bitrate": "Bitrate",
+            "status": "Status",
+            "actions": "Actions",
+            "no_targets": "No targets",
+            "live": "Live",
+            "empty_state": "No active streams found. Start by adding a new source."
+        },
+        "modal": {
+            "title": "Add New Stream",
+            "name": "Stream Name",
+            "video_id": "Video ID",
+            "bitrate": "Bitrate (Kbps)",
+            "resolution": "Resolution",
+            "targets": "RTMP Targets (One per line)",
+            "targets_help": "Enter multiple targets separated by new lines.",
+            "cancel": "Cancel",
+            "create": "Create Stream",
+            "no_videos": "No videos available. Please upload first.",
+            "placeholders": {
+                "name": "e.g. Morning Broadcast",
+                "video_id": "1",
+                "bitrate": "3000",
+                "targets": "rtmp://a.rtmp.youtube.com/live2/key..."
+            }
+        }
+    },
+    "videos": {
+        "upload": "Upload Media",
+        "empty_state": "Ready to store your high-quality recordings.",
+        "upload_modal": {
+            "title": "Upload Video",
+            "file_label": "Select Video File",
+            "help_text": "Supported formats: MP4, MKV, MOV. Max size: 2GB.",
+            "cancel": "Cancel",
+            "submit": "Upload"
+        }
+    },
+    "settings": {
+        "engine": {
+            "title": "Engine Configuration",
+            "desc": "tune your stream pipeline performance",
+            "default_bitrate": "Default Bitrate",
+            "log_verbosity": "Log Verbosity",
+            "global_api_key": "Global API Key",
+            "development_notice": "These modules are currently under development but will allow full control over the GoStreamix RTMP/HLS pipeline.",
+            "save": "Save Changes"
+        }
     }
 }

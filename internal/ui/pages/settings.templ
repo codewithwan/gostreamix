@@ -25,30 +25,30 @@ templ Settings(username, email, lang string) {
         <div class="grid gap-6">
             @card.Card(card.Props{Class: "bg-card/40 border-border/40 w-full lg:max-w-2xl shadow-sm self-center md:self-start"}) {
                 @card.Header(card.HeaderProps{Class: "py-4 px-5 text-center md:text-left"}) {
-                    @card.Title(card.TitleProps{Class: "text-sm md:text-base font-semibold uppercase tracking-tight"}) { Engine Configuration }
-                    @card.Description(card.DescriptionProps{Class: "text-[10px] md:text-xs lowercase italic"}) { tune your stream pipeline performance }
+                    @card.Title(card.TitleProps{Class: "text-sm md:text-base font-semibold uppercase tracking-tight"}) { { i18n.Tr(lang, "settings.engine.title") } }
+                    @card.Description(card.DescriptionProps{Class: "text-[10px] md:text-xs lowercase italic"}) { { i18n.Tr(lang, "settings.engine.desc") } }
                 }
                 @card.Content(card.ContentProps{Class: "p-4 md:p-6 space-y-4 text-[10px] md:text-xs italic opacity-40"}) {
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div class="space-y-1.5">
-                                <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">Default Bitrate</p>
+                                <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">{ i18n.Tr(lang, "settings.engine.default_bitrate") }</p>
                                 <div class="h-8 md:h-9 w-full bg-muted/20 border border-border/40 rounded-md"></div>
                             </div>
                             <div class="space-y-1.5">
-                                <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">Log Verbosity</p>
+                                <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">{ i18n.Tr(lang, "settings.engine.log_verbosity") }</p>
                                     <div class="h-8 md:h-9 w-full bg-muted/20 border border-border/40 rounded-md"></div>
                             </div>
                         </div>
                         <div class="space-y-1.5 pt-2">
-                            <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">Global API Key</p>
+                            <p class="font-bold text-[8px] md:text-[9px] uppercase tracking-widest text-muted-foreground">{ i18n.Tr(lang, "settings.engine.global_api_key") }</p>
                             <div class="h-8 md:h-9 w-full bg-muted/20 border border-border/40 rounded-md"></div>
                         </div>
                     </div>
-                    <p class="pt-4 text-center md:text-left">These modules are currently under development but will allow full control over the GoStreamix RTMP/HLS pipeline.</p>
+                    <p class="pt-4 text-center md:text-left">{ i18n.Tr(lang, "settings.engine.development_notice") }</p>
                 }
                 @card.Footer(card.FooterProps{Class: "p-4 md:p-5 border-t border-border/20 flex justify-center md:justify-end"}) {
-                    @button.Button(button.Props{Class: "h-8 text-[9px] md:text-[10px] uppercase font-bold tracking-widest px-6", Disabled: true}) { Save Changes }
+                    @button.Button(button.Props{Class: "h-8 text-[9px] md:text-[10px] uppercase font-bold tracking-widest px-6", Disabled: true}) { { i18n.Tr(lang, "settings.engine.save") } }
                 }
             }
         </div>

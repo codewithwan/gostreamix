@@ -2,6 +2,7 @@ package stream
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 )
 
 type Handler struct {
@@ -18,6 +19,31 @@ func (h *Handler) Routes(app *fiber.App) {
 	group.Post("/", h.CreateStream)
 	group.Post("/:id/start", h.StartStream)
 	group.Post("/:id/stop", h.StopStream)
+	group.Get("/:id/stats", h.GetStreamStats)
+	group.Delete("/:id", h.DeleteStream)
+}
+
+func (h *Handler) GetStreamStats(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
+	}
+	stats, err := h.svc.GetStreamStats(c.Context(), id)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(stats)
+}
+
+func (h *Handler) DeleteStream(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
+	}
+	if err := h.svc.DeleteStream(c.Context(), id); err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.SendStatus(204)
 }
 
 func (h *Handler) GetStreams(c *fiber.Ctx) error {
@@ -41,16 +67,22 @@ func (h *Handler) CreateStream(c *fiber.Ctx) error {
 }
 
 func (h *Handler) StartStream(c *fiber.Ctx) error {
-	id, _ := c.ParamsInt("id")
-	if err := h.svc.StartStream(c.Context(), int64(id)); err != nil {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
+	}
+	if err := h.svc.StartStream(c.Context(), id); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.SendStatus(200)
 }
 
 func (h *Handler) StopStream(c *fiber.Ctx) error {
-	id, _ := c.ParamsInt("id")
-	if err := h.svc.StopStream(c.Context(), int64(id)); err != nil {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
+	}
+	if err := h.svc.StopStream(c.Context(), id); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 	return c.SendStatus(200)

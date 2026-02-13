@@ -9,6 +9,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/infrastructure/database"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/logger"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/server"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware"
 	"github.com/uptrace/bun"
@@ -18,34 +19,37 @@ import (
 
 func BuildContainer() *dig.Container {
 	c := dig.New()
-	_ = c.Provide(config.NewConfig)
-	_ = c.Provide(logger.NewLogger)
-	_ = c.Provide(func(cfg *config.Config) struct{ Secret string } {
+
+	c.Provide(config.NewConfig)
+	c.Provide(logger.NewLogger)
+	c.Provide(func(cfg *config.Config) struct{ Secret string } {
 		return struct{ Secret string }{Secret: cfg.Secret}
 	})
-	_ = c.Provide(func(cfg *config.Config, log *zap.Logger) (*bun.DB, error) {
+	c.Provide(func(cfg *config.Config, log *zap.Logger) (*bun.DB, error) {
 		return database.NewSQLiteDB(cfg, log)
 	})
+	c.Provide(ws.NewHub)
 
-	_ = c.Provide(auth.NewRepository)
-	_ = c.Provide(auth.NewService)
-	_ = c.Provide(jwt.NewJWTService)
-	_ = c.Provide(middleware.NewAuthGuard)
-	_ = c.Provide(auth.NewHandler)
+	c.Provide(auth.NewRepository)
+	c.Provide(auth.NewService)
+	c.Provide(jwt.NewJWTService)
+	c.Provide(middleware.NewAuthGuard)
+	c.Provide(auth.NewHandler)
 
-	_ = c.Provide(stream.NewRepository)
-	_ = c.Provide(stream.NewService)
-	_ = c.Provide(stream.NewPipeline)
-	_ = c.Provide(stream.NewHandler)
+	c.Provide(stream.NewRepository)
+	c.Provide(stream.NewService)
+	c.Provide(stream.NewProcessManager)
+	c.Provide(stream.NewPipeline)
+	c.Provide(stream.NewHandler)
 
-	_ = c.Provide(video.NewRepository)
-	_ = c.Provide(video.NewService)
-	_ = c.Provide(video.NewHandler)
+	c.Provide(video.NewRepository)
+	c.Provide(video.NewService)
+	c.Provide(video.NewHandler)
 
-	_ = c.Provide(dashboard.NewService)
-	_ = c.Provide(dashboard.NewHandler)
+	c.Provide(dashboard.NewService)
+	c.Provide(dashboard.NewHandler)
 
-	_ = c.Provide(server.NewServer)
+	c.Provide(server.NewServer)
 
 	return c
 }

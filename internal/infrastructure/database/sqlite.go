@@ -40,10 +40,12 @@ func migrate(ctx context.Context, db *bun.DB, log *zap.Logger) error {
 		(*stream.Stream)(nil),
 		(*video.Video)(nil),
 	}
+
 	for _, m := range models {
 		if _, err := db.NewCreateTable().Model(m).IfNotExists().Exec(ctx); err != nil {
 			return err
 		}
+
 		name := reflect.TypeOf(m).Elem().Name()
 		log.Info("table verified", zap.String("table", name))
 	}

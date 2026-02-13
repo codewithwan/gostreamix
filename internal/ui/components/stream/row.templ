@@ -1,0 +1,55 @@
+package stream
+
+import (
+	"fmt"
+	"github.com/codewithwan/gostreamix/internal/domain/stream"
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
+	t "github.com/a-h/templ"
+)
+
+templ Row(s *stream.Stream, lang string) {
+	<tr class="hover:bg-muted/20 transition-colors">
+		<td class="px-5 py-4">
+			<div class="flex flex-col">
+				<span class="text-sm font-semibold">{ s.Name }</span>
+				if len(s.RTMPTargets) > 0 {
+					<span class="text-[10px] text-muted-foreground font-mono truncate max-w-[150px]" title={ s.RTMPTargets[0] }>{ s.RTMPTargets[0] }</span>
+				} else {
+					<span class="text-[10px] text-muted-foreground font-mono italic">{ i18n.Tr(lang, "streams.table.no_targets") }</span>
+				}
+			</div>
+		</td>
+		<td class="px-5 py-4 text-sm font-medium">{ s.Resolution }</td>
+		<td class="px-5 py-4 text-sm font-medium">{ fmt.Sprintf("%d Kbps", s.Bitrate) }</td>
+		<td class="px-5 py-4">
+			if s.Status == "running" {
+				<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 text-[10px] font-bold uppercase tracking-wider">
+					<span class="size-1.5 rounded-full bg-green-500 animate-pulse"></span>
+					{ i18n.Tr(lang, "streams.table.live") }
+				</div>
+			} else {
+				<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border text-[10px] font-bold uppercase tracking-wider">
+					<span class="size-1.5 rounded-full bg-muted-foreground/50"></span>
+					{ s.Status }
+				</div>
+			}
+		</td>
+		<td class="px-5 py-4 pointer-events-auto">
+			<div class="flex items-center gap-2">
+				if s.Status == "running" {
+					@button.Button(button.Props{Variant: button.VariantGhost, Class: "h-8 w-8 p-0 text-amber-500 hover:bg-amber-500/10", Attributes: t.Attributes{"hx-post": fmt.Sprintf("/api/streams/%s/stop", s.ID.String()), "hx-swap": "none"}}) {
+						<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+					}
+				} else {
+					@button.Button(button.Props{Variant: button.VariantGhost, Class: "h-8 w-8 p-0 text-green-500 hover:bg-green-500/10", Attributes: t.Attributes{"hx-post": fmt.Sprintf("/api/streams/%s/start", s.ID.String()), "hx-swap": "none"}}) {
+						<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+					}
+				}
+				@button.Button(button.Props{Variant: button.VariantGhost, Class: "h-8 w-8 p-0 text-destructive hover:bg-destructive/10", Attributes: t.Attributes{"hx-delete": fmt.Sprintf("/api/streams/%s", s.ID.String()), "hx-confirm": "Are you sure?", "hx-target": "closest tr", "hx-swap": "outerHTML"}}) {
+					<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+				}
+			</div>
+		</td>
+	</tr>
+}

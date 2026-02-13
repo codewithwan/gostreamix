@@ -5,13 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/codewithwan/gostreamix/internal/infrastructure/monitor"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/server"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
 	"go.uber.org/dig"
 	"go.uber.org/zap"
 )
 
 func Bootstrap(c *dig.Container) error {
-	return c.Invoke(func(s *server.Server, l *zap.Logger) {
+	return c.Invoke(func(s *server.Server, l *zap.Logger, hub *ws.Hub) {
 		appURL := s.Config.AppURL
 		if appURL == "http://localhost:8080" && s.Config.Host == "0.0.0.0" {
 			appURL = fmt.Sprintf("http://localhost:%s", s.Config.Port)
@@ -19,7 +21,13 @@ func Bootstrap(c *dig.Container) error {
 
 		printBanner(s.Config.Port, s.Config.DBPath, appURL)
 
-		time.Sleep(100 * time.Millisecond)
+		go func() {
+			ticker := time.NewTicker(5 * time.Second)
+			for range ticker.C {
+				stats := monitor.GetStats()
+				hub.Broadcast("system_stats", stats)
+			}
+		}()
 
 		go func() {
 			time.Sleep(2 * time.Second)
@@ -54,22 +62,22 @@ func printBanner(port, dbPath, appURL string) {
  ██░       ██▓  ▒█████   ██▒                      ░███
  ███████████   ▒███████   ██░           ▓████████████▓
  ██▓░░░░░     ██████████   ██░        ███▓░░░░░░░░▓██▓
- ▓█▒       ▒█████████████   ██▒     ░██▒          ▒███
- ▒█▓  ▒███████████████████   ███░ ▒███   ▓█████▒  ▓██ 
- ▒██░  ████████████████████░   ████▓   ░███████  ░███ 
-  ▓██   █████████████████████        ░████████   ███  
-   ███   ████████████████████████████████████   ███   
-    ███   ▓████████████████████████████████▓   ███    
-     ▓██▒  ░██████████████████████████████░  ▒███     
-      ▒███░  ░▓████████████████████████▓░   ███▓      
-       ▒▓███░   ░████████████████████░   ░███▓▓       
-         ▒▒███▓      ▒██████████▒      ▓███▓          
-             ▓████▓                ▓████▓▒            
-               ░▒████████████████████▓▒               
-                     ▒▓▓▓█████▓▓▓░                                       
+  ▓█▒       ▒█████████████   ██▒     ░██▒          ▒███
+  ▒█▓  ▒███████████████████   ███░ ▒███   ▓█████▒  ▓██ 
+  ▒██░  ████████████████████░   ████▓   ░███████  ░███ 
+   ▓██   █████████████████████        ░████████   ███  
+    ███   ████████████████████████████████████   ███   
+     ███   ▓████████████████████████████████▓   ███    
+      ▓██▒  ░██████████████████████████████░  ▒███     
+       ▒███░  ░▓████████████████████████▓░   ███▓      
+        ▒▓███░   ░████████████████████░   ░███▓▓       
+          ▒▒███▓      ▒██████████▒      ▓███▓          
+              ▓████▓                ▓████▓▒            
+                ░▒████████████████████▓▒               
+                      ▒▓▓▓█████▓▓▓░                                       
                                                         
-  GoStreamix Engine
-  --------------------------------------------------`)
+   GoStreamix Engine
+   --------------------------------------------------`)
 
 	fmt.Printf("  App URL   : %s\n", appURL)
 	fmt.Printf("  Port      : %s\n", port)

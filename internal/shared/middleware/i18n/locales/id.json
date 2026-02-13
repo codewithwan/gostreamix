@@ -72,7 +72,62 @@
         "settings": "Pengaturan",
         "settings_desc": "Kontrol parameter sistem dan konfigurasi mesin global.",
         "footer": {
-            "copyright": "Stream Engine"
+            "copyright": "Mesin Streaming"
+        }
+    },
+    "streams": {
+        "add_new": "Tambah Sumber Baru",
+        "active_pipelines": "Pipa Aktif",
+        "monitoring_desc": "memantau kesehatan streaming anda secara real-time",
+        "table": {
+            "source_name": "Nama Sumber",
+            "resolution": "Resolusi",
+            "bitrate": "Bitrate",
+            "status": "Status",
+            "actions": "Aksi",
+            "no_targets": "Tidak ada target",
+            "live": "Langsung",
+            "empty_state": "Tidak ada streaming aktif ditemukan. Mulai dengan menambahkan sumber baru."
+        },
+        "modal": {
+            "title": "Tambah Streaming Baru",
+            "name": "Nama Streaming",
+            "video_id": "ID Video",
+            "bitrate": "Bitrate (Kbps)",
+            "resolution": "Resolusi",
+            "targets": "Target RTMP (Satu per baris)",
+            "targets_help": "Masukkan beberapa target dipisahkan oleh baris baru.",
+            "cancel": "Batal",
+            "create": "Buat Streaming",
+            "no_videos": "Tidak ada video tersedia. Silakan unggah dahulu.",
+            "placeholders": {
+                "name": "cth. Siaran Pagi",
+                "video_id": "1",
+                "bitrate": "3000",
+                "targets": "rtmp://a.rtmp.youtube.com/live2/key..."
+            }
+        }
+    },
+    "videos": {
+        "upload": "Unggah Media",
+        "empty_state": "Siap untuk menyimpan rekaman berkualitas tinggi anda.",
+        "upload_modal": {
+            "title": "Unggah Video",
+            "file_label": "Pilih Berkas Video",
+            "help_text": "Format: MP4, MKV, MOV. Ukuran maks: 2GB.",
+            "cancel": "Batal",
+            "submit": "Unggah"
+        }
+    },
+    "settings": {
+        "engine": {
+            "title": "Konfigurasi Mesin",
+            "desc": "sesuaikan performa pipa streaming anda",
+            "default_bitrate": "Bitrate Bawaan",
+            "log_verbosity": "Verbositas Log",
+            "global_api_key": "Kunci API Global",
+            "development_notice": "Modul-modul ini sedang dalam pengembangan tetapi akan memungkinkan kontrol penuh atas pipa RTMP/HLS GoStreamix.",
+            "save": "Simpan Perubahan"
         }
     }
 }
