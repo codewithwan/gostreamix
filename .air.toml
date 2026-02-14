@@ -1,0 +1,37 @@
+# air configuration file
+root = "."
+tmp_dir = "tmp"
+
+[build]
+pre_cmd = ["templ generate"]
+cmd = "go build -o ./tmp/main main.go"
+bin = "tmp/main"
+include_ext = ["go", "templ", "json", "html", "js", "css", "env"]
+include_dir = ["internal", "cmd", "assets"]
+exclude_dir = ["tmp", "vendor", "data", "logs", ".git"]
+exclude_regex = ["_test\\.go$", "_templ\\.go$"]
+poll = true
+poll_interval = 200
+delay = 500
+stop_on_error = false
+send_interrupt = true
+kill_delay = 500
+rerun = true
+rerun_delay = 500
+
+[log]
+time = true
+main_only = false
+
+[color]
+main = "magenta"
+watcher = "cyan"
+build = "yellow"
+runner = "green"
+
+[misc]
+clean_on_exit = true
+
+[screen]
+clear_on_rebuild = true
+keep_scroll = true

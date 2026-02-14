@@ -1,0 +1,35 @@
+FROM golang:1.25
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y \
+    ffmpeg \
+    git \
+    curl \
+    bash \
+    build-essential
+
+ENV GOPROXY=https://proxy.golang.org,direct
+ENV CGO_ENABLED=0
+
+RUN go install github.com/air-verse/air@latest
+RUN go install github.com/a-h/templ/cmd/templ@latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN mkdir -p /app/tmp \
+    /app/data/uploads \
+    /app/data/thumbnails \
+    /app/logs
+
+RUN templ generate
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+CMD ["air", "-c", ".air.toml"]

@@ -1,64 +1,59 @@
-# GoStreamix Engine 🚀
+# GoStreamix
 
-GoStreamix is a lightweight, high-performance stream engine and control panel designed for managing live broadcasting pipelines, VOD assets, and system configurations. Built with modern Go technologies for speed and reliability.
+<p align="center">
+  <img src="assets/img/app_icon.png" width="128" alt="GoStreamix Logo">
+</p>
 
-## ✨ Features
+GoStreamix is a lightweight and user-friendly stream control panel and engine designed to manage live broadcasts, video storage, and system settings in one place.
 
-- **Authentication System**: Secure setup and login flow for administrators.
-- **Intuitive Dashboard**: Real-time monitoring of CPU, Memory, and Network metrics.
-- **Stream Management**: Pipeline monitoring for active ingest points.
-- **Media Vault**: Manage recorded sessions and video assets.
-- **Responsive Design**: Fully functional on mobile, tablet, and desktop devices.
-- **Internationalization (i18n)**: Native support for English and Indonesian languages.
-- **Theme Support**: Professional Dark Mode aesthetics with glassmorphism effects.
+## Core Features
 
-## 🛠️ Tech Stack
+- Administrator access with secure login.
+- Real-time system monitoring including CPU, memory, and network usage.
+- Centralized stream management for active broadcasting channels.
+- Media storage for managing recorded videos and assets.
+- Mobile-friendly interface that works on all devices.
+- Multi-language support (English and Indonesian).
+- Professional dark theme for comfortable viewing.
 
-- **Backend**: [Go](https://go.dev/) with [Fiber](https://gofiber.io/)
-- **Database**: [SQLite](https://sqlite.org/) via [Bun ORM](https://bun.uptrace.dev/)
-- **UI Components**: [Templ](https://templ.guide/) (Type-safe HTML templates)
-- **Frontend Interactivity**: [HTMX](https://htmx.org/)
-- **Styling**: Vanilla CSS with [Tailwind CSS](https://tailwindcss.com/)
-- **Logging**: [Uber Zap](https://github.com/uber-go/zap)
+## Development Guide
 
-## 🚀 Getting Started
+### 1. Clone the Project
 
-### Prerequisites
+```bash
+git clone https://github.com/codewithwan/gostreamix.git
+cd gostreamix
+```
 
-- [Go](https://go.dev/dl/) (1.21 or later)
-- [Templ CLI](https://templ.guide/quick-start/installation/)
-- [Air](https://github.com/cosmtrek/air) (Optional, for hot reloading)
+### 2. Run with Docker (Recommended)
 
-### Running Locally
+This method includes automatic hot-reloading for rapid development. Every time you save a file, the application will rebuild and restart inside the container.
 
-1. **Clone the repository**:
+```bash
+docker-compose -f docker-compose.dev.yml up --build
+```
 
-   ```bash
-   git clone https://github.com/codewithwan/gostreamix.git
-   cd gostreamix
-   ```
+Access the application at: http://localhost:8080
 
-2. **Generate Templ components**:
+### 3. Run Locally (Manual)
 
+If you prefer to run the application directly on your machine without Docker:
+
+1. **Install Prerequisites**: Go (1.25 or later) and Templ CLI.
+2. **Generate UI Components**:
    ```bash
    templ generate
    ```
-
-3. **Install dependencies**:
-
-   ```bash
-   go mod tidy
-   ```
-
-4. **Run the application**:
-
+3. **Run the Server**:
    ```bash
    go run main.go
    ```
 
-5. **Access the Control Panel**:
-   Open [http://localhost:8080](http://localhost:8080) in your browser.
+## Development Features
+
+- **Hot Reload**: Powered by Air, the system detects changes in code, templates, and translations, performing automatic updates without manual intervention.
+- **Data Persistence**: Development data and databases are stored in Docker volumes, ensuring your progress is not lost when containers are stopped.
 
 ---
 
-Built with ❤️ by [codewithwanwan](https://github.com/codewithwan)
+Built by [codewithwanwan](https://github.com/codewithwan)
