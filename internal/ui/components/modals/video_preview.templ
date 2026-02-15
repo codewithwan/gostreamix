@@ -1,0 +1,49 @@
+package modals
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/components/video"
+	"github.com/codewithwan/gostreamix/internal/ui/components/card"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
+)
+
+templ VideoPreview(lang string, src string, poster string, filename string) {
+	<div 
+		class="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0"
+		id="video-preview-modal" 
+		onclick="this.remove()"
+	>
+		<div 
+			class="relative w-full sm:max-w-lg md:max-w-xl p-4 animate-in zoom-in-95 slide-in-from-bottom-10 duration-200"
+			onclick="event.stopPropagation()"
+		>
+			@card.Card(card.Props{Class: "shadow-2xl border-border bg-card text-card-foreground"}) {
+				@card.Header(card.HeaderProps{Class: "flex flex-row items-center justify-between space-y-0 pb-2"}) {
+					<div class="flex flex-col space-y-1.5 overflow-hidden">
+						@card.Title(card.TitleProps{Class: "truncate", Attributes: templ.Attributes{"title": filename}}) {
+							{ filename }
+						}
+						@card.Description() {
+							{ i18n.Tr(lang, "videos.preview") }
+						}
+					</div>
+					<button 
+						class="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+						onclick="document.getElementById('video-preview-modal').remove()"
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
+						<span class="sr-only">Close</span>
+					</button>
+				}
+				@card.Content(card.ContentProps{Class: "p-0 overflow-hidden rounded-b-lg"}) {
+					<div class="aspect-video w-full bg-black">
+						@video.Player(video.PlayerProps{
+							Src: src,
+							Poster: poster,
+							Class: "w-full h-full rounded-none border-none",
+						})
+					</div>
+				}
+			}
+		</div>
+	</div>
+}

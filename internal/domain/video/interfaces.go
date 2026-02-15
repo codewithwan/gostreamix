@@ -16,5 +16,6 @@ type Repository interface {
 type Service interface {
 	GetVideos(ctx context.Context) ([]*Video, error)
 	ProcessVideo(ctx context.Context, filename, originalName, path string) (*Video, error)
+	GetVideo(ctx context.Context, id uuid.UUID) (*Video, error)
 	DeleteVideo(ctx context.Context, id uuid.UUID) error
 }

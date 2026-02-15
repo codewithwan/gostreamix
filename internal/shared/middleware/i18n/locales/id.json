@@ -1,84 +1,46 @@
 {
     "auth": {
-        "setup": {
-            "title": "Siapkan",
-            "desc": "buat akun anda",
-            "username": "Nama Pengguna",
-            "email": "Email",
-            "password": "Kata Sandi",
-            "confirm": "Konfirmasi Sandi",
-            "submit": "Siapkan",
-            "placeholder": {
-                "username": "misal: administrator",
-                "email": "admin@gostreamix.io",
-                "password": "minimal 8 karakter",
-                "confirm": "masukkan ulang kata sandi"
-            }
-        },
-        "login": {
-            "title": "Masuk",
-            "desc": "selamat datang kembali",
-            "username": "Nama Pengguna",
-            "password": "Kata Sandi",
-            "submit": "Masuk",
-            "success": "Berhasil Masuk!",
-            "placeholder": {
-                "username": "identitas pengguna...",
-                "password": "kata sandi anda..."
-            }
-        },
-        "logout": {
-            "confirm": "Keluar?",
-            "desc": "Apakah anda yakin?",
-            "yes": "Ya, Keluar",
-            "cancel": "Batal"
-        }
-    },
-    "dashboard": {
-        "title": "Dasbor",
-        "desc": "Memantau performa mesin inti dan metrik klaster.",
-        "overview": "Ringkasan",
-        "stats": {
-            "status": "Kesehatan Mesin",
-            "cpu": "Beban CPU",
-            "memory": "Memori",
-            "network": "Jaringan",
-            "lower_avg": "Di bawah rata-rata",
-            "stable": "Alokasi stabil",
-            "normal": "Hulu normal"
-        },
-        "stream": {
-            "quick": "Streaming Cepat",
-            "active": "Streaming Aktif"
-        },
-        "activity": {
-            "title": "Log Aktivitas",
-            "desc": "Kejadian sistem waktu nyata.",
-            "waiting": "Aliran log diinisialisasi, menunggu kejadian..."
-        },
-        "storage": {
-            "title": "Pool Penyimpanan",
-            "desc": "Penggunaan Disk & Penyimpanan Objek.",
-            "main": "Disk Utama"
+        "login": "Masuk",
+        "register": "Daftar",
+        "logout": "Keluar",
+        "email": "Alamat Email",
+        "password": "Kata Sandi",
+        "username": "Nama Pengguna",
+        "forgot_password": "Lupa Kata Sandi?",
+        "no_account": "Belum punya akun?",
+        "have_account": "Sudah punya akun?",
+        "submit_login": "Masuk Sekarang",
+        "submit_register": "Daftar Sekarang",
+        "placeholders": {
+            "email": "nama@contoh.com",
+            "password": "••••••••",
+            "username": "ridwannya"
         }
     },
     "sidebar": {
         "dashboard": "Dasbor",
-        "support": "Dukung Saya",
-        "streams": "Streaming",
-        "streams_desc": "Kelola saluran siaran langsung dan titik ingest anda.",
-        "videos": "Video",
+        "streams": "Pipa Siaran",
+        "videos": "Gudang Media",
+        "settings": "Konfigurasi",
+        "logout": "Keluar Sesi",
+        "dashboard_desc": "Ikhtisar aktivitas streaming Anda.",
+        "streams_desc": "Kelola pipa streaming aktif Anda.",
         "videos_desc": "Gudang untuk sesi rekaman dan aset media.",
-        "settings": "Pengaturan",
-        "settings_desc": "Kontrol parameter sistem dan konfigurasi mesin global.",
-        "footer": {
-            "copyright": "Mesin Streaming"
+        "settings_desc": "Pengaturan mesin global dan akun."
+    },
+    "dashboard": {
+        "welcome": "Selamat datang kembali",
+        "stats": {
+            "active_streams": "Siaran Aktif",
+            "total_videos": "Jumlah Media",
+            "storage_used": "Penyimpanan",
+            "bandwidth": "Bandwidth"
         }
     },
     "streams": {
-        "add_new": "Tambah Sumber Baru",
+        "add_new": "Tambah Siaran",
         "active_pipelines": "Pipa Aktif",
-        "monitoring_desc": "memantau kesehatan streaming anda secara real-time",
+        "monitoring_desc": "pantau kesehatan siaran secara real-time",
         "table": {
             "source_name": "Nama Sumber",
             "resolution": "Resolusi",
@@ -86,17 +48,17 @@
             "status": "Status",
             "actions": "Aksi",
             "no_targets": "Tidak ada target",
-            "live": "Langsung",
-            "empty_state": "Tidak ada streaming aktif ditemukan. Mulai dengan menambahkan sumber baru."
+            "live": "Live",
+            "empty_state": "Tidak ada siaran aktif. Mulai dengan menambah sumber baru."
         },
         "modal": {
-            "title": "Tambah Streaming Baru",
-            "name": "Nama Streaming",
+            "title": "Tambah Siaran Baru",
+            "name": "Nama Siaran",
             "video_id": "ID Video",
             "bitrate": "Bitrate (Kbps)",
             "resolution": "Resolusi",
             "targets": "Target RTMP (Satu per baris)",
-            "targets_help": "Masukkan beberapa target dipisahkan oleh baris baru.",
+            "targets_help": "Masukkan beberapa target dipisahkan baris baru.",
             "cancel": "Batal",
             "create": "Buat Streaming",
             "no_videos": "Tidak ada video tersedia. Silakan unggah dahulu.",
@@ -105,18 +67,37 @@
                 "video_id": "1",
                 "bitrate": "3000",
                 "targets": "rtmp://a.rtmp.youtube.com/live2/key..."
-            }
+            },
+            "created_success": "Streaming Berhasil Dibuat"
         }
     },
     "videos": {
         "upload": "Unggah Media",
         "empty_state": "Siap untuk menyimpan rekaman berkualitas tinggi anda.",
+        "preview": "Pratinjau Media",
         "upload_modal": {
             "title": "Unggah Video",
             "file_label": "Pilih Berkas Video",
-            "help_text": "Format: MP4, MKV, MOV. Ukuran maks: 2GB.",
+            "help_text": "Format: MP4, MKV, MOV. Ukuran maks: 2GB per berkas.",
             "cancel": "Batal",
-            "submit": "Unggah"
+            "submit": "Unggah Berkas",
+            "dropzone": {
+                "title": "Klik untuk unggah atau seret dan lepas",
+                "desc": "Video (MP4, MKV, MOV)",
+                "selected": "berkas dipilih"
+            }
+        },
+        "delete_modal": {
+            "title": "Hapus Video",
+            "desc": "Apakah Anda yakin ingin menghapus video ini secara permanen? Tindakan ini tidak dapat dibatalkan.",
+            "cancel": "Batal",
+            "confirm": "Hapus Permanen"
+        },
+        "notifications": {
+            "upload_success": "Unggah Berhasil",
+            "upload_desc": "video berhasil diunggah.",
+            "delete_success": "Video Dihapus",
+            "delete_desc": "Video telah dihapus secara permanen."
         }
     },
     "settings": {

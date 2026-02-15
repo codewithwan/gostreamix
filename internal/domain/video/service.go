@@ -21,6 +21,10 @@ func (s *service) GetVideos(ctx context.Context) ([]*Video, error) {
 	return s.repo.List(ctx)
 }
 
+func (s *service) GetVideo(ctx context.Context, id uuid.UUID) (*Video, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
 func (s *service) ProcessVideo(ctx context.Context, filename, originalName, path string) (*Video, error) {
 	meta, err := ProbeVideo(path)
 	if err != nil {

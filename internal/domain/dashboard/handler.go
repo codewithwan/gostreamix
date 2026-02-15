@@ -11,6 +11,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 	"github.com/codewithwan/gostreamix/internal/shared/utils"
 	"github.com/codewithwan/gostreamix/internal/ui/components"
 	"github.com/codewithwan/gostreamix/internal/ui/components/modals"
@@ -43,8 +44,11 @@ func (h *Handler) Routes(app *fiber.App) {
 
 	app.Get("/components/modals/add-stream", h.GetAddStreamModal)
 	app.Post("/dashboard/streams", h.CreateStream)
-	app.Get("/components/modals/upload-video", h.GetUploadVideoModal)
+	app.Get("/dashboard/videos/upload", h.GetUploadVideoModal)
 	app.Post("/dashboard/videos/upload", h.UploadVideo)
+	app.Get("/components/modals/delete-video/:id", h.GetDeleteVideoModal)
+	app.Get("/components/modals/video-preview/:id", h.GetVideoPreviewModal)
+	app.Delete("/dashboard/videos/:id", h.DeleteVideo)
 }
 
 func (h *Handler) GetAddStreamModal(c *fiber.Ctx) error {
@@ -57,6 +61,54 @@ func (h *Handler) GetAddStreamModal(c *fiber.Ctx) error {
 
 func (h *Handler) GetUploadVideoModal(c *fiber.Ctx) error {
 	return utils.Render(c, modals.UploadVideo(h.getLang(c)))
+}
+
+func (h *Handler) GetDeleteVideoModal(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).SendString("invalid id")
+	}
+	v, err := h.videoSvc.GetVideo(c.Context(), id)
+	if err != nil {
+		return c.Status(404).SendString("video not found")
+	}
+	return utils.Render(c, modals.DeleteVideo(h.getLang(c), v.ID, v.Filename))
+}
+
+func (h *Handler) GetVideoPreviewModal(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).SendString("invalid id")
+	}
+	v, err := h.videoSvc.GetVideo(c.Context(), id)
+	if err != nil {
+		return c.Status(404).SendString("video not found")
+	}
+	src := "/uploads/" + v.Filename
+	var poster string
+	if v.Thumbnail != "" {
+		poster = "/thumbnails/" + v.Thumbnail
+	}
+	return utils.Render(c, modals.VideoPreview(h.getLang(c), src, poster, v.Filename))
+}
+
+func (h *Handler) DeleteVideo(c *fiber.Ctx) error {
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return c.Status(400).SendString("invalid id")
+	}
+
+	if err := h.videoSvc.DeleteVideo(c.Context(), id); err != nil {
+		return c.Status(500).SendString("failed to delete video")
+	}
+
+	c.Set("Content-Type", "text/html")
+	lang := h.getLang(c)
+	return utils.Render(c, components.Toast(components.ToastProps{
+		Type:    components.ToastTypeSuccess,
+		Message: i18n.Tr(lang, "videos.upload_modal.delete_modal.success"),
+		Desc:    i18n.Tr(lang, "videos.upload_modal.delete_modal.delete_desc"),
+	}))
 }
 
 func (h *Handler) CreateStream(c *fiber.Ctx) error {
@@ -96,34 +148,78 @@ func (h *Handler) CreateStream(c *fiber.Ctx) error {
 		return c.Status(500).SendString(err.Error())
 	}
 
-	return utils.Render(c, component_stream.Row(newStream, h.getLang(c)))
+	var streamSb strings.Builder
+	if err := component_stream.Row(newStream, h.getLang(c)).Render(c.Context(), &streamSb); err != nil {
+		return c.Status(500).SendString("failed to render stream row")
+	}
+
+	var toastSb strings.Builder
+	if err := components.Toast(components.ToastProps{
+		Type:    components.ToastTypeSuccess,
+		Message: i18n.Tr(h.getLang(c), "streams.modal.created_success"),
+		Desc:    fmt.Sprintf("Stream '%s' has been created.", newStream.Name),
+	}).Render(c.Context(), &toastSb); err != nil {
+		fmt.Println("Warning: failed to render toast:", err)
+	}
+
+	c.Set("Content-Type", "text/html")
+	return c.SendString(streamSb.String() + toastSb.String())
 }
 
 func (h *Handler) UploadVideo(c *fiber.Ctx) error {
-	file, err := c.FormFile("video")
+	form, err := c.MultipartForm()
 	if err != nil {
-		return c.Status(400).SendString("no video file found")
+		return c.Status(400).SendString("invalid form data")
 	}
 
-	ext := filepath.Ext(file.Filename)
-	filename := uuid.New().String() + ext
-	path := filepath.Join("data", "uploads", filename)
-
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return c.Status(500).SendString("failed to create upload directory")
+	files := form.File["video"]
+	if len(files) == 0 {
+		return c.Status(400).SendString("no video files found")
 	}
 
-	if err := c.SaveFile(file, path); err != nil {
-		return c.Status(500).SendString("failed to save file")
+	var results []string
+	for _, file := range files {
+		ext := filepath.Ext(file.Filename)
+		filename := uuid.New().String() + ext
+		path := filepath.Join("data", "uploads", filename)
+
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			continue
+		}
+
+		if err := c.SaveFile(file, path); err != nil {
+			continue
+		}
+
+		v, err := h.videoSvc.ProcessVideo(c.Context(), filename, file.Filename, path)
+		if err != nil {
+			_ = os.Remove(path)
+			continue
+		}
+
+		// Render each card and collect them
+		var sb strings.Builder
+		if err := component_video.Card(v).Render(c.Context(), &sb); err == nil {
+			results = append(results, sb.String())
+		}
 	}
 
-	v, err := h.videoSvc.ProcessVideo(c.Context(), filename, file.Filename, path)
-	if err != nil {
-		_ = os.Remove(path)
-		return c.Status(500).SendString(err.Error())
+	if len(results) == 0 {
+		return c.Status(500).SendString("failed to process any videos")
 	}
 
-	return utils.Render(c, component_video.Card(v))
+	// Add success toast OOB
+	var toastSb strings.Builder
+	lang := h.getLang(c)
+	_ = components.Toast(components.ToastProps{
+		Type:    components.ToastTypeSuccess,
+		Message: i18n.Tr(lang, "videos.upload_success"),
+		Desc:    fmt.Sprintf("%d %s", len(results), i18n.Tr(lang, "videos.upload_success_desc")),
+	}).Render(c.Context(), &toastSb)
+	results = append(results, toastSb.String())
+
+	c.Set("Content-Type", "text/html")
+	return c.SendString(strings.Join(results, ""))
 }
 
 func (h *Handler) getLang(c *fiber.Ctx) string {

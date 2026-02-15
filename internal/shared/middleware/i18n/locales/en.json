@@ -1,82 +1,44 @@
 {
     "auth": {
-        "setup": {
-            "title": "Setup",
-            "desc": "create your account",
-            "username": "Username",
-            "email": "Email",
-            "password": "Password",
-            "confirm": "Confirm Password",
-            "submit": "Setup",
-            "placeholder": {
-                "username": "e.g. administrator",
-                "email": "admin@gostreamix.io",
-                "password": "minimum 8 characters",
-                "confirm": "re-enter password"
-            }
-        },
-        "login": {
-            "title": "Login",
-            "desc": "welcome back",
-            "username": "Username",
-            "password": "Password",
-            "submit": "Login",
-            "success": "Authenticated Successfully!",
-            "placeholder": {
-                "username": "user identify...",
-                "password": "••••••••"
-            }
-        },
-        "logout": {
-            "confirm": "Sign Out?",
-            "desc": "Are you sure?",
-            "yes": "Yes, Sign Out",
-            "cancel": "Cancel"
-        }
-    },
-    "dashboard": {
-        "title": "Dashboard",
-        "desc": "Monitoring core engine performance and cluster metrics.",
-        "overview": "Overview",
-        "stats": {
-            "status": "Engine Health",
-            "cpu": "CPU Load",
-            "memory": "Memory",
-            "network": "Network",
-            "lower_avg": "Lower than average",
-            "stable": "Stable allocation",
-            "normal": "Upstream normal"
-        },
-        "stream": {
-            "quick": "Quick Stream",
-            "active": "Active Streams"
-        },
-        "activity": {
-            "title": "Activity Logs",
-            "desc": "Real-time system events.",
-            "waiting": "Log stream initialized, waiting for events..."
-        },
-        "storage": {
-            "title": "Storage Pool",
-            "desc": "Disk & Object Store usage.",
-            "main": "Main Disk"
+        "login": "Login",
+        "register": "Register",
+        "logout": "Logout",
+        "email": "Email Address",
+        "password": "Password",
+        "username": "Username",
+        "forgot_password": "Forgot Password?",
+        "no_account": "Don't have an account?",
+        "have_account": "Already have an account?",
+        "submit_login": "Sign In",
+        "submit_register": "Sign Up",
+        "placeholders": {
+            "email": "name@example.com",
+            "password": "••••••••",
+            "username": "ridwannya"
         }
     },
     "sidebar": {
         "dashboard": "Dashboard",
-        "support": "Support Me",
-        "streams": "Streams",
-        "streams_desc": "Manage your live broadcasting channels and ingest points.",
-        "videos": "Videos",
+        "streams": "Live Pipelines",
+        "videos": "Media Vault",
+        "settings": "Configurations",
+        "logout": "Exit Session",
+        "dashboard_desc": "Overview of your streaming activity.",
+        "streams_desc": "Manage your active streaming pipelines.",
         "videos_desc": "Vault for recorded sessions and media assets.",
-        "settings": "Settings",
-        "settings_desc": "Control system parameters and global engine configuration.",
-        "footer": {
-            "copyright": "Stream Engine"
+        "settings_desc": "Global engine and account settings."
+    },
+    "dashboard": {
+        "welcome": "Welcome back",
+        "stats": {
+            "active_streams": "Active Streams",
+            "total_videos": "Media Count",
+            "storage_used": "Storage Used",
+            "bandwidth": "Bandwidth"
         }
     },
     "streams": {
-        "add_new": "Add New Source",
+        "add_new": "Add Stream",
         "active_pipelines": "Active Pipelines",
         "monitoring_desc": "monitoring your stream health in real-time",
         "table": {
@@ -105,18 +67,37 @@
                 "video_id": "1",
                 "bitrate": "3000",
                 "targets": "rtmp://a.rtmp.youtube.com/live2/key..."
-            }
+            },
+            "created_success": "Stream Created Successfully"
         }
     },
     "videos": {
         "upload": "Upload Media",
         "empty_state": "Ready to store your high-quality recordings.",
+        "preview": "Media Preview",
         "upload_modal": {
             "title": "Upload Video",
             "file_label": "Select Video File",
-            "help_text": "Supported formats: MP4, MKV, MOV. Max size: 2GB.",
+            "help_text": "Supported formats: MP4, MKV, MOV. Max size: 2GB per file.",
             "cancel": "Cancel",
-            "submit": "Upload"
+            "submit": "Upload Files",
+            "dropzone": {
+                "title": "Click to upload or drag and drop",
+                "desc": "Videos (MP4, MKV, MOV)",
+                "selected": "files selected"
+            }
+        },
+        "delete_modal": {
+            "title": "Delete Video",
+            "desc": "Are you sure you want to permanently delete this video? This action cannot be undone.",
+            "cancel": "Cancel",
+            "confirm": "Delete Permanently"
+        },
+        "notifications": {
+            "upload_success": "Upload Success",
+            "upload_desc": "videos uploaded successfully.",
+            "delete_success": "Video Deleted",
+            "delete_desc": "The video has been permanently removed."
         }
     },
     "settings": {

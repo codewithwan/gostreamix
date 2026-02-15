@@ -1,13 +1,79 @@
 package components
 
-templ ToastSuccess() {
-	<div class="flex items-center gap-3 px-4 py-3 bg-card border border-border/50 rounded-lg shadow-lg animate-in slide-in-from-bottom-5 duration-300">
-		<div class="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center border border-green-500/20">
-			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500"><polyline points="20 6 9 17 4 12"/></svg>
-		</div>
-		<div class="flex flex-col">
-			<span class="text-xs font-bold text-foreground">Authenticated</span>
-			<span class="text-[10px] text-muted-foreground/80">Welcome back, session active.</span>
-		</div>
+import "github.com/codewithwan/gostreamix/internal/ui/components/card"
+
+type ToastType string
+
+const (
+	ToastTypeSuccess ToastType = "success"
+	ToastTypeError   ToastType = "error"
+	ToastTypeInfo    ToastType = "info"
+)
+
+type ToastProps struct {
+	Type    ToastType
+	Message string
+	Desc    string
+}
+
+templ Toast(props ToastProps) {
+	<div 
+		id="toast-notification" 
+		class="toast-notification fixed bottom-6 right-6 z-[100] animate-in slide-in-from-right-10 fade-in duration-300 pointer-events-auto"
+		hx-on::load="setTimeout(() => this.remove(), 5000)"
+	>
+		@card.Card(card.Props{Class: "min-w-[300px] border-l-4 " + getToastBorder(props.Type)}) {
+			<div class="flex items-start gap-3 p-4">
+				<div class={ "h-8 w-8 rounded-full flex items-center justify-center border " + getToastIconBg(props.Type) }>
+					@getToastIcon(props.Type)
+				</div>
+				<div class="flex flex-col gap-0.5">
+					<span class="text-xs font-bold text-foreground">{ props.Message }</span>
+					if props.Desc != "" {
+						<span class="text-[10px] text-muted-foreground/80">{ props.Desc }</span>
+					}
+				</div>
+                <button class="ml-auto text-muted-foreground hover:text-foreground" onclick="this.closest('.toast-notification').remove()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+			</div>
+		}
 	</div>
+}
+
+func getToastBorder(t ToastType) string {
+	switch t {
+	case ToastTypeSuccess: return "border-l-green-600"
+	case ToastTypeError: return "border-l-destructive"
+	case ToastTypeInfo: return "border-l-primary"
+	default: return "border-l-border"
+	}
+}
+
+func getToastIconBg(t ToastType) string {
+	switch t {
+	case ToastTypeSuccess: return "bg-green-500/10 border-green-500/20 text-green-600"
+	case ToastTypeError: return "bg-destructive/10 border-destructive/20 text-destructive"
+	case ToastTypeInfo: return "bg-primary/10 border-primary/20 text-primary"
+	default: return "bg-muted border-border"
+	}
+}
+
+templ getToastIcon(t ToastType) {
+	switch t {
+	case ToastTypeSuccess:
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+	case ToastTypeError:
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+	default:
+		<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>
+	}
+}
+
+templ ToastSuccess() {
+    @Toast(ToastProps{
+        Type: ToastTypeSuccess,
+        Message: "Success",
+        Desc: "Operation completed successfully.",
+    })
 }

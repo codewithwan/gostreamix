@@ -1,0 +1,50 @@
+package modals
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/ui/components/card"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
+    "github.com/google/uuid"
+	t "github.com/a-h/templ"
+)
+
+templ DeleteVideo(lang string, videoID uuid.UUID, filename string) {
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" id="delete-video-modal" onclick="this.remove()">
+		<div class="w-full" style="max-width: 400px;" onclick="event.stopPropagation()">
+			@card.Card() {
+				@card.Header() {
+					@card.Title() {
+						{ i18n.Tr(lang, "videos.delete_modal.title") }
+					}
+					@card.Description() {
+						{ i18n.Tr(lang, "videos.delete_modal.desc") }
+					}
+				}
+				
+				@card.Content() {
+                    <div class="p-3 bg-muted/30 border border-border/50 rounded-lg truncate text-xs font-medium text-foreground">
+                        { filename }
+                    </div>
+                }
+
+                @card.Footer(card.FooterProps{Class: "flex items-center justify-end gap-3"}) {
+                    <button type="button" class="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors" onclick="document.getElementById('delete-video-modal').remove()">
+                        { i18n.Tr(lang, "videos.delete_modal.cancel") }
+                    </button>
+                    @button.Button(button.Props{
+                        Variant: button.VariantDestructive, 
+                        Class: "h-8 text-xs px-4",
+                        Attributes: t.Attributes{
+                            "hx-delete": "/dashboard/videos/" + videoID.String(),
+                            "hx-target": "body",
+                            "hx-swap": "beforeend",
+                            "hx-on::after-request": "if(event.detail.successful) { document.getElementById('delete-video-modal').remove(); document.getElementById('video-card-" + videoID.String() + "')?.remove(); }",
+                        },
+                    }) {
+                        { i18n.Tr(lang, "videos.delete_modal.confirm") }
+                    }
+                }
+			}
+		</div>
+	</div>
+}
