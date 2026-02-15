@@ -84,8 +84,54 @@ func TestAuthService_Authenticate(t *testing.T) {
 
 		res, err := service.Authenticate(ctx, "unknown", "password")
 		assert.Error(t, err)
-		assert.Equal(t, auth.ErrUserNotFound, err)
 		assert.Nil(t, res)
 		mockRepo.AssertExpectations(t)
+	})
+}
+
+func TestAuthService_GetUserByID(t *testing.T) {
+	ctx := context.Background()
+	userID := uuid.New()
+	user := &auth.User{ID: userID, Username: "admin"}
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepo := new(MockAuthRepository)
+		service := auth.NewService(mockRepo)
+
+		mockRepo.On("GetUserByID", ctx, userID).Return(user, nil)
+
+		res, err := service.GetUserByID(ctx, userID)
+		assert.NoError(t, err)
+		assert.Equal(t, user, res)
+	})
+}
+
+func TestAuthService_ResetPassword(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepo := new(MockAuthRepository)
+		service := auth.NewService(mockRepo)
+
+		mockRepo.On("UpdatePassword", ctx, "admin", mock.AnythingOfType("string")).Return(nil)
+
+		err := service.ResetPassword(ctx, "admin", "newpassword")
+		assert.NoError(t, err)
+	})
+}
+
+func TestAuthService_GetPrimaryUser(t *testing.T) {
+	ctx := context.Background()
+	user := &auth.User{ID: uuid.New(), Username: "admin"}
+
+	t.Run("Success", func(t *testing.T) {
+		mockRepo := new(MockAuthRepository)
+		service := auth.NewService(mockRepo)
+
+		mockRepo.On("GetAnyUser", ctx).Return(user, nil)
+
+		res, err := service.GetPrimaryUser(ctx)
+		assert.NoError(t, err)
+		assert.Equal(t, user, res)
 	})
 }

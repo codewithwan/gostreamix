@@ -11,13 +11,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.uber.org/zap"
 )
 
 func TestPlatformHandler(t *testing.T) {
 	app := fiber.New()
 	mockPlatformSvc := new(MockPlatformService)
 	mockAuthSvc := new(authTest.MockAuthService)
-	handler := platform.NewHandler(mockPlatformSvc, mockAuthSvc)
+	handler := platform.NewHandler(mockPlatformSvc, mockAuthSvc, zap.NewNop())
 
 	// Mock middleware to set user_id
 	userID := uuid.New()

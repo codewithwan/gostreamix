@@ -16,15 +16,17 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	svc     Service
 	authSvc auth.Service
+	log     *zap.Logger
 }
 
-func NewHandler(svc Service, authSvc auth.Service) *Handler {
-	return &Handler{svc: svc, authSvc: authSvc}
+func NewHandler(svc Service, authSvc auth.Service, log *zap.Logger) *Handler {
+	return &Handler{svc: svc, authSvc: authSvc, log: log}
 }
 
 func (h *Handler) Routes(app *fiber.App) {
@@ -192,7 +194,8 @@ func (h *Handler) DeleteVideo(c *fiber.Ctx) error {
 func (h *Handler) ApiGetVideos(c *fiber.Ctx) error {
 	videos, err := h.svc.GetVideos(c.Context())
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to get videos", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve videos"})
 	}
 	return c.JSON(videos)
 }
@@ -212,7 +215,8 @@ func (h *Handler) ApiUploadVideo(c *fiber.Ctx) error {
 	}
 
 	if err := c.SaveFile(file, path); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to save file"})
+		h.log.Error("Failed to save uploaded file", zap.Error(err))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save file"})
 	}
 
 	v, err := h.svc.ProcessVideo(c.Context(), ProcessVideoDTO{
@@ -222,7 +226,8 @@ func (h *Handler) ApiUploadVideo(c *fiber.Ctx) error {
 	})
 	if err != nil {
 		_ = os.Remove(path)
-		return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("failed to process video: %v", err)})
+		h.log.Error("Failed to process video", zap.Error(err), zap.String("filename", filename))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to process video"})
 	}
 
 	return c.Status(201).JSON(v)
@@ -235,7 +240,8 @@ func (h *Handler) ApiDeleteVideo(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.DeleteVideo(c.Context(), id); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to delete video", zap.Error(err), zap.String("videoID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete video"})
 	}
 	return c.SendStatus(204)
 }

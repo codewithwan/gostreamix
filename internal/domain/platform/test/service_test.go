@@ -104,7 +104,7 @@ func TestPlatformService_UpdatePlatform(t *testing.T) {
 		p, err := service.UpdatePlatform(ctx, platformID, platform.UpdatePlatformDTO{})
 		assert.Error(t, err)
 		assert.Nil(t, p)
-		assert.Equal(t, platform.ErrPlatformNotFound, err)
+		assert.ErrorIs(t, err, platform.ErrPlatformNotFound)
 
 		mockRepo.AssertExpectations(t)
 	})

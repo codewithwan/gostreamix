@@ -18,11 +18,19 @@ func NewService(repo Repository) Service {
 }
 
 func (s *service) GetVideos(ctx context.Context) ([]*Video, error) {
-	return s.repo.List(ctx)
+	videos, err := s.repo.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list videos: %w", err)
+	}
+	return videos, nil
 }
 
 func (s *service) GetVideo(ctx context.Context, id uuid.UUID) (*Video, error) {
-	return s.repo.GetByID(ctx, id)
+	v, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("get video by id: %w", err)
+	}
+	return v, nil
 }
 
 func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video, error) {
@@ -39,7 +47,7 @@ func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video
 
 	info, err := os.Stat(dto.Path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("stat video file: %w", err)
 	}
 
 	thumbName := dto.Filename + ".jpg"
@@ -59,7 +67,7 @@ func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video
 	}
 
 	if err := s.repo.Create(ctx, v); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create video record: %w", err)
 	}
 
 	return v, nil
@@ -75,11 +83,14 @@ func (s *service) AddVideo(ctx context.Context, v *Video) error {
 func (s *service) DeleteVideo(ctx context.Context, id uuid.UUID) error {
 	v, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		return err
+		return fmt.Errorf("get video by id for deletion: %w", err)
 	}
 
 	_ = os.Remove(filepath.Join("data", "uploads", v.Filename))
 	_ = os.Remove(filepath.Join("data", "thumbnails", v.Thumbnail))
 
-	return s.repo.Delete(ctx, id)
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("delete video record: %w", err)
+	}
+	return nil
 }

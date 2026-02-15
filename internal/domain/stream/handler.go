@@ -16,16 +16,18 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	svc      Service
 	authSvc  auth.Service
 	videoSvc video.Service
+	log      *zap.Logger
 }
 
-func NewHandler(svc Service, authSvc auth.Service, videoSvc video.Service) *Handler {
-	return &Handler{svc: svc, authSvc: authSvc, videoSvc: videoSvc}
+func NewHandler(svc Service, authSvc auth.Service, videoSvc video.Service, log *zap.Logger) *Handler {
+	return &Handler{svc: svc, authSvc: authSvc, videoSvc: videoSvc, log: log}
 }
 
 func (h *Handler) Routes(app *fiber.App) {
@@ -149,7 +151,8 @@ func (h *Handler) ApiGetStreamStats(c *fiber.Ctx) error {
 	}
 	stats, err := h.svc.GetStreamStats(c.Context(), id)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to get stream stats", zap.Error(err), zap.String("streamID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get stream stats"})
 	}
 	return c.JSON(stats)
 }
@@ -160,7 +163,8 @@ func (h *Handler) ApiDeleteStream(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
 	}
 	if err := h.svc.DeleteStream(c.Context(), id); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to delete stream", zap.Error(err), zap.String("streamID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete stream"})
 	}
 	return c.SendStatus(204)
 }
@@ -191,7 +195,8 @@ func (h *Handler) ApiStartStream(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
 	}
 	if err := h.svc.StartStream(c.Context(), id); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to start stream", zap.Error(err), zap.String("streamID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to start stream"})
 	}
 	return c.SendStatus(200)
 }
@@ -202,7 +207,8 @@ func (h *Handler) ApiStopStream(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid stream id"})
 	}
 	if err := h.svc.StopStream(c.Context(), id); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to stop stream", zap.Error(err), zap.String("streamID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to stop stream"})
 	}
 	return c.SendStatus(200)
 }

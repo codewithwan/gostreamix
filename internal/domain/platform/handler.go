@@ -12,15 +12,17 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	svc     Service
 	authSvc auth.Service
+	log     *zap.Logger
 }
 
-func NewHandler(svc Service, authSvc auth.Service) *Handler {
-	return &Handler{svc: svc, authSvc: authSvc}
+func NewHandler(svc Service, authSvc auth.Service, log *zap.Logger) *Handler {
+	return &Handler{svc: svc, authSvc: authSvc, log: log}
 }
 
 func (h *Handler) Routes(app *fiber.App) {
@@ -148,7 +150,7 @@ func (h *Handler) CreatePlatform(c *fiber.Ctx) error {
 		return c.Status(500).SendString("failed to create platform")
 	}
 
-	// Render success toast OOB first to avoid being nested in table
+	// render toast
 	lang := utils.GetLang(c)
 	var sb strings.Builder
 	sb.WriteString(`<div hx-swap-oob="beforeend:body">`)
@@ -158,7 +160,7 @@ func (h *Handler) CreatePlatform(c *fiber.Ctx) error {
 	}).Render(c.Context(), &sb)
 	sb.WriteString(`</div>`)
 
-	// Render item
+	// render item
 	if err := pages.PlatformItem(toPlatformView(p), lang).Render(c.Context(), &sb); err != nil {
 		return err
 	}
@@ -193,7 +195,7 @@ func (h *Handler) UpdatePlatform(c *fiber.Ctx) error {
 		return c.Status(500).SendString("failed to update platform")
 	}
 
-	// Render success toast OOB first to avoid being nested in table row
+	// render toast
 	lang := utils.GetLang(c)
 	var sb strings.Builder
 	sb.WriteString(`<div hx-swap-oob="beforeend:body">`)
@@ -203,7 +205,7 @@ func (h *Handler) UpdatePlatform(c *fiber.Ctx) error {
 	}).Render(c.Context(), &sb)
 	sb.WriteString(`</div>`)
 
-	// Render item
+	// render item
 	if err := pages.PlatformItem(toPlatformView(p), lang).Render(c.Context(), &sb); err != nil {
 		return err
 	}
@@ -227,7 +229,7 @@ func (h *Handler) DeletePlatform(c *fiber.Ctx) error {
 		return c.Status(500).SendString("failed to delete platform")
 	}
 
-	// Success toast
+	// success toast
 	lang := utils.GetLang(c)
 	c.Set("Content-Type", "text/html")
 	return utils.Render(c, components.Toast(components.ToastProps{
@@ -246,7 +248,10 @@ func (h *Handler) ApiGetPlatforms(c *fiber.Ctx) error {
 
 	platforms, err := h.svc.GetPlatforms(c.Context(), u.ID)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to get platforms", zap.Error(err), zap.String("userID", u.ID.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to retrieve platforms",
+		})
 	}
 
 	return c.JSON(platforms)
@@ -260,12 +265,19 @@ func (h *Handler) ApiCreatePlatform(c *fiber.Ctx) error {
 
 	var req CreatePlatformDTO
 	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if err := req.Validate(); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	p, err := h.svc.CreatePlatform(c.Context(), u.ID, req)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to create platform", zap.Error(err), zap.String("userID", u.ID.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to create platform",
+		})
 	}
 
 	return c.Status(201).JSON(p)
@@ -283,7 +295,10 @@ func (h *Handler) ApiDeletePlatform(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.DeletePlatform(c.Context(), id); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to delete platform", zap.Error(err), zap.String("platformID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to delete platform",
+		})
 	}
 
 	return c.SendStatus(204)
@@ -302,12 +317,19 @@ func (h *Handler) ApiUpdatePlatform(c *fiber.Ctx) error {
 
 	var req UpdatePlatformDTO
 	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid request body"})
+	}
+
+	if err := req.Validate(); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	p, err := h.svc.UpdatePlatform(c.Context(), id, req)
 	if err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("Failed to update platform", zap.Error(err), zap.String("platformID", id.String()))
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to update platform",
+		})
 	}
 
 	return c.JSON(p)

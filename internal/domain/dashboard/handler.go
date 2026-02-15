@@ -8,14 +8,16 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/components"
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	authSvc auth.Service
+	log     *zap.Logger
 }
 
-func NewHandler(authSvc auth.Service) *Handler {
-	return &Handler{authSvc: authSvc}
+func NewHandler(authSvc auth.Service, log *zap.Logger) *Handler {
+	return &Handler{authSvc: authSvc, log: log}
 }
 
 func (h *Handler) Routes(app *fiber.App) {

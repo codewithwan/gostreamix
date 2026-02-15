@@ -7,16 +7,18 @@ import (
 	"github.com/codewithwan/gostreamix/internal/shared/utils"
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
+	"go.uber.org/zap"
 )
 
 type Handler struct {
 	svc   Service
 	jwt   *jwt.JWTService
 	guard Guard
+	log   *zap.Logger
 }
 
-func NewHandler(svc Service, jwt *jwt.JWTService, guard Guard) *Handler {
-	return &Handler{svc: svc, jwt: jwt, guard: guard}
+func NewHandler(svc Service, jwt *jwt.JWTService, guard Guard, log *zap.Logger) *Handler {
+	return &Handler{svc: svc, jwt: jwt, guard: guard, log: log}
 }
 
 func (h *Handler) Routes(app *fiber.App) {
@@ -54,7 +56,8 @@ func (h *Handler) PostSetup(c *fiber.Ctx) error {
 		return utils.Render(c, pages.Setup(pages.AuthProps{Error: "passwords do not match", Lang: lang}))
 	}
 	if err := h.svc.Setup(c.Context(), u, e, p); err != nil {
-		return utils.Render(c, pages.Setup(pages.AuthProps{Error: err.Error(), Lang: lang}))
+		h.log.Error("Setup failed", zap.Error(err), zap.String("username", u))
+		return utils.Render(c, pages.Setup(pages.AuthProps{Error: "failed to setup system", Lang: lang}))
 	}
 	return c.Redirect("/login?setup=success")
 }
@@ -72,7 +75,8 @@ func (h *Handler) PostLogin(c *fiber.Ctx) error {
 	}
 	t, err := h.jwt.GenerateToken(usr.ID)
 	if err != nil {
-		return c.SendStatus(500)
+		h.log.Error("Failed to generate JWT", zap.Error(err), zap.String("userID", usr.ID.String()))
+		return c.SendStatus(fiber.StatusInternalServerError)
 	}
 
 	c.Cookie(&fiber.Cookie{
@@ -109,7 +113,8 @@ func (h *Handler) ApiSetup(c *fiber.Ctx) error {
 	}
 
 	if err := h.svc.Setup(c.Context(), req.Username, req.Email, req.Password); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		h.log.Error("API Setup failed", zap.Error(err))
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to setup system"})
 	}
 
 	return c.Status(201).JSON(fiber.Map{"message": "setup successful"})

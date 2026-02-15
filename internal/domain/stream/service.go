@@ -37,13 +37,18 @@ func (s *service) CreateStream(ctx context.Context, dto CreateStreamDTO) (*Strea
 		Loop:        dto.Loop,
 		Status:      "idle",
 	}
-	err := s.repo.Create(ctx, stream)
-	return stream, err
+	if err := s.repo.Create(ctx, stream); err != nil {
+		return nil, fmt.Errorf("create stream record: %w", err)
+	}
+	return stream, nil
 }
 
 func (s *service) StartStream(ctx context.Context, id uuid.UUID) error {
 	stream, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		return fmt.Errorf("get stream by id: %w", err)
+	}
+	if stream == nil {
 		return ErrStreamNotFound
 	}
 
@@ -54,19 +59,32 @@ func (s *service) StartStream(ctx context.Context, id uuid.UUID) error {
 
 	videoPath := filepath.Join("data", "uploads", video.Filename)
 
-	return s.pipeline.Start(ctx, stream, videoPath)
+	if err := s.pipeline.Start(ctx, stream, videoPath); err != nil {
+		return fmt.Errorf("start stream pipeline: %w", err)
+	}
+	return nil
 }
 
 func (s *service) StopStream(ctx context.Context, id uuid.UUID) error {
 	stream, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		return fmt.Errorf("get stream by id for stopping: %w", err)
+	}
+	if stream == nil {
 		return ErrStreamNotFound
 	}
-	return s.pipeline.Stop(ctx, stream)
+	if err := s.pipeline.Stop(ctx, stream); err != nil {
+		return fmt.Errorf("stop stream pipeline: %w", err)
+	}
+	return nil
 }
 
 func (s *service) GetStreams(ctx context.Context) ([]*Stream, error) {
-	return s.repo.List(ctx)
+	streams, err := s.repo.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list streams: %w", err)
+	}
+	return streams, nil
 }
 
 func (s *service) GetStreamStats(ctx context.Context, id uuid.UUID) (interface{}, error) {
@@ -83,11 +101,17 @@ func (s *service) GetStreamStats(ctx context.Context, id uuid.UUID) (interface{}
 }
 
 func (s *service) GetStream(ctx context.Context, id uuid.UUID) (*Stream, error) {
-	return s.repo.GetByID(ctx, id)
+	stream, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("get stream by id: %w", err)
+	}
+	return stream, nil
 }
 
 func (s *service) DeleteStream(ctx context.Context, id uuid.UUID) error {
-	// Stop if running?
 	_ = s.StopStream(ctx, id)
-	return s.repo.Delete(ctx, id)
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("delete stream record: %w", err)
+	}
+	return nil
 }
