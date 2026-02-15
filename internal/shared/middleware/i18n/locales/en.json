@@ -1,20 +1,39 @@
 {
     "auth": {
-        "login": "Login",
-        "register": "Register",
-        "logout": "Logout",
-        "email": "Email Address",
-        "password": "Password",
-        "username": "Username",
-        "forgot_password": "Forgot Password?",
-        "no_account": "Don't have an account?",
-        "have_account": "Already have an account?",
-        "submit_login": "Sign In",
-        "submit_register": "Sign Up",
-        "placeholders": {
-            "email": "name@example.com",
-            "password": "••••••••",
-            "username": "ridwannya"
+        "login": {
+            "title": "Welcome Back",
+            "desc": "Enter your credentials to access your account.",
+            "username": "Username",
+            "password": "Password",
+            "submit": "Sign In",
+            "placeholder": {
+                "username": "admin",
+                "password": "••••••••"
+            }
+        },
+        "setup": {
+            "title": "Initial Setup",
+            "desc": "Create your administrator account to get started.",
+            "username": "Username",
+            "email": "Email Address",
+            "password": "Password",
+            "confirm": "Confirm Password",
+            "submit": "Create Account",
+            "success_title": "Setup Complete",
+            "success_desc": "Admin account created successfully. You can now login.",
+            "placeholder": {
+                "username": "admin",
+                "email": "admin@example.com",
+                "password": "••••••••",
+                "confirm": "••••••••"
+            }
+        },
+        "logout": {
+            "label": "Logout",
+            "confirm": "Confirm Logout",
+            "desc": "Are you sure you want to end your current session?",
+            "yes": "Yes, Logout",
+            "cancel": "Cancel"
         }
     },
     "sidebar": {
@@ -22,6 +41,7 @@
         "streams": "Live Pipelines",
         "videos": "Media Vault",
         "settings": "Configurations",
+        "platforms": "Platforms",
         "logout": "Exit Session",
         "dashboard_desc": "Overview of your streaming activity.",
         "streams_desc": "Manage your active streaming pipelines.",
@@ -98,6 +118,40 @@
             "upload_desc": "videos uploaded successfully.",
             "delete_success": "Video Deleted",
             "delete_desc": "The video has been permanently removed."
+        }
+    },
+    "platforms": {
+        "description": "Configure third-party streaming destinations.",
+        "add_new": "Add Platform",
+        "empty": "No platforms configured. Add one to start restreaming.",
+        "table": {
+            "name": "Platform Name",
+            "type": "Type",
+            "key": "Stream Key (Masked)",
+            "url": "RTMP URL",
+            "actions": "Actions"
+        },
+        "modal": {
+            "title": "Add New Platform",
+            "name_label": "Platform Name",
+            "name_placeholder": "e.g. My YouTube Channel",
+            "type_label": "Platform Type",
+            "key_label": "Stream Key",
+            "url_label": "RTMP Server URL",
+            "cancel": "Cancel",
+            "save": "Save Platform",
+            "edit_title": "Edit Platform"
+        },
+        "delete": {
+            "title": "Delete Platform",
+            "desc": "Are you sure you want to delete this platform? This will stop any active streams to this destination.",
+            "confirm": "Delete Platform",
+            "cancel": "Cancel"
+        },
+        "notifications": {
+            "add_success": "Platform Added Successfully",
+            "update_success": "Platform Updated Successfully",
+            "delete_success": "Platform Deleted Successfully"
         }
     },
     "settings": {

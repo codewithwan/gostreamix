@@ -1,0 +1,55 @@
+package modals
+
+import (
+	"github.com/codewithwan/gostreamix/internal/ui/components/button"
+	"github.com/codewithwan/gostreamix/internal/ui/components/card"
+	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
+	"github.com/google/uuid"
+	t "github.com/a-h/templ"
+)
+
+templ DeletePlatform(lang string, platformID uuid.UUID, name string) {
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" id="delete-platform-modal" onclick="if(event.target === this) this.remove()">
+		<div class="w-full animate-in zoom-in-95 duration-200" style="max-width: 400px;" onclick="event.stopPropagation()">
+			@card.Card(card.Props{Class: "shadow-2xl border-border/50 bg-card/95 backdrop-blur-xl"}) {
+				@card.Header(card.HeaderProps{Class: "pt-6"}) {
+					<div class="flex items-center justify-between">
+						@card.Title(card.TitleProps{Class: "text-lg font-semibold tracking-tight"}) {
+							{ i18n.Tr(lang, "platforms.delete.title") }
+						}
+						<button class="text-muted-foreground hover:text-foreground transition-colors" onclick="document.getElementById('delete-platform-modal').remove()">
+							<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+						</button>
+					</div>
+				}
+				
+				@card.Content(card.ContentProps{Class: "space-y-4 pt-2"}) {
+					<p class="text-sm text-muted-foreground leading-relaxed">
+						{ i18n.Tr(lang, "platforms.delete.desc") }
+					</p>
+					<div class="p-3 bg-muted/30 border border-border/40 rounded-lg text-xs font-semibold text-foreground">
+						<span class="text-muted-foreground mr-1">Platform:</span> { name }
+					</div>
+				}
+
+				@card.Footer(card.FooterProps{Class: "flex items-center justify-end gap-3 p-6 pt-2"}) {
+					<button type="button" class="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors" onclick="document.getElementById('delete-platform-modal').remove()">
+						{ i18n.Tr(lang, "platforms.delete.cancel") }
+					</button>
+					@button.Button(button.Props{
+						Variant: button.VariantDestructive,
+						Class:   "h-8 text-xs px-4",
+						Attributes: t.Attributes{
+							"hx-delete":            "/dashboard/platforms/" + platformID.String(),
+							"hx-target":            "body",
+							"hx-swap":              "beforeend",
+							"hx-on::after-request": "if(event.detail.successful) { document.getElementById('delete-platform-modal').remove(); document.getElementById('platform-item-" + platformID.String() + "')?.remove(); }",
+						},
+					}) {
+						{ i18n.Tr(lang, "platforms.delete.confirm") }
+					}
+				}
+			}
+		</div>
+	</div>
+}

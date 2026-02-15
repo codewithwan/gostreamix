@@ -1,26 +1,46 @@
 {
     "auth": {
-        "login": "Masuk",
-        "register": "Daftar",
-        "logout": "Keluar",
-        "email": "Alamat Email",
-        "password": "Kata Sandi",
-        "username": "Nama Pengguna",
-        "forgot_password": "Lupa Kata Sandi?",
-        "no_account": "Belum punya akun?",
-        "have_account": "Sudah punya akun?",
-        "submit_login": "Masuk Sekarang",
-        "submit_register": "Daftar Sekarang",
-        "placeholders": {
-            "email": "nama@contoh.com",
-            "password": "••••••••",
-            "username": "ridwannya"
+        "login": {
+            "title": "Selamat Datang Kembali",
+            "desc": "Masukkan kredensial Anda untuk mengakses akun.",
+            "username": "Nama Pengguna",
+            "password": "Kata Sandi",
+            "submit": "Masuk",
+            "placeholder": {
+                "username": "admin",
+                "password": "••••••••"
+            }
+        },
+        "setup": {
+            "title": "Pengaturan Awal",
+            "desc": "Buat akun administrator Anda untuk memulai.",
+            "username": "Nama Pengguna",
+            "email": "Alamat Email",
+            "password": "Kata Sandi",
+            "confirm": "Konfirmasi Kata Sandi",
+            "submit": "Buat Akun",
+            "success_title": "Pengaturan Selesai",
+            "success_desc": "Akun admin berhasil dibuat. Anda sekarang dapat masuk.",
+            "placeholder": {
+                "username": "admin",
+                "email": "admin@contoh.com",
+                "password": "••••••••",
+                "confirm": "••••••••"
+            }
+        },
+        "logout": {
+            "label": "Keluar",
+            "confirm": "Konfirmasi Keluar",
+            "desc": "Apakah Anda yakin ingin mengakhiri sesi saat ini?",
+            "yes": "Ya, Keluar",
+            "cancel": "Batal"
         }
     },
     "sidebar": {
         "dashboard": "Dasbor",
         "streams": "Pipa Siaran",
         "videos": "Gudang Media",
+        "platforms": "Platform",
         "settings": "Konfigurasi",
         "logout": "Keluar Sesi",
         "dashboard_desc": "Ikhtisar aktivitas streaming Anda.",
@@ -98,6 +118,40 @@
             "upload_desc": "video berhasil diunggah.",
             "delete_success": "Video Dihapus",
             "delete_desc": "Video telah dihapus secara permanen."
+        }
+    },
+    "platforms": {
+        "description": "Konfigurasikan tujuan streaming pihak ketiga.",
+        "add_new": "Tambah Platform",
+        "empty": "Belum ada platform dikonfigurasi. Tambahkan satu untuk mulai restreaming.",
+        "table": {
+            "name": "Nama Platform",
+            "type": "Tipe",
+            "key": "Kunci Stream (Disembunyikan)",
+            "url": "URL RTMP",
+            "actions": "Aksi"
+        },
+        "modal": {
+            "title": "Tambah Platform Baru",
+            "name_label": "Nama Platform",
+            "name_placeholder": "cth. Saluran YouTube Saya",
+            "type_label": "Tipe Platform",
+            "key_label": "Kunci Stream",
+            "url_label": "URL Server RTMP",
+            "cancel": "Batal",
+            "save": "Simpan Platform",
+            "edit_title": "Edit Platform"
+        },
+        "delete": {
+            "title": "Hapus Platform",
+            "desc": "Apakah Anda yakin ingin menghapus platform ini? Ini akan menghentikan siaran aktif ke tujuan ini.",
+            "confirm": "Hapus Platform",
+            "cancel": "Batal"
+        },
+        "notifications": {
+            "add_success": "Platform Berhasil Ditambahkan",
+            "update_success": "Platform Berhasil Diperbarui",
+            "delete_success": "Platform Berhasil Dihapus"
         }
     },
     "settings": {

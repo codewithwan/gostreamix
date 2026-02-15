@@ -25,8 +25,8 @@ func (s *service) GetVideo(ctx context.Context, id uuid.UUID) (*Video, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *service) ProcessVideo(ctx context.Context, filename, originalName, path string) (*Video, error) {
-	meta, err := ProbeVideo(path)
+func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video, error) {
+	meta, err := ProbeVideo(dto.Path)
 	if err != nil {
 		meta = &Metadata{
 			Duration:   0,
@@ -37,22 +37,22 @@ func (s *service) ProcessVideo(ctx context.Context, filename, originalName, path
 		fmt.Printf("Warning: failed to probe video: %v\n", err)
 	}
 
-	info, err := os.Stat(path)
+	info, err := os.Stat(dto.Path)
 	if err != nil {
 		return nil, err
 	}
 
-	thumbName := filename + ".jpg"
+	thumbName := dto.Filename + ".jpg"
 	thumbPath := filepath.Join("data", "thumbnails", thumbName)
-	if err := GenerateThumbnail(path, thumbPath); err != nil {
+	if err := GenerateThumbnail(dto.Path, thumbPath); err != nil {
 		fmt.Printf("Warning: failed to generate thumbnail: %v\n", err)
 		thumbName = ""
 	}
 
 	v := &Video{
 		ID:           uuid.New(),
-		Filename:     filename,
-		OriginalName: originalName,
+		Filename:     dto.Filename,
+		OriginalName: dto.OriginalName,
 		Size:         info.Size(),
 		Thumbnail:    thumbName,
 		Duration:     meta.Duration,

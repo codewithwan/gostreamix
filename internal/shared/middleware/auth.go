@@ -20,7 +20,7 @@ func NewAuthGuard(svc auth.Service, jwt *jwt.JWTService) auth.Guard {
 
 func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/setup" || strings.HasPrefix(p, "/assets") || strings.HasPrefix(p, "/components") {
+	if p == "/setup" || strings.HasPrefix(p, "/assets") {
 		return c.Next()
 	}
 	s, _ := g.svc.IsSetup(c.Context())
@@ -32,7 +32,7 @@ func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 
 func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/login" || p == "/setup" || strings.HasPrefix(p, "/assets") || strings.HasPrefix(p, "/components") {
+	if p == "/login" || p == "/setup" || strings.HasPrefix(p, "/assets") {
 		return c.Next()
 	}
 	ck := c.Cookies("jwt")

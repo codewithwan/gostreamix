@@ -1,7 +1,6 @@
 package pages
 
 import (
-	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/ui/layouts"
 	"github.com/codewithwan/gostreamix/internal/ui/components/button"
 	"github.com/codewithwan/gostreamix/internal/ui/components/card"
@@ -10,7 +9,7 @@ import (
     t "github.com/a-h/templ"
 )
 
-templ Streams(username, email, lang string, streams []*stream.Stream) {
+templ Streams(username, email, lang string, streams []component_stream.StreamView) {
 	@layouts.Dashboard(layouts.DashboardProps{
         Active: "streams",
         Username: username,

@@ -4,12 +4,12 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/components/button"
 	"github.com/codewithwan/gostreamix/internal/ui/components/input"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
-	"github.com/codewithwan/gostreamix/internal/domain/video"
+	component_video "github.com/codewithwan/gostreamix/internal/ui/components/video"
 	t "github.com/a-h/templ"
 	"fmt"
 )
 
-templ AddStream(lang string, videos []*video.Video) {
+templ AddStream(lang string, videos []component_video.VideoView) {
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" id="add-stream-modal">
 		<div class="bg-card border border-border rounded-lg shadow-lg w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200" onclick="event.stopPropagation()">
 			<div class="px-6 py-4 border-b border-border flex items-center justify-between">

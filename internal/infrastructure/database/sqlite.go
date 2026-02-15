@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
+	"github.com/codewithwan/gostreamix/internal/domain/platform"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
@@ -39,6 +40,7 @@ func migrate(ctx context.Context, db *bun.DB, log *zap.Logger) error {
 		(*auth.User)(nil),
 		(*stream.Stream)(nil),
 		(*video.Video)(nil),
+		(*platform.Platform)(nil),
 	}
 
 	for _, m := range models {

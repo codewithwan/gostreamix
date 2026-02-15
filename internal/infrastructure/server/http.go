@@ -5,6 +5,7 @@ import (
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
+	"github.com/codewithwan/gostreamix/internal/domain/platform"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
@@ -29,6 +30,7 @@ func NewServer(
 	dashH *dashboard.Handler,
 	streamH *stream.Handler,
 	videoH *video.Handler,
+	platformH *platform.Handler,
 ) *Server {
 	fiberConfig := fiber.Config{
 		DisableStartupMessage: true,
@@ -73,6 +75,7 @@ func NewServer(
 	dashH.Routes(app)
 	streamH.Routes(app)
 	videoH.Routes(app)
+	platformH.Routes(app)
 
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Redirect("/dashboard")

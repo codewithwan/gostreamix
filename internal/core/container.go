@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
+	"github.com/codewithwan/gostreamix/internal/domain/platform"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
@@ -45,6 +46,10 @@ func BuildContainer() *dig.Container {
 	c.Provide(video.NewRepository)
 	c.Provide(video.NewService)
 	c.Provide(video.NewHandler)
+
+	c.Provide(platform.NewRepository)
+	c.Provide(platform.NewService)
+	c.Provide(platform.NewHandler)
 
 	c.Provide(dashboard.NewService)
 	c.Provide(dashboard.NewHandler)

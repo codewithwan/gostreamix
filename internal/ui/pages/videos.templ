@@ -4,12 +4,11 @@ import (
 	"github.com/codewithwan/gostreamix/internal/ui/layouts"
 	"github.com/codewithwan/gostreamix/internal/ui/components/button"
 	component_video "github.com/codewithwan/gostreamix/internal/ui/components/video"
-	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 	t "github.com/a-h/templ"
 )
 
-templ Videos(username, email, lang string, videos []*video.Video) {
+templ Videos(username, email, lang string, videos []component_video.VideoView) {
 	@layouts.Dashboard(layouts.DashboardProps{
         Active: "videos",
         Username: username,
@@ -17,17 +16,15 @@ templ Videos(username, email, lang string, videos []*video.Video) {
         Lang: lang,
         Title: "sidebar.videos",
     }) {
-        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div class="space-y-0.5 text-center md:text-left">
-                <h1 class="text-xl md:text-2xl font-bold tracking-tight text-foreground">{ i18n.Tr(lang, "sidebar.videos") }</h1>
+        <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+                <h1 class="text-lg md:text-xl font-bold tracking-tight text-foreground">{ i18n.Tr(lang, "sidebar.videos") }</h1>
                 <p class="text-xs md:text-sm text-muted-foreground font-normal">{ i18n.Tr(lang, "sidebar.videos_desc") }</p>
             </div>
-            <div class="flex items-center justify-center gap-3">
-                @button.Button(button.Props{Variant: button.VariantOutline, Class: "h-9 text-[10px] md:text-xs font-medium uppercase tracking-wider", Attributes: t.Attributes{"hx-get": "/dashboard/videos/upload", "hx-target": "body", "hx-swap": "beforeend"}}) {
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                    { i18n.Tr(lang, "videos.upload") }
-                }
-            </div>
+            @button.Button(button.Props{Variant: button.VariantOutline, Class: "h-8 text-[10px] md:text-xs font-medium uppercase tracking-wider", Attributes: t.Attributes{"hx-get": "/dashboard/videos/upload", "hx-target": "body", "hx-swap": "beforeend"}}) {
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+                { i18n.Tr(lang, "videos.upload") }
+            }
         </div>
 
         <div class="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" id="video-grid">

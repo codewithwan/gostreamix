@@ -2,11 +2,10 @@ package video
 
 import (
     "fmt"
-    "github.com/codewithwan/gostreamix/internal/domain/video"
     "github.com/codewithwan/gostreamix/internal/ui/components/card"
 )
 
-templ Card(v *video.Video) {
+templ Card(v VideoView) {
     <div 
         id={ "video-card-" + v.ID.String() } 
         class="group relative"

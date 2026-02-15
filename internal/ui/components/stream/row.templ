@@ -2,13 +2,12 @@ package stream
 
 import (
 	"fmt"
-	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/ui/components/button"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 	t "github.com/a-h/templ"
 )
 
-templ Row(s *stream.Stream, lang string) {
+templ Row(s StreamView, lang string) {
 	<tr class="hover:bg-muted/20 transition-colors">
 		<td class="px-5 py-4">
 			<div class="flex flex-col">
