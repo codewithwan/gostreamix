@@ -7,7 +7,7 @@ import (
 	t "github.com/a-h/templ"
 )
 
-templ UploadVideo(lang string) {
+templ UploadVideo(lang, csrfToken string) {
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" id="upload-video-modal" onclick="this.remove()">
 		<div class="w-full" style="max-width: 400px;" onclick="event.stopPropagation()">
 			@card.Card() {
@@ -31,6 +31,7 @@ templ UploadVideo(lang string) {
 					hx-encoding="multipart/form-data" 
 					hx-target="#video-grid" 
 					hx-swap="beforeend" 
+					hx-headers={ `{"X-CSRF-Token": "` + csrfToken + `"}` }
 					hx-on::after-request="if(event.detail.successful) { document.getElementById('upload-video-modal').remove(); document.getElementById('video-empty-state')?.remove(); }"
 				>
 					@card.Content(card.ContentProps{Class: "space-y-4"}) {

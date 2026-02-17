@@ -10,7 +10,7 @@ import (
 	t "github.com/a-h/templ"
 )
 
-templ EditPlatform(lang string, p pages.PlatformView) {
+templ EditPlatform(lang string, p pages.PlatformView, csrfToken string) {
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" id="edit-platform-modal" onclick="if(event.target === this) this.remove()">
 		<div class="w-full" style="max-width: 400px;" onclick="event.stopPropagation()">
 			@card.Card() {
@@ -27,9 +27,10 @@ templ EditPlatform(lang string, p pages.PlatformView) {
 				
 				<form 
 					hx-put={ "/dashboard/platforms/" + p.ID.String() } 
-					hx-target={ "#platform-item-" + p.ID.String() } 
-					hx-swap="outerHTML" 
-					hx-on::after-request="if(event.detail.successful) document.getElementById('edit-platform-modal').remove()"
+					hx-headers={ `{"X-CSRF-Token": "` + csrfToken + `"}` }
+					hx-target="body" 
+					hx-swap="beforeend" 
+					hx-on::after-request="if(event.detail.successful) { document.getElementById('edit-platform-modal').remove(); document.body.dispatchEvent(new Event('refresh-platforms')); }"
 					class="space-y-4"
 					id="edit-platform-form"
 				>

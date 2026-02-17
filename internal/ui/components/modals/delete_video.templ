@@ -8,7 +8,7 @@ import (
 	t "github.com/a-h/templ"
 )
 
-templ DeleteVideo(lang string, videoID uuid.UUID, filename string) {
+templ DeleteVideo(lang string, videoID uuid.UUID, filename string, csrfToken string) {
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" id="delete-video-modal" onclick="this.remove()">
 		<div class="w-full" style="max-width: 400px;" onclick="event.stopPropagation()">
 			@card.Card() {
@@ -36,6 +36,7 @@ templ DeleteVideo(lang string, videoID uuid.UUID, filename string) {
                         Class: "h-8 text-xs px-4",
                         Attributes: t.Attributes{
                             "hx-delete": "/dashboard/videos/" + videoID.String(),
+                            "hx-headers": `{"X-CSRF-Token": "` + csrfToken + `"}`,
                             "hx-target": "body",
                             "hx-swap": "beforeend",
                             "hx-on::after-request": "if(event.detail.successful) { document.getElementById('delete-video-modal').remove(); document.getElementById('video-card-" + videoID.String() + "')?.remove(); }",

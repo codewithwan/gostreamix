@@ -1,14 +1,12 @@
 package platform
 
 import (
-	"strings"
-
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 	"github.com/codewithwan/gostreamix/internal/shared/utils"
-	"github.com/codewithwan/gostreamix/internal/ui/components"
 	"github.com/codewithwan/gostreamix/internal/ui/components/modals"
+	"github.com/codewithwan/gostreamix/internal/ui/components/toast"
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
@@ -35,12 +33,14 @@ func (h *Handler) Routes(app *fiber.App) {
 	// UI Routes
 	app.Get("/platforms", h.GetPlatforms)
 	app.Get("/platforms/list", h.GetPlatformsList)
-	app.Get("/components/modals/add-platform", h.GetAddPlatformModal)
-	app.Get("/components/modals/edit-platform/:id", h.GetEditPlatformModal)
-	app.Get("/components/modals/delete-platform/:id", h.GetDeletePlatformModal)
 	app.Post("/dashboard/platforms", h.CreatePlatform)
 	app.Put("/dashboard/platforms/:id", h.UpdatePlatform)
 	app.Delete("/dashboard/platforms/:id", h.DeletePlatform)
+
+	// Components
+	app.Get("/components/modals/add-platform", h.GetAddPlatformModal)
+	app.Get("/components/modals/edit-platform/:id", h.GetEditPlatformModal)
+	app.Get("/components/modals/delete-platform/:id", h.GetDeletePlatformModal)
 }
 
 // UI Handlers
@@ -72,23 +72,21 @@ func (h *Handler) GetPlatformsList(c *fiber.Ctx) error {
 
 	viewModels := toPlatformViews(platforms)
 	lang := utils.GetLang(c)
-	var sb string
 	if len(viewModels) == 0 {
-		sb = `<div class="p-12 text-center text-muted-foreground text-sm italic">` + i18n.Tr(lang, "platforms.empty") + `</div>`
+		sb := `<div class="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
+			<p class="text-sm font-medium italic">` + i18n.Tr(lang, "platforms.empty") + `</p>
+		</div>`
 		c.Set("Content-Type", "text/html")
 		return c.SendString(sb)
 	}
 
-	for _, p := range viewModels {
-		if err := pages.PlatformItem(p, lang).Render(c.Context(), c); err != nil {
-			return err
-		}
-	}
-	return nil
+	c.Set("Content-Type", "text/html")
+	return utils.Render(c, pages.PlatformsListContent(viewModels, lang))
 }
 
 func (h *Handler) GetAddPlatformModal(c *fiber.Ctx) error {
-	return utils.Render(c, modals.AddPlatform(utils.GetLang(c)))
+	csrfToken, _ := c.Locals("csrf").(string)
+	return utils.Render(c, modals.AddPlatform(utils.GetLang(c), csrfToken))
 }
 
 func (h *Handler) GetEditPlatformModal(c *fiber.Ctx) error {
@@ -107,7 +105,8 @@ func (h *Handler) GetEditPlatformModal(c *fiber.Ctx) error {
 		return c.Status(404).SendString("Platform not found")
 	}
 
-	return utils.Render(c, modals.EditPlatform(utils.GetLang(c), toPlatformView(p)))
+	csrfToken, _ := c.Locals("csrf").(string)
+	return utils.Render(c, modals.EditPlatform(utils.GetLang(c), toPlatformView(p), csrfToken))
 }
 
 func (h *Handler) GetDeletePlatformModal(c *fiber.Ctx) error {
@@ -126,7 +125,8 @@ func (h *Handler) GetDeletePlatformModal(c *fiber.Ctx) error {
 		return c.Status(404).SendString("Platform not found")
 	}
 
-	return utils.Render(c, modals.DeletePlatform(utils.GetLang(c), p.ID, p.Name))
+	csrfToken, _ := c.Locals("csrf").(string)
+	return utils.Render(c, modals.DeletePlatform(utils.GetLang(c), p.ID, p.Name, csrfToken))
 }
 
 func (h *Handler) CreatePlatform(c *fiber.Ctx) error {
@@ -140,7 +140,7 @@ func (h *Handler) CreatePlatform(c *fiber.Ctx) error {
 	streamKey := c.FormValue("stream_key")
 	customURL := c.FormValue("custom_url")
 
-	p, err := h.svc.CreatePlatform(c.Context(), u.ID, CreatePlatformDTO{
+	_, err := h.svc.CreatePlatform(c.Context(), u.ID, CreatePlatformDTO{
 		Name:         name,
 		PlatformType: platformType,
 		StreamKey:    streamKey,
@@ -152,21 +152,16 @@ func (h *Handler) CreatePlatform(c *fiber.Ctx) error {
 
 	// render toast
 	lang := utils.GetLang(c)
-	var sb strings.Builder
-	sb.WriteString(`<div hx-swap-oob="beforeend:body">`)
-	_ = components.Toast(components.ToastProps{
-		Type:    components.ToastTypeSuccess,
-		Message: i18n.Tr(lang, "platforms.notifications.add_success"),
-	}).Render(c.Context(), &sb)
-	sb.WriteString(`</div>`)
-
-	// render item
-	if err := pages.PlatformItem(toPlatformView(p), lang).Render(c.Context(), &sb); err != nil {
-		return err
-	}
-
 	c.Set("Content-Type", "text/html")
-	return c.SendString(sb.String())
+	return utils.Render(c, toast.Toast(toast.Props{
+		Variant:       toast.VariantSuccess,
+		Title:         "Success",
+		Description:   i18n.Tr(lang, "platforms.notifications.add_success"),
+		ShowIndicator: true,
+		Icon:          true,
+		Duration:      5000,
+		Dismissible:   true,
+	}))
 }
 
 func (h *Handler) UpdatePlatform(c *fiber.Ctx) error {
@@ -185,7 +180,7 @@ func (h *Handler) UpdatePlatform(c *fiber.Ctx) error {
 	streamKey := c.FormValue("stream_key")
 	customURL := c.FormValue("custom_url")
 
-	p, err := h.svc.UpdatePlatform(c.Context(), id, UpdatePlatformDTO{
+	_, err = h.svc.UpdatePlatform(c.Context(), id, UpdatePlatformDTO{
 		Name:         name,
 		PlatformType: platformType,
 		StreamKey:    streamKey,
@@ -197,21 +192,16 @@ func (h *Handler) UpdatePlatform(c *fiber.Ctx) error {
 
 	// render toast
 	lang := utils.GetLang(c)
-	var sb strings.Builder
-	sb.WriteString(`<div hx-swap-oob="beforeend:body">`)
-	_ = components.Toast(components.ToastProps{
-		Type:    components.ToastTypeSuccess,
-		Message: i18n.Tr(lang, "platforms.notifications.update_success"),
-	}).Render(c.Context(), &sb)
-	sb.WriteString(`</div>`)
-
-	// render item
-	if err := pages.PlatformItem(toPlatformView(p), lang).Render(c.Context(), &sb); err != nil {
-		return err
-	}
-
 	c.Set("Content-Type", "text/html")
-	return c.SendString(sb.String())
+	return utils.Render(c, toast.Toast(toast.Props{
+		Variant:       toast.VariantSuccess,
+		Title:         "Success",
+		Description:   i18n.Tr(lang, "platforms.notifications.update_success"),
+		ShowIndicator: true,
+		Icon:          true,
+		Duration:      5000,
+		Dismissible:   true,
+	}))
 }
 
 func (h *Handler) DeletePlatform(c *fiber.Ctx) error {
@@ -232,9 +222,14 @@ func (h *Handler) DeletePlatform(c *fiber.Ctx) error {
 	// success toast
 	lang := utils.GetLang(c)
 	c.Set("Content-Type", "text/html")
-	return utils.Render(c, components.Toast(components.ToastProps{
-		Type:    components.ToastTypeSuccess,
-		Message: i18n.Tr(lang, "platforms.notifications.delete_success"),
+	return utils.Render(c, toast.Toast(toast.Props{
+		Variant:       toast.VariantSuccess,
+		Title:         "Success",
+		Description:   i18n.Tr(lang, "platforms.notifications.delete_success"),
+		ShowIndicator: true,
+		Icon:          true,
+		Duration:      5000,
+		Dismissible:   true,
 	}))
 }
 

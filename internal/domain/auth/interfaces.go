@@ -14,6 +14,10 @@ type Repository interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
 	UpdatePassword(ctx context.Context, username, hash string) error
 	GetAnyUser(ctx context.Context) (*User, error)
+	SaveRefreshToken(ctx context.Context, rt *RefreshToken) error
+	GetRefreshToken(ctx context.Context, hash string) (*RefreshToken, error)
+	RevokeRefreshToken(ctx context.Context, hash string) error
+	RevokeAllRefreshTokens(ctx context.Context, userID uuid.UUID) error
 }
 
 type Service interface {
@@ -23,6 +27,10 @@ type Service interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
 	ResetPassword(ctx context.Context, username, password string) error
 	GetPrimaryUser(ctx context.Context) (*User, error)
+	CreateSession(ctx context.Context, userID uuid.UUID, ip, userAgent string) (string, string, error)
+	RefreshSession(ctx context.Context, refreshToken, ip, userAgent string) (string, string, error)
+	RevokeSession(ctx context.Context, refreshToken string) error
+	RevokeAllSessions(ctx context.Context, userID uuid.UUID) error
 }
 
 type Guard interface {

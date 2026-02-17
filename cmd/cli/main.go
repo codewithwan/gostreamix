@@ -11,6 +11,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/database"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/logger"
+	"github.com/codewithwan/gostreamix/internal/shared/jwt"
 	"golang.org/x/term"
 )
 
@@ -24,7 +25,11 @@ func main() {
 	}
 
 	cfg := config.NewConfig()
-	log, _ := logger.NewLogger()
+	log, err := logger.NewLogger()
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		os.Exit(1)
+	}
 
 	db, err := database.NewSQLiteDB(cfg, log)
 	if err != nil {
@@ -33,7 +38,8 @@ func main() {
 	}
 
 	repo := auth.NewRepository(db)
-	svc := auth.NewService(repo)
+	jwtSvc := jwt.NewJWTService(struct{ Secret string }{Secret: cfg.Secret})
+	svc := auth.NewService(repo, jwtSvc)
 
 	user, err := svc.GetPrimaryUser(context.Background())
 	if err != nil {

@@ -79,7 +79,7 @@ templ Dashboard(username, email, lang string) {
                     toastDiv.id = 'login-toast';
                     document.getElementById('toast-container').appendChild(toastDiv);
                     
-                    htmx.ajax('GET', '/components/toast/success', {target: '#login-toast', swap: 'innerHTML'});
+                    htmx.ajax('GET', '/components/toast/login_success', {target: '#login-toast', swap: 'innerHTML'});
                     setTimeout(() => {
                         toastDiv.classList.remove('translate-y-2', 'opacity-0');
                     }, 100);

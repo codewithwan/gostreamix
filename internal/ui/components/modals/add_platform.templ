@@ -9,7 +9,7 @@ import (
 	t "github.com/a-h/templ"
 )
 
-templ AddPlatform(lang string) {
+templ AddPlatform(lang, csrfToken string) {
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" id="add-platform-modal" onclick="if(event.target === this) this.remove()">
 		<div class="w-full" style="max-width: 400px;" onclick="event.stopPropagation()">
 			@card.Card() {
@@ -26,9 +26,10 @@ templ AddPlatform(lang string) {
 				
 				<form 
 					hx-post="/dashboard/platforms" 
-					hx-target="#platforms-list" 
+					hx-headers={ `{"X-CSRF-Token": "` + csrfToken + `"}` }
+					hx-target="body" 
 					hx-swap="beforeend" 
-					hx-on::after-request="if(event.detail.successful) document.getElementById('add-platform-modal').remove()"
+					hx-on::after-request="if(event.detail.successful) { document.getElementById('add-platform-modal').remove(); document.body.dispatchEvent(new Event('refresh-platforms')); }"
 					class="space-y-4"
 					id="add-platform-form"
 				>

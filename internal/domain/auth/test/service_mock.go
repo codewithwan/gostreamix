@@ -50,3 +50,23 @@ func (m *MockAuthService) IsSetup(ctx context.Context) (bool, error) {
 	args := m.Called(ctx)
 	return args.Bool(0), args.Error(1)
 }
+
+func (m *MockAuthService) CreateSession(ctx context.Context, userID uuid.UUID, ip, userAgent string) (string, string, error) {
+	args := m.Called(ctx, userID, ip, userAgent)
+	return args.String(0), args.String(1), args.Error(2)
+}
+
+func (m *MockAuthService) RefreshSession(ctx context.Context, refreshToken, ip, userAgent string) (string, string, error) {
+	args := m.Called(ctx, refreshToken, ip, userAgent)
+	return args.String(0), args.String(1), args.Error(2)
+}
+
+func (m *MockAuthService) RevokeSession(ctx context.Context, refreshToken string) error {
+	args := m.Called(ctx, refreshToken)
+	return args.Error(0)
+}
+
+func (m *MockAuthService) RevokeAllSessions(ctx context.Context, userID uuid.UUID) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}

@@ -136,6 +136,7 @@ templ Toast(props ...Props) {
 						"aria-label":             "Close",
 						"data-tui-toast-dismiss": "",
 						"type":                   "button",
+						"onclick":                "this.closest('[data-tui-toast]').remove()",
 					},
 				}) {
 					@icon.X(icon.Props{

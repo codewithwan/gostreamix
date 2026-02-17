@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
@@ -11,8 +12,11 @@ import (
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
+	"github.com/codewithwan/gostreamix/internal/shared/utils"
+	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/csrf"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -46,25 +50,89 @@ func NewServer(
 	}
 
 	app := fiber.New(fiberConfig)
+
+	app.Static("/assets", "./assets")
+	app.Static("/thumbnails", "./data/thumbnails")
+	app.Static("/uploads", "./data/uploads")
+
 	app.Use(recover.New())
 	app.Use(helmet.New())
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
 	}))
+
+	// Global Limiter
 	app.Use(limiter.New(limiter.Config{
-		Max:        60,
+		Max:        500,
 		Expiration: 1 * time.Minute,
+		LimitReached: func(c *fiber.Ctx) error {
+			if c.Get("Accept") == "application/json" {
+				return c.Status(429).JSON(fiber.Map{"error": "Too many requests"})
+			}
+			return c.Status(429).SendString("Too many requests. Please try again later.")
+		},
 	}))
+
+	app.Use(csrf.New(csrf.Config{
+		Extractor: func(c *fiber.Ctx) (string, error) {
+			token := c.Get("X-CSRF-Token")
+			if token == "" {
+				token = c.FormValue("csrf")
+			}
+			return token, nil
+		},
+		CookieName:     "csrf_",
+		CookieSameSite: "Lax",
+		CookieSecure:   strings.HasPrefix(cfg.AppURL, "https"),
+		CookieHTTPOnly: true,
+		Expiration:     1 * time.Hour,
+		ContextKey:     "csrf",
+		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			if c.Get("Accept") == "application/json" {
+				return c.Status(403).JSON(fiber.Map{"error": "Invalid CSRF Token"})
+			}
+			return c.Redirect("/login?error=expired")
+		},
+	}))
+
+	limitHandler := func(c *fiber.Ctx) error {
+		csrfToken, _ := c.Locals("csrf").(string)
+		return utils.Render(c, pages.Login(pages.AuthProps{
+			Error:     "Too many requests. Please try again later.",
+			Lang:      utils.GetLang(c),
+			CsrfToken: csrfToken,
+		}))
+	}
+
+	loginLimiter := limiter.New(limiter.Config{
+		Max:          15,
+		Expiration:   1 * time.Minute,
+		LimitReached: limitHandler,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+	})
+
+	setupLimiter := limiter.New(limiter.Config{
+		Max:          10,
+		Expiration:   1 * time.Minute,
+		LimitReached: limitHandler,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+	})
+
+	app.Use("/login", loginLimiter)
+	app.Use("/api/auth/login", loginLimiter)
+	app.Use("/setup", setupLimiter)
+	app.Use("/api/auth/setup", setupLimiter)
+
 	app.Use(logger.New(logger.Config{
 		Format:     "${time}	INFO	http request	{\"status\": ${status}, \"method\": \"${method}\", \"path\": \"${path}\", \"latency\": \"${latency}\", \"ip\": \"${ip}\"}\n",
 		TimeFormat: "2006-01-02T15:04:05.000Z",
 		TimeZone:   "UTC",
 	}))
-
-	app.Static("/assets", "./assets")
-	app.Static("/thumbnails", "./data/thumbnails")
-	app.Static("/uploads", "./data/uploads")
 
 	app.Get("/ws", ws.NewHandler(hub))
 

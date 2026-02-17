@@ -3,17 +3,21 @@ package auth
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/codewithwan/gostreamix/internal/shared/jwt"
+	"github.com/codewithwan/gostreamix/internal/shared/utils"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type service struct {
 	repo Repository
+	jwt  *jwt.JWTService
 }
 
-func NewService(repo Repository) Service {
-	return &service{repo: repo}
+func NewService(repo Repository, jwt *jwt.JWTService) Service {
+	return &service{repo: repo, jwt: jwt}
 }
 
 func (s *service) IsSetup(ctx context.Context) (bool, error) {
@@ -39,10 +43,18 @@ func (s *service) Setup(ctx context.Context, u, e, p string) error {
 	return nil
 }
 
+var dummyHash []byte
+
+func init() {
+	dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy"), bcrypt.DefaultCost)
+}
+
 func (s *service) Authenticate(ctx context.Context, u, p string) (*User, error) {
 	usr, err := s.repo.GetUserByUsername(ctx, u)
 	if err != nil {
-		return nil, fmt.Errorf("get user by username: %w", err)
+		// timing att protection
+		bcrypt.CompareHashAndPassword(dummyHash, []byte(p))
+		return nil, ErrInvalidCredentials
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(usr.PasswordHash), []byte(p))
 	if err != nil {
@@ -76,4 +88,68 @@ func (s *service) GetPrimaryUser(ctx context.Context) (*User, error) {
 		return nil, fmt.Errorf("get primary user: %w", err)
 	}
 	return usr, nil
+}
+
+func (s *service) CreateSession(ctx context.Context, userID uuid.UUID, ip, userAgent string) (string, string, error) {
+	at, err := s.jwt.GenerateAccessToken(userID)
+	if err != nil {
+		return "", "", fmt.Errorf("generate access token: %w", err)
+	}
+
+	rt, err := s.jwt.GenerateRefreshToken(userID)
+	if err != nil {
+		return "", "", fmt.Errorf("generate refresh token: %w", err)
+	}
+
+	_, exp, err := s.jwt.GetRefreshTokenClaims(rt)
+	if err != nil {
+		return "", "", fmt.Errorf("parse refresh token: %w", err)
+	}
+
+	hash := utils.HashToken(rt)
+	refreshToken := &RefreshToken{
+		ID:        uuid.New(),
+		UserID:    userID,
+		TokenHash: hash,
+		ExpiresAt: time.Unix(exp, 0),
+		IPAddress: ip,
+		UserAgent: userAgent,
+	}
+
+	if err := s.repo.SaveRefreshToken(ctx, refreshToken); err != nil {
+		return "", "", fmt.Errorf("save refresh token: %w", err)
+	}
+	return at, rt, nil
+}
+
+func (s *service) RefreshSession(ctx context.Context, token, ip, userAgent string) (string, string, error) {
+	uID, _, err := s.jwt.GetRefreshTokenClaims(token)
+	if err != nil {
+		return "", "", fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	hash := utils.HashToken(token)
+	rtModel, err := s.repo.GetRefreshToken(ctx, hash)
+	if err != nil {
+		return "", "", fmt.Errorf("refresh token not found: %w", err)
+	}
+
+	if rtModel.Revoked {
+		return "", "", fmt.Errorf("token revoked")
+	}
+
+	if err := s.repo.RevokeRefreshToken(ctx, hash); err != nil {
+		return "", "", fmt.Errorf("revoke old token: %w", err)
+	}
+
+	return s.CreateSession(ctx, uID, ip, userAgent)
+}
+
+func (s *service) RevokeSession(ctx context.Context, token string) error {
+	hash := utils.HashToken(token)
+	return s.repo.RevokeRefreshToken(ctx, hash)
+}
+
+func (s *service) RevokeAllSessions(ctx context.Context, userID uuid.UUID) error {
+	return s.repo.RevokeAllRefreshTokens(ctx, userID)
 }

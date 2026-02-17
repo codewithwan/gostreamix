@@ -38,6 +38,7 @@ func NewSQLiteDB(cfg *config.Config, log *zap.Logger) (*bun.DB, error) {
 func migrate(ctx context.Context, db *bun.DB, log *zap.Logger) error {
 	models := []interface{}{
 		(*auth.User)(nil),
+		(*auth.RefreshToken)(nil),
 		(*stream.Stream)(nil),
 		(*video.Video)(nil),
 		(*platform.Platform)(nil),

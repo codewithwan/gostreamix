@@ -5,18 +5,21 @@ import (
 	"testing"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
+	"github.com/codewithwan/gostreamix/internal/shared/jwt"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var testJWT = jwt.NewJWTService(struct{ Secret string }{Secret: "secret"})
+
 func TestAuthService_Setup(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Setup success", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("CountUsers", ctx).Return(0, nil)
 		mockRepo.On("CreateUser", ctx, mock.AnythingOfType("*auth.User")).Return(nil)
@@ -29,7 +32,7 @@ func TestAuthService_Setup(t *testing.T) {
 
 	t.Run("Setup failed - already setup", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("CountUsers", ctx).Return(1, nil)
 
@@ -51,7 +54,7 @@ func TestAuthService_Authenticate(t *testing.T) {
 
 	t.Run("Authenticate success", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("GetUserByUsername", ctx, "admin").Return(user, nil)
 
@@ -65,7 +68,7 @@ func TestAuthService_Authenticate(t *testing.T) {
 
 	t.Run("Authenticate failed - invalid password", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("GetUserByUsername", ctx, "admin").Return(user, nil)
 
@@ -78,7 +81,7 @@ func TestAuthService_Authenticate(t *testing.T) {
 
 	t.Run("Authenticate failed - user not found", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("GetUserByUsername", ctx, "unknown").Return(nil, auth.ErrUserNotFound)
 
@@ -96,7 +99,7 @@ func TestAuthService_GetUserByID(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("GetUserByID", ctx, userID).Return(user, nil)
 
@@ -111,7 +114,7 @@ func TestAuthService_ResetPassword(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("UpdatePassword", ctx, "admin", mock.AnythingOfType("string")).Return(nil)
 
@@ -126,7 +129,7 @@ func TestAuthService_GetPrimaryUser(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		mockRepo := new(MockAuthRepository)
-		service := auth.NewService(mockRepo)
+		service := auth.NewService(mockRepo, testJWT)
 
 		mockRepo.On("GetAnyUser", ctx).Return(user, nil)
 

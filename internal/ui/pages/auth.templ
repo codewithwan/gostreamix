@@ -10,8 +10,9 @@ import (
 )
 
 type AuthProps struct {
-	Error string
-	Lang  string
+	Error     string
+	Lang      string
+	CsrfToken string
 }
 
 templ Setup(props AuthProps) {
@@ -34,6 +35,7 @@ templ Setup(props AuthProps) {
 						</div>
 					}
 					<form action="/setup" method="POST" class="space-y-4">
+						<input type="hidden" name="csrf" value={ props.CsrfToken } />
 						<div class="space-y-1">
 							<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.setup.username") }</label>
 							@input.Input(input.Props{Name: "username", Class: "h-9 text-sm", Placeholder: i18n.Tr(props.Lang, "auth.setup.placeholder.username"), Attributes: templ.Attributes{"required": true, "autofocus": true}})
@@ -87,6 +89,7 @@ templ Login(props AuthProps) {
 						</div>
 					}
 					<form action="/login" method="POST" class="space-y-4">
+						<input type="hidden" name="csrf" value={ props.CsrfToken } />
 						<div class="space-y-1">
 							<label class="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground ml-0.5">{ i18n.Tr(props.Lang, "auth.login.username") }</label>
 							@input.Input(input.Props{Name: "username", Class: "h-9 text-sm", Placeholder: i18n.Tr(props.Lang, "auth.login.placeholder.username"), Attributes: templ.Attributes{"required": true, "autofocus": true}})

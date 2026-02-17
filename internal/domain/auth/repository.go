@@ -46,3 +46,24 @@ func (r *repository) GetAnyUser(ctx context.Context) (*User, error) {
 	err := r.db.NewSelect().Model(usr).Limit(1).Scan(ctx)
 	return usr, err
 }
+
+func (r *repository) SaveRefreshToken(ctx context.Context, rt *RefreshToken) error {
+	_, err := r.db.NewInsert().Model(rt).Exec(ctx)
+	return err
+}
+
+func (r *repository) GetRefreshToken(ctx context.Context, hash string) (*RefreshToken, error) {
+	rt := new(RefreshToken)
+	err := r.db.NewSelect().Model(rt).Where("token_hash = ?", hash).Scan(ctx)
+	return rt, err
+}
+
+func (r *repository) RevokeRefreshToken(ctx context.Context, hash string) error {
+	_, err := r.db.NewDelete().Model((*RefreshToken)(nil)).Where("token_hash = ?", hash).Exec(ctx)
+	return err
+}
+
+func (r *repository) RevokeAllRefreshTokens(ctx context.Context, userID uuid.UUID) error {
+	_, err := r.db.NewDelete().Model((*RefreshToken)(nil)).Where("user_id = ?", userID).Exec(ctx)
+	return err
+}

@@ -10,8 +10,8 @@ import (
 	"github.com/codewithwan/gostreamix/internal/shared/middleware"
 	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
 	"github.com/codewithwan/gostreamix/internal/shared/utils"
-	"github.com/codewithwan/gostreamix/internal/ui/components"
 	"github.com/codewithwan/gostreamix/internal/ui/components/modals"
+	"github.com/codewithwan/gostreamix/internal/ui/components/toast"
 	component_video "github.com/codewithwan/gostreamix/internal/ui/components/video"
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +40,8 @@ func (h *Handler) Routes(app *fiber.App) {
 	app.Get("/videos", h.GetVideos)
 	app.Get("/dashboard/videos/upload", h.GetUploadVideoModal)
 	app.Post("/dashboard/videos/upload", h.UploadVideo)
+
+	// Components
 	app.Get("/components/modals/delete-video/:id", h.GetDeleteVideoModal)
 	app.Get("/components/modals/video-preview/:id", h.GetVideoPreviewModal)
 	app.Delete("/dashboard/videos/:id", h.DeleteVideo)
@@ -78,7 +80,8 @@ func ToVideoViews(videos []*Video) []component_video.VideoView {
 }
 
 func (h *Handler) GetUploadVideoModal(c *fiber.Ctx) error {
-	return utils.Render(c, modals.UploadVideo(utils.GetLang(c)))
+	csrfToken, _ := c.Locals("csrf").(string)
+	return utils.Render(c, modals.UploadVideo(utils.GetLang(c), csrfToken))
 }
 
 func (h *Handler) UploadVideo(c *fiber.Ctx) error {
@@ -130,10 +133,14 @@ func (h *Handler) UploadVideo(c *fiber.Ctx) error {
 	// success toast
 	var toastSb strings.Builder
 	lang := utils.GetLang(c)
-	_ = components.Toast(components.ToastProps{
-		Type:    components.ToastTypeSuccess,
-		Message: i18n.Tr(lang, "videos.notifications.upload_success"),
-		Desc:    fmt.Sprintf("%d %s", len(results), i18n.Tr(lang, "videos.notifications.upload_desc")),
+	_ = toast.Toast(toast.Props{
+		Variant:       toast.VariantSuccess,
+		Title:         "Success",
+		Description:   fmt.Sprintf("%s (%d %s)", i18n.Tr(lang, "videos.notifications.upload_success"), len(results), i18n.Tr(lang, "videos.notifications.upload_desc")),
+		ShowIndicator: true,
+		Icon:          true,
+		Duration:      5000,
+		Dismissible:   true,
 	}).Render(c.Context(), &toastSb)
 	results = append(results, toastSb.String())
 
@@ -150,7 +157,8 @@ func (h *Handler) GetDeleteVideoModal(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(404).SendString("video not found")
 	}
-	return utils.Render(c, modals.DeleteVideo(utils.GetLang(c), v.ID, v.Filename))
+	csrfToken, _ := c.Locals("csrf").(string)
+	return utils.Render(c, modals.DeleteVideo(utils.GetLang(c), v.ID, v.Filename, csrfToken))
 }
 
 func (h *Handler) GetVideoPreviewModal(c *fiber.Ctx) error {
@@ -182,10 +190,14 @@ func (h *Handler) DeleteVideo(c *fiber.Ctx) error {
 
 	c.Set("Content-Type", "text/html")
 	lang := utils.GetLang(c)
-	return utils.Render(c, components.Toast(components.ToastProps{
-		Type:    components.ToastTypeSuccess,
-		Message: i18n.Tr(lang, "videos.notifications.delete_success"),
-		Desc:    i18n.Tr(lang, "videos.notifications.delete_desc"),
+	return utils.Render(c, toast.Toast(toast.Props{
+		Variant:       toast.VariantSuccess,
+		Title:         "Success",
+		Description:   i18n.Tr(lang, "videos.notifications.delete_success"),
+		ShowIndicator: true,
+		Icon:          true,
+		Duration:      5000,
+		Dismissible:   true,
 	}))
 }
 

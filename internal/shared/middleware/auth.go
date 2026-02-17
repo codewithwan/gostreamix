@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"strings"
+	"time"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
@@ -32,22 +33,55 @@ func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 
 func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/login" || p == "/setup" || strings.HasPrefix(p, "/assets") {
+	if p == "/login" || p == "/setup" || strings.HasPrefix(p, "/assets") || p == "/components/toast/setup_success" {
 		return c.Next()
 	}
+
 	ck := c.Cookies("jwt")
-	if ck == "" {
-		return c.Redirect("/login")
+	valid := false
+	if ck != "" {
+		id := g.jwt.GetUserID(ck)
+		if id != uuid.Nil {
+			c.Locals("user_id", id)
+			valid = true
+		}
 	}
-	tk, err := g.jwt.ValidateToken(ck)
-	if err != nil || tk == nil || !tk.Valid {
-		return c.Redirect("/login")
+
+	if !valid {
+		// Try Refresh
+		rt := c.Cookies("refresh_token")
+		if rt == "" {
+			return c.Redirect("/login")
+		}
+
+		at, newRt, err := g.svc.RefreshSession(c.Context(), rt, c.IP(), c.Get("User-Agent"))
+		if err != nil {
+			c.ClearCookie("jwt", "refresh_token")
+			return c.Redirect("/login")
+		}
+
+		secure := c.Protocol() == "https"
+		c.Cookie(&fiber.Cookie{
+			Name:     "jwt",
+			Value:    at,
+			Expires:  time.Now().Add(time.Minute * 15),
+			HTTPOnly: true,
+			Secure:   secure,
+			SameSite: "Strict",
+		})
+		c.Cookie(&fiber.Cookie{
+			Name:     "refresh_token",
+			Value:    newRt,
+			Expires:  time.Now().Add(time.Hour * 24 * 7),
+			HTTPOnly: true,
+			Secure:   secure,
+			SameSite: "Strict",
+		})
+
+		id := g.jwt.GetUserID(at)
+		c.Locals("user_id", id)
 	}
-	id := g.jwt.GetUserID(ck)
-	if id == uuid.Nil {
-		return c.Redirect("/login")
-	}
-	c.Locals("user_id", id)
+
 	return c.Next()
 }
 

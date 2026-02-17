@@ -8,7 +8,7 @@ import (
 	t "github.com/a-h/templ"
 )
 
-templ DeletePlatform(lang string, platformID uuid.UUID, name string) {
+templ DeletePlatform(lang string, platformID uuid.UUID, name string, csrfToken string) {
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200" id="delete-platform-modal" onclick="if(event.target === this) this.remove()">
 		<div class="w-full animate-in zoom-in-95 duration-200" style="max-width: 400px;" onclick="event.stopPropagation()">
 			@card.Card(card.Props{Class: "shadow-2xl border-border/50 bg-card/95 backdrop-blur-xl"}) {
@@ -41,9 +41,10 @@ templ DeletePlatform(lang string, platformID uuid.UUID, name string) {
 						Class:   "h-8 text-xs px-4",
 						Attributes: t.Attributes{
 							"hx-delete":            "/dashboard/platforms/" + platformID.String(),
+							"hx-headers":           `{"X-CSRF-Token": "` + csrfToken + `"}`,
 							"hx-target":            "body",
 							"hx-swap":              "beforeend",
-							"hx-on::after-request": "if(event.detail.successful) { document.getElementById('delete-platform-modal').remove(); document.getElementById('platform-item-" + platformID.String() + "')?.remove(); }",
+							"hx-on::after-request": "if(event.detail.successful) { document.getElementById('delete-platform-modal').remove(); document.getElementById('platform-row-" + platformID.String() + "')?.remove(); document.getElementById('platform-card-" + platformID.String() + "')?.remove(); document.body.dispatchEvent(new Event('refresh-platforms')); }",
 						},
 					}) {
 						{ i18n.Tr(lang, "platforms.delete.confirm") }
