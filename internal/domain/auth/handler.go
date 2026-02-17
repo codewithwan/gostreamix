@@ -5,6 +5,7 @@ import (
 
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
 	"github.com/codewithwan/gostreamix/internal/shared/utils"
+	"github.com/codewithwan/gostreamix/internal/shared/validator"
 	"github.com/codewithwan/gostreamix/internal/ui/components/toast"
 	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
@@ -58,10 +59,21 @@ func (h *Handler) GetSetup(c *fiber.Ctx) error {
 
 func (h *Handler) PostSetup(c *fiber.Ctx) error {
 	lang := utils.GetLang(c)
-	u, e, p, cf := c.FormValue("username"), c.FormValue("email"), c.FormValue("password"), c.FormValue("confirm_password")
+	u, e, p, cf := validator.SanitizeInput(c.FormValue("username")), validator.SanitizeInput(c.FormValue("email")), c.FormValue("password"), c.FormValue("confirm_password")
 	csrfToken, _ := c.Locals("csrf").(string)
+
+	if err := validator.Username(u); err != nil {
+		return utils.Render(c, pages.Setup(pages.AuthProps{Error: err.Error(), Lang: lang, CsrfToken: csrfToken}))
+	}
+	if err := validator.Email(e); err != nil {
+		return utils.Render(c, pages.Setup(pages.AuthProps{Error: err.Error(), Lang: lang, CsrfToken: csrfToken}))
+	}
 	if p != cf {
 		return utils.Render(c, pages.Setup(pages.AuthProps{Error: "passwords do not match", Lang: lang, CsrfToken: csrfToken}))
+	}
+
+	if err := validator.Password(p); err != nil {
+		return utils.Render(c, pages.Setup(pages.AuthProps{Error: err.Error(), Lang: lang, CsrfToken: csrfToken}))
 	}
 	if err := h.svc.Setup(c.Context(), u, e, p); err != nil {
 		h.log.Error("Setup failed", zap.Error(err), zap.String("username", u))
@@ -85,12 +97,21 @@ func (h *Handler) GetLogin(c *fiber.Ctx) error {
 
 func (h *Handler) PostLogin(c *fiber.Ctx) error {
 	lang := utils.GetLang(c)
-	u, p := c.FormValue("username"), c.FormValue("password")
+	u, p := validator.SanitizeInput(c.FormValue("username")), c.FormValue("password")
 	csrfToken, _ := c.Locals("csrf").(string)
+
+	if err := validator.Password(p); err != nil {
+		return utils.Render(c, pages.Login(pages.AuthProps{Error: "invalid credentials", Lang: lang, CsrfToken: csrfToken}))
+	}
+
 	usr, err := h.svc.Authenticate(c.Context(), u, p)
 	if err != nil {
 		h.log.Warn("Login failed", zap.String("username", u), zap.String("ip", c.IP()), zap.Error(err))
-		return utils.Render(c, pages.Login(pages.AuthProps{Error: "invalid credentials", Lang: lang, CsrfToken: csrfToken}))
+		errMsg := "invalid credentials"
+		if err.Error() == "account locked due to too many failed attempts" {
+			errMsg = err.Error()
+		}
+		return utils.Render(c, pages.Login(pages.AuthProps{Error: errMsg, Lang: lang, CsrfToken: csrfToken}))
 	}
 
 	at, rt, err := h.svc.CreateSession(c.Context(), usr.ID, c.IP(), c.Get("User-Agent"))
@@ -170,8 +191,22 @@ func (h *Handler) ApiSetup(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	req.Username = validator.SanitizeInput(req.Username)
+	req.Email = validator.SanitizeInput(req.Email)
+
+	if err := validator.Username(req.Username); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+	if err := validator.Email(req.Email); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	if req.Password != req.ConfirmPassword {
 		return c.Status(400).JSON(fiber.Map{"error": "passwords do not match"})
+	}
+
+	if err := validator.Password(req.Password); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	if err := h.svc.Setup(c.Context(), req.Username, req.Email, req.Password); err != nil {
@@ -192,10 +227,16 @@ func (h *Handler) ApiLogin(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
+	req.Username = validator.SanitizeInput(req.Username)
+
 	usr, err := h.svc.Authenticate(c.Context(), req.Username, req.Password)
 	if err != nil {
 		h.log.Warn("API Login failed", zap.String("username", req.Username), zap.String("ip", c.IP()), zap.Error(err))
-		return c.Status(401).JSON(fiber.Map{"error": "invalid credentials"})
+		errMsg := "invalid credentials"
+		if err.Error() == "account locked due to too many failed attempts" {
+			errMsg = err.Error()
+		}
+		return c.Status(401).JSON(fiber.Map{"error": errMsg})
 	}
 
 	at, rt, err := h.svc.CreateSession(c.Context(), usr.ID, c.IP(), c.Get("User-Agent"))

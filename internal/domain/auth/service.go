@@ -2,7 +2,9 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
@@ -10,6 +12,13 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type loginAttempt struct {
+	Attempts int
+	LockedAt time.Time
+}
+
+var loginAttempts = sync.Map{}
 
 type service struct {
 	repo Repository
@@ -46,21 +55,57 @@ func (s *service) Setup(ctx context.Context, u, e, p string) error {
 var dummyHash []byte
 
 func init() {
-	dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy"), bcrypt.DefaultCost)
+	dummyHash = []byte("$2a$10$dummy.hash.for.timing.protection.so.computation.takes.time")
 }
 
 func (s *service) Authenticate(ctx context.Context, u, p string) (*User, error) {
+	if s.isAccountLocked(u) {
+		return nil, errors.New("account locked due to too many failed attempts")
+	}
+
 	usr, err := s.repo.GetUserByUsername(ctx, u)
 	if err != nil {
-		// timing att protection
+		s.recordFailedAttempt(u)
+		// compute bcrypt for timing protection
 		bcrypt.CompareHashAndPassword(dummyHash, []byte(p))
 		return nil, ErrInvalidCredentials
 	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(usr.PasswordHash), []byte(p))
 	if err != nil {
+		s.recordFailedAttempt(u)
 		return nil, ErrInvalidCredentials
 	}
+
+	s.clearFailedAttempts(u)
 	return usr, nil
+}
+
+func (s *service) isAccountLocked(u string) bool {
+	if val, ok := loginAttempts.Load(u); ok {
+		attempt := val.(*loginAttempt)
+		if attempt.Attempts >= 5 {
+			if time.Since(attempt.LockedAt) < 15*time.Minute {
+				return true
+			}
+			// reset after lockout expires
+			s.clearFailedAttempts(u)
+		}
+	}
+	return false
+}
+
+func (s *service) recordFailedAttempt(u string) {
+	val, _ := loginAttempts.LoadOrStore(u, &loginAttempt{})
+	attempt := val.(*loginAttempt)
+	attempt.Attempts++
+	if attempt.Attempts >= 5 {
+		attempt.LockedAt = time.Now()
+	}
+}
+
+func (s *service) clearFailedAttempts(u string) {
+	loginAttempts.Delete(u)
 }
 
 func (s *service) GetUserByID(ctx context.Context, id uuid.UUID) (*User, error) {
