@@ -17,10 +17,6 @@ tasks:
 
   dev:
     desc: Start development server with hot reload
-    cmds:
-      - task: tailwind
-      - task: templ
-    sources:
-      - ./**/*.templ
-      - ./**/*.go
-      - ./assets/css/input.css
+    deps:
+      - tailwind
+      - templ
