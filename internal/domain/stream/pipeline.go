@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/codewithwan/gostreamix/internal/domain/stream/ffmpeg"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/activity"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -109,6 +110,17 @@ func (p *pipeline) monitorProcess(proc *Process, streamID uuid.UUID, stderr io.R
 			if len(processLog) > 10 {
 				processLog = processLog[1:]
 			}
+
+			if looksLikeFFmpegError(line) {
+				activity.Record(activity.Entry{
+					Timestamp: time.Now().UTC(),
+					Source:    "ffmpeg",
+					Level:     "error",
+					Event:     "stderr",
+					Message:   line,
+					StreamID:  streamID.String(),
+				})
+			}
 		}
 	}
 
@@ -198,6 +210,15 @@ func (p *pipeline) Reload(ctx context.Context, s *Stream, videoPath string) erro
 }
 
 func (p *pipeline) emitLog(level, event string, streamID uuid.UUID, message string) {
+	activity.Record(activity.Entry{
+		Timestamp: time.Now().UTC(),
+		Source:    "ffmpeg",
+		Level:     normalizeLogLevel(level),
+		Event:     event,
+		Message:   message,
+		StreamID:  streamID.String(),
+	})
+
 	p.hub.Broadcast("stream_log", map[string]interface{}{
 		"stream_id":   streamID.String(),
 		"level":       level,
@@ -205,4 +226,32 @@ func (p *pipeline) emitLog(level, event string, streamID uuid.UUID, message stri
 		"message":     message,
 		"occurred_at": time.Now().UTC().Format(time.RFC3339),
 	})
+}
+
+func normalizeLogLevel(level string) string {
+	normalized := strings.ToLower(strings.TrimSpace(level))
+
+	switch normalized {
+	case "error", "warning", "warn", "info":
+		if normalized == "warn" {
+			return "warning"
+		}
+		return normalized
+	default:
+		return "info"
+	}
+}
+
+func looksLikeFFmpegError(line string) bool {
+	trimmed := strings.TrimSpace(line)
+	if trimmed == "" {
+		return false
+	}
+
+	lower := strings.ToLower(trimmed)
+	return strings.Contains(lower, " error") ||
+		strings.Contains(lower, "error ") ||
+		strings.Contains(lower, "failed") ||
+		strings.Contains(lower, "invalid") ||
+		strings.Contains(lower, "cannot")
 }

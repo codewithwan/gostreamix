@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -8,11 +9,14 @@ import (
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
+	"github.com/codewithwan/gostreamix/internal/domain/notification"
 	"github.com/codewithwan/gostreamix/internal/domain/platform"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/activity"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/frontend"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/monitor"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -37,9 +41,11 @@ func NewServer(
 	hub *ws.Hub,
 	authH *auth.Handler,
 	dashH *dashboard.Handler,
+	notifH *notification.Handler,
 	streamH *stream.Handler,
 	videoH *video.Handler,
 	platformH *platform.Handler,
+	collector *monitor.Collector,
 ) *Server {
 	fiberConfig := fiber.Config{
 		DisableStartupMessage: true,
@@ -69,6 +75,33 @@ func NewServer(
 
 	app.Use(recover.New())
 	app.Use(helmet.New())
+	app.Use(func(c *fiber.Ctx) error {
+		startedAt := time.Now()
+		err := c.Next()
+
+		if shouldTrackActivityPath(c.Path()) {
+			status := c.Response().StatusCode()
+			statusText := http.StatusText(status)
+			activity.Record(activity.Entry{
+				Timestamp:  time.Now().UTC(),
+				Source:     "http",
+				Level:      activityLevelFromStatus(status),
+				Event:      "request",
+				Message:    fmt.Sprintf("%s %s -> %d %s", c.Method(), c.Path(), status, statusText),
+				Method:     c.Method(),
+				Path:       c.Path(),
+				Status:     status,
+				LatencyMS:  time.Since(startedAt).Milliseconds(),
+				IP:         c.IP(),
+				UserAgent:  c.Get("User-Agent"),
+				IsAPI:      strings.HasPrefix(c.Path(), "/api/"),
+				RequestID:  c.GetRespHeader("X-Request-ID"),
+				StatusText: statusText,
+			})
+		}
+
+		return err
+	})
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
 		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
@@ -162,9 +195,11 @@ func NewServer(
 	})
 
 	s := &Server{App: app, Config: cfg, Log: log}
+	collector.Start(context.Background())
 
 	authH.Routes(app)
 	dashH.Routes(app)
+	notifH.Routes(app)
 	streamH.Routes(app)
 	videoH.Routes(app)
 	platformH.Routes(app)
@@ -195,6 +230,7 @@ func NewServer(
 	app.Get("/videos", serveSPA)
 	app.Get("/platforms", serveSPA)
 	app.Get("/settings", serveSPA)
+	app.Get("/activity", serveSPA)
 
 	return s
 }
@@ -203,4 +239,33 @@ func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%s", s.Config.Host, s.Config.Port)
 	s.Log.Info("http server listening", zap.String("address", addr))
 	return s.App.Listen(addr)
+}
+
+func shouldTrackActivityPath(path string) bool {
+	if path == "/health" {
+		return false
+	}
+	if path == "/api/dashboard/logs" {
+		return false
+	}
+
+	if strings.HasPrefix(path, "/assets") ||
+		strings.HasPrefix(path, "/web/") ||
+		strings.HasPrefix(path, "/ws") ||
+		strings.HasPrefix(path, "/uploads") ||
+		strings.HasPrefix(path, "/thumbnails") {
+		return false
+	}
+
+	return true
+}
+
+func activityLevelFromStatus(status int) string {
+	if status >= fiber.StatusInternalServerError {
+		return "error"
+	}
+	if status >= fiber.StatusBadRequest {
+		return "warning"
+	}
+	return "info"
 }

@@ -3,6 +3,7 @@ package platform
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	sharedutils "github.com/codewithwan/gostreamix/internal/shared/utils"
 	"github.com/google/uuid"
@@ -11,6 +12,8 @@ import (
 type service struct {
 	repo Repository
 }
+
+const defaultPlatformColor = "#1f2937"
 
 func NewService(repo Repository) Service {
 	return &service{repo: repo}
@@ -24,6 +27,7 @@ func (s *service) CreatePlatform(ctx context.Context, userID uuid.UUID, dto Crea
 		PlatformType: dto.PlatformType,
 		StreamKey:    dto.StreamKey,
 		CustomURL:    dto.CustomURL,
+		Color:        normalizePlatformColor(dto.PlatformType),
 		Enabled:      true,
 	}
 	if err := s.repo.Create(ctx, p); err != nil {
@@ -65,10 +69,26 @@ func (s *service) UpdatePlatform(ctx context.Context, id uuid.UUID, dto UpdatePl
 	p.PlatformType = dto.PlatformType
 	p.StreamKey = dto.StreamKey
 	p.CustomURL = dto.CustomURL
+	p.Color = normalizePlatformColor(dto.PlatformType)
 
 	if err := s.repo.Update(ctx, p); err != nil {
 		return nil, fmt.Errorf("update platform: %w", err)
 	}
 
 	return p, nil
+}
+
+func normalizePlatformColor(platformType string) string {
+	switch strings.ToLower(strings.TrimSpace(platformType)) {
+	case "youtube":
+		return "#ff0033"
+	case "twitch":
+		return "#8b5cf6"
+	case "facebook":
+		return "#1877f2"
+	case "tiktok":
+		return "#111111"
+	default:
+		return defaultPlatformColor
+	}
 }

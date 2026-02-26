@@ -61,6 +61,7 @@ func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video
 		ID:           uuid.New(),
 		Filename:     dto.Filename,
 		OriginalName: dto.OriginalName,
+		Folder:       dto.Folder,
 		Size:         info.Size(),
 		Thumbnail:    thumbName,
 		Duration:     meta.Duration,

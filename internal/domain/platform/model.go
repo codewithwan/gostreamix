@@ -16,6 +16,7 @@ type Platform struct {
 	PlatformType string    `bun:"platform_type,notnull" json:"platform_type"`
 	StreamKey    string    `bun:"stream_key,notnull" json:"stream_key"`
 	CustomURL    string    `bun:"custom_url" json:"custom_url"`
+	Color        string    `bun:"color,notnull,default:'#1f2937'" json:"color"`
 	Enabled      bool      `bun:"enabled,default:true" json:"enabled"`
 	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"created_at"`
 	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"updated_at"`

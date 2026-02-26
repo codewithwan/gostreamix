@@ -3,20 +3,40 @@
 @tailwind utilities;
 
 :root {
-  --background: 210 36% 8%;
-  --foreground: 197 23% 95%;
-  --card: 213 34% 12%;
-  --card-foreground: 197 23% 95%;
-  --primary: 38 92% 56%;
-  --primary-foreground: 213 48% 8%;
-  --muted: 214 24% 18%;
-  --muted-foreground: 213 16% 72%;
-  --border: 213 20% 24%;
-  --accent: 190 95% 43%;
-  --danger: 0 84% 64%;
-  --radius-lg: 14px;
+  --background: 0 0% 99%;
+  --foreground: 0 0% 9%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 9%;
+  --primary: 0 0% 7%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 40%;
+  --border: 0 0% 89%;
+  --accent: 0 0% 96%;
+  --danger: 0 72% 52%;
+  --chart-cpu: 8 88% 55%;
+  --chart-memory: 210 90% 55%;
+  --chart-disk: 42 88% 50%;
+  --radius-lg: 12px;
   --radius-md: 10px;
   --radius-sm: 8px;
+}
+
+.dark {
+  --background: 0 0% 7%;
+  --foreground: 0 0% 96%;
+  --card: 0 0% 10%;
+  --card-foreground: 0 0% 96%;
+  --primary: 0 0% 96%;
+  --primary-foreground: 0 0% 8%;
+  --muted: 0 0% 16%;
+  --muted-foreground: 0 0% 68%;
+  --border: 0 0% 22%;
+  --accent: 0 0% 16%;
+  --danger: 0 75% 60%;
+  --chart-cpu: 8 92% 66%;
+  --chart-memory: 205 100% 72%;
+  --chart-disk: 42 95% 66%;
 }
 
 * {
@@ -32,4 +52,9 @@ body,
 body {
   @apply bg-background text-foreground antialiased;
   margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }

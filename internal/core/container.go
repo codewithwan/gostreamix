@@ -3,12 +3,14 @@ package core
 import (
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
+	"github.com/codewithwan/gostreamix/internal/domain/notification"
 	"github.com/codewithwan/gostreamix/internal/domain/platform"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/database"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/logger"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/monitor"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/server"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
@@ -30,6 +32,7 @@ func BuildContainer() *dig.Container {
 		return database.NewSQLiteDB(cfg, log)
 	})
 	c.Provide(ws.NewHub)
+	c.Provide(monitor.NewCollector)
 
 	c.Provide(auth.NewRepository)
 	c.Provide(auth.NewService)
@@ -53,6 +56,10 @@ func BuildContainer() *dig.Container {
 
 	c.Provide(dashboard.NewService)
 	c.Provide(dashboard.NewHandler)
+
+	c.Provide(notification.NewRepository)
+	c.Provide(notification.NewService)
+	c.Provide(notification.NewHandler)
 
 	c.Provide(server.NewServer)
 

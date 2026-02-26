@@ -74,15 +74,48 @@ func GenerateThumbnail(videoPath, thumbPath string) error {
 		return err
 	}
 
-	args := []string{
-		"-ss", "00:00:01",
-		"-i", videoPath,
-		"-vframes", "1",
-		"-q:v", "2",
-		"-y",
-		thumbPath,
+	attempts := [][]string{
+		{
+			"-hide_banner",
+			"-loglevel", "error",
+			"-i", videoPath,
+			"-vf", "thumbnail,scale=640:-1",
+			"-frames:v", "1",
+			"-q:v", "2",
+			"-y",
+			thumbPath,
+		},
+		{
+			"-hide_banner",
+			"-loglevel", "error",
+			"-ss", "00:00:01",
+			"-i", videoPath,
+			"-vframes", "1",
+			"-q:v", "2",
+			"-y",
+			thumbPath,
+		},
+		{
+			"-hide_banner",
+			"-loglevel", "error",
+			"-ss", "00:00:00",
+			"-i", videoPath,
+			"-vframes", "1",
+			"-q:v", "2",
+			"-y",
+			thumbPath,
+		},
 	}
 
-	cmd := exec.Command("ffmpeg", args...)
-	return cmd.Run()
+	var lastErr error
+	for _, args := range attempts {
+		cmd := exec.Command("ffmpeg", args...)
+		if err := cmd.Run(); err == nil {
+			return nil
+		} else {
+			lastErr = err
+		}
+	}
+
+	return lastErr
 }

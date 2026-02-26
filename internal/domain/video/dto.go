@@ -4,4 +4,5 @@ type ProcessVideoDTO struct {
 	Filename     string
 	OriginalName string
 	Path         string
+	Folder       string
 }

@@ -2,6 +2,7 @@ package test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/codewithwan/gostreamix/internal/domain/video"
@@ -61,7 +62,7 @@ func TestVideoService_DeleteVideo(t *testing.T) {
 
 		err := service.DeleteVideo(ctx, vidID)
 		assert.Error(t, err)
-		assert.Equal(t, video.ErrVideoNotFound, err)
+		assert.True(t, errors.Is(err, video.ErrVideoNotFound))
 		mockRepo.AssertExpectations(t)
 	})
 }

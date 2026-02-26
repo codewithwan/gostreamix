@@ -27,6 +27,7 @@ export interface Video {
   id: string
   filename: string
   original_name?: string
+  folder?: string
   size: number
   thumbnail: string
   duration: number
@@ -39,7 +40,48 @@ export interface Platform {
   platform_type: string
   stream_key: string
   custom_url: string
+  color?: string
   enabled: boolean
+}
+
+export interface MetricSample {
+  cpu: number
+  memory: number
+  disk: number
+  recorded_at: string
+}
+
+export interface ActivityLogEntry {
+  timestamp: string
+  source: string
+  level: string
+  event: string
+  message: string
+  stream_id?: string
+  method: string
+  path: string
+  status: number
+  latency_ms: number
+  ip: string
+  user_agent: string
+  is_api: boolean
+  request_id: string
+  status_text: string
+}
+
+export interface ActivityLogsResponse {
+  items: ActivityLogEntry[]
+  page: number
+  per_page: number
+  total: number
+  total_pages: number
+}
+
+export interface NotificationSettings {
+  id?: number
+  discord_webhook: string
+  telegram_bot_token: string
+  telegram_chat_id: string
 }
 
 export interface StreamWorkspace {
@@ -87,15 +129,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     headers,
   })
 
-	const raw = await response.text()
-	let data: unknown = null
-	if (raw) {
-		try {
-			data = JSON.parse(raw) as unknown
-		} catch {
-			data = raw
-		}
-	}
+  const raw = await response.text()
+  let data: unknown = null
+  if (raw) {
+    try {
+      data = JSON.parse(raw) as unknown
+    } catch {
+      data = raw
+    }
+  }
 
   if (!response.ok) {
     const message =
@@ -140,6 +182,16 @@ export async function logout() {
 
 export async function getDashboardStats() {
   return request<{ cpu: number; memory: number; disk: number }>("/api/dashboard/stats")
+}
+
+export async function getDashboardMetrics(minutes = 60) {
+  return request<{ items: MetricSample[] }>(`/api/dashboard/metrics?minutes=${minutes}`)
+}
+
+export async function getActivityLogs(page = 1, perPage = 20) {
+  const safePage = Number.isFinite(page) ? Math.max(1, Math.trunc(page)) : 1
+  const safePerPage = Number.isFinite(perPage) ? Math.max(1, Math.trunc(perPage)) : 20
+  return request<ActivityLogsResponse>(`/api/dashboard/logs?page=${safePage}&per_page=${safePerPage}`)
 }
 
 export async function getProfile() {
@@ -202,9 +254,12 @@ export async function getVideos() {
   return request<Video[]>("/api/videos/")
 }
 
-export async function uploadVideo(file: File) {
+export async function uploadVideo(file: File, folder = "") {
   const formData = new FormData()
   formData.append("video", file)
+  if (folder.trim() !== "") {
+    formData.append("folder", folder.trim())
+  }
 
   return request<Video>("/api/videos/upload", {
     method: "POST",
@@ -250,5 +305,23 @@ export async function updatePlatform(
 export async function removePlatform(platformID: string) {
   return request<void>(`/api/platforms/${platformID}`, {
     method: "DELETE",
+  })
+}
+
+export async function getNotificationSettings() {
+  return request<NotificationSettings>("/api/settings/notifications/")
+}
+
+export async function saveNotificationSettings(payload: NotificationSettings) {
+  return request<NotificationSettings>("/api/settings/notifications/", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function sendNotificationTest(message: string) {
+  return request<{ message: string }>("/api/settings/notifications/test", {
+    method: "POST",
+    body: JSON.stringify({ message }),
   })
 }

@@ -262,6 +262,8 @@ func buildRTMPTarget(platformType, baseURL, streamKey string) string {
 			baseURL = "rtmp://live.twitch.tv/app"
 		case "facebook":
 			baseURL = "rtmps://live-api-s.facebook.com:443/rtmp"
+		case "tiktok":
+			baseURL = "rtmp://push-rtmp-global.tiktok.com/live"
 		}
 	}
 

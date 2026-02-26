@@ -23,18 +23,9 @@ export default {
         md: "var(--radius-md)",
         sm: "var(--radius-sm)",
       },
-      keyframes: {
-        "fade-in": {
-          "0%": { opacity: "0", transform: "translateY(8px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-      },
-      animation: {
-        "fade-in": "fade-in 360ms ease-out both",
-      },
       fontFamily: {
-        sans: ["'IBM Plex Sans'", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["'Space Grotesk'", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["'Manrope'", "ui-sans-serif", "system-ui", "sans-serif"],
+        display: ["'Manrope'", "ui-sans-serif", "system-ui", "sans-serif"],
       },
     },
   },

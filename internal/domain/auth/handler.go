@@ -164,8 +164,7 @@ func (h *Handler) ApiLogout(c *fiber.Ctx) error {
 		_ = h.svc.RevokeSession(c.Context(), rt)
 	}
 
-	c.ClearCookie("jwt")
-	c.ClearCookie("refresh_token")
+	clearSessionCookies(c)
 
 	return c.JSON(fiber.Map{"message": "logout successful"})
 }
@@ -188,8 +187,7 @@ func (h *Handler) PostRefresh(c *fiber.Ctx) error {
 	at, newRt, err := h.svc.RefreshSession(c.Context(), rt, c.IP(), c.Get("User-Agent"))
 	if err != nil {
 		h.log.Error("Refresh failed", zap.Error(err))
-		c.ClearCookie("jwt")
-		c.ClearCookie("refresh_token")
+		clearSessionCookies(c)
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "invalid refresh token"})
 	}
 
@@ -226,6 +224,7 @@ func setSessionCookies(c *fiber.Ctx, accessToken, refreshToken string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "jwt",
 		Value:    accessToken,
+		Path:     "/",
 		Expires:  time.Now().Add(15 * time.Minute),
 		HTTPOnly: true,
 		Secure:   secure,
@@ -235,9 +234,27 @@ func setSessionCookies(c *fiber.Ctx, accessToken, refreshToken string) {
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
 		Value:    refreshToken,
+		Path:     "/",
 		Expires:  time.Now().Add(7 * 24 * time.Hour),
 		HTTPOnly: true,
 		Secure:   secure,
 		SameSite: "Strict",
+	})
+}
+
+func clearSessionCookies(c *fiber.Ctx) {
+	c.Cookie(&fiber.Cookie{
+		Name:     "jwt",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HTTPOnly: true,
+	})
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+		HTTPOnly: true,
 	})
 }

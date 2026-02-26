@@ -13,6 +13,7 @@ type Video struct {
 	ID           uuid.UUID `bun:",pk,type:text" json:"id"`
 	Filename     string    `bun:",notnull" json:"filename"`
 	OriginalName string    `json:"original_name"`
+	Folder       string    `bun:",notnull,default:''" json:"folder"`
 	Size         int64     `json:"size"`
 	Thumbnail    string    `json:"thumbnail"`
 	Duration     int       `json:"duration"`

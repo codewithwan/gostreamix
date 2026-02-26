@@ -67,6 +67,7 @@ func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 		c.Cookie(&fiber.Cookie{
 			Name:     "jwt",
 			Value:    at,
+			Path:     "/",
 			Expires:  time.Now().Add(time.Minute * 15),
 			HTTPOnly: true,
 			Secure:   secure,
@@ -75,6 +76,7 @@ func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 		c.Cookie(&fiber.Cookie{
 			Name:     "refresh_token",
 			Value:    newRt,
+			Path:     "/",
 			Expires:  time.Now().Add(time.Hour * 24 * 7),
 			HTTPOnly: true,
 			Secure:   secure,

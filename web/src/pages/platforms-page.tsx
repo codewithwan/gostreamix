@@ -1,31 +1,41 @@
-import { FormEvent, useEffect, useState } from "react"
+import { useEffect, useState, type FormEvent } from "react"
+import { Plus, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { PlatformForm } from "@/features/platforms/platform-form"
+import { PlatformList } from "@/features/platforms/platform-list"
+import { createEmptyPlatformDraft, type PlatformDraft } from "@/features/platforms/platform-utils"
 import { createPlatform, getPlatforms, removePlatform, updatePlatform, type Platform } from "@/lib/api"
-
-const defaultDraft = {
-  name: "",
-  platform_type: "youtube",
-  stream_key: "",
-  custom_url: "",
-}
+import { useI18n } from "@/lib/i18n"
 
 export function PlatformsPage() {
+  const { t } = useI18n()
+
   const [platforms, setPlatforms] = useState<Platform[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-  const [draft, setDraft] = useState(defaultDraft)
-  const [savingID, setSavingID] = useState("")
+
+  const [createOpen, setCreateOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [showCreateKey, setShowCreateKey] = useState(false)
+  const [showEditKey, setShowEditKey] = useState(false)
+
+  const [draft, setDraft] = useState<PlatformDraft>(createEmptyPlatformDraft)
+  const [editingID, setEditingID] = useState("")
 
   const loadPlatforms = async () => {
-    setError("")
     try {
       const data = await getPlatforms()
       setPlatforms(data)
+      setError("")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load platforms")
+      const message = err instanceof Error ? err.message : t("platformsLoadFailed")
+      setError(message)
+      toast.error(message)
     } finally {
       setLoading(false)
     }
@@ -35,135 +45,150 @@ export function PlatformsPage() {
     void loadPlatforms()
   }, [])
 
+  const openCreate = () => {
+    setDraft(createEmptyPlatformDraft())
+    setShowCreateKey(false)
+    setCreateOpen(true)
+  }
+
+  const openEdit = (platform: Platform) => {
+    setEditingID(platform.id)
+    setDraft({
+      name: platform.name,
+      platform_type: platform.platform_type,
+      stream_key: platform.stream_key,
+      custom_url: platform.custom_url,
+    })
+    setShowEditKey(false)
+    setEditOpen(true)
+  }
+
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError("")
+    setSaving(true)
+
     try {
       await createPlatform(draft)
-      setDraft(defaultDraft)
+      setCreateOpen(false)
       await loadPlatforms()
+      toast.success(t("platformsCreateSuccess"))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create platform")
-    }
-  }
-
-  const handleUpdate = async (platform: Platform) => {
-    setSavingID(platform.id)
-    setError("")
-    try {
-      await updatePlatform(platform.id, {
-        name: platform.name,
-        platform_type: platform.platform_type,
-        stream_key: platform.stream_key,
-        custom_url: platform.custom_url,
-      })
-      await loadPlatforms()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update platform")
+      const message = err instanceof Error ? err.message : t("platformsCreateFailed")
+      setError(message)
+      toast.error(message)
     } finally {
-      setSavingID("")
+      setSaving(false)
     }
   }
 
-  const handleDelete = async (platformID: string) => {
-    setError("")
+  const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setSaving(true)
+
+    try {
+      await updatePlatform(editingID, draft)
+      setEditOpen(false)
+      await loadPlatforms()
+      toast.success(t("platformsUpdateSuccess"))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t("platformsUpdateFailed")
+      setError(message)
+      toast.error(message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async (platformID: string, platformName: string) => {
+    const ok = window.confirm(t("platformsDeleteConfirm", "Delete platform {name}?", { name: platformName }))
+    if (!ok) {
+      return
+    }
+
     try {
       await removePlatform(platformID)
       await loadPlatforms()
+      toast.success(t("platformsDeleteSuccess"))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete platform")
+      const message = err instanceof Error ? err.message : t("platformsDeleteFailed")
+      setError(message)
+      toast.error(message)
     }
   }
 
-  const patchPlatform = (platformID: string, key: keyof Platform, value: string) => {
-    setPlatforms((current) =>
-      current.map((platform) => {
-        if (platform.id !== platformID) {
-          return platform
-        }
-
-        return {
-          ...platform,
-          [key]: value,
-        }
-      }),
-    )
-  }
-
   return (
-    <section className="space-y-4">
-      <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Platforms</h1>
-        <p className="text-sm text-muted-foreground">Store and manage your RTMP publishing targets.</p>
+    <section className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("platformsTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("platformsDescription")}</p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => void loadPlatforms()}>
+            <RefreshCw className="h-4 w-4" />
+            {t("refresh")}
+          </Button>
+
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                {t("platformsAddButton")}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{t("platformsCreateTitle")}</DialogTitle>
+                <DialogDescription>{t("platformsCreateDescription")}</DialogDescription>
+              </DialogHeader>
+
+              <PlatformForm
+                draft={draft}
+                onSubmit={handleCreate}
+                onDraftChange={setDraft}
+                showKey={showCreateKey}
+                onToggleShowKey={() => setShowCreateKey((current) => !current)}
+                saving={saving}
+                submitLabel={t("create")}
+                t={t}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      {error ? <p className="text-sm text-danger">{error}</p> : null}
 
       <Card>
         <CardHeader>
-          <CardTitle>Add Platform</CardTitle>
-          <CardDescription>Quickly register YouTube, Twitch, Facebook, or custom destinations.</CardDescription>
+          <CardTitle className="text-base">{t("platformsTitle")}</CardTitle>
+          <CardDescription>{t("platformsDescription")}</CardDescription>
         </CardHeader>
-        <CardContent>
-          <form className="grid gap-3 md:grid-cols-2" onSubmit={handleCreate}>
-            <Input
-              value={draft.name}
-              onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
-              placeholder="Platform name"
-              required
-            />
-            <select
-              className="h-10 rounded-md border border-border bg-transparent px-3 text-sm"
-              value={draft.platform_type}
-              onChange={(event) => setDraft((current) => ({ ...current, platform_type: event.target.value }))}
-            >
-              <option value="youtube">YouTube</option>
-              <option value="twitch">Twitch</option>
-              <option value="facebook">Facebook</option>
-              <option value="custom">Custom</option>
-            </select>
-            <Input
-              value={draft.stream_key}
-              onChange={(event) => setDraft((current) => ({ ...current, stream_key: event.target.value }))}
-              placeholder="Stream key"
-              required
-            />
-            <Input
-              value={draft.custom_url}
-              onChange={(event) => setDraft((current) => ({ ...current, custom_url: event.target.value }))}
-              placeholder="Custom URL (optional)"
-            />
-            <Button className="md:col-span-2 md:w-fit">Save platform</Button>
-          </form>
+        <CardContent className="overflow-x-auto">
+          <PlatformList loading={loading} platforms={platforms} onEdit={openEdit} onDelete={handleDelete} t={t} />
         </CardContent>
       </Card>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
-      {loading ? <p className="text-sm text-muted-foreground">Loading platforms...</p> : null}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("platformsEditTitle")}</DialogTitle>
+            <DialogDescription>{t("platformsEditDescription")}</DialogDescription>
+          </DialogHeader>
 
-      <div className="grid gap-3">
-        {!loading && platforms.length === 0 ? <p className="text-sm text-muted-foreground">No platforms configured.</p> : null}
-
-        {platforms.map((platform) => (
-          <Card key={platform.id} className="bg-card/85">
-            <CardContent className="grid gap-3 pt-5 md:grid-cols-4">
-              <Input value={platform.name} onChange={(event) => patchPlatform(platform.id, "name", event.target.value)} />
-              <Input
-                value={platform.platform_type}
-                onChange={(event) => patchPlatform(platform.id, "platform_type", event.target.value)}
-              />
-              <Input value={platform.stream_key} onChange={(event) => patchPlatform(platform.id, "stream_key", event.target.value)} />
-              <Input value={platform.custom_url} onChange={(event) => patchPlatform(platform.id, "custom_url", event.target.value)} />
-              <div className="md:col-span-4 flex flex-wrap gap-2">
-                <Button size="sm" disabled={savingID === platform.id} onClick={() => void handleUpdate(platform)}>
-                  {savingID === platform.id ? "Saving..." : "Update"}
-                </Button>
-                <Button size="sm" variant="danger" onClick={() => void handleDelete(platform.id)}>
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          <PlatformForm
+            draft={draft}
+            onSubmit={handleUpdate}
+            onDraftChange={setDraft}
+            showKey={showEditKey}
+            onToggleShowKey={() => setShowEditKey((current) => !current)}
+            saving={saving}
+            submitLabel={t("update")}
+            t={t}
+          />
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }
