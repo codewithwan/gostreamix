@@ -3,12 +3,13 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-pre_cmd = ["templ generate"]
+pre_cmd = ["templ generate", "npx --yes @tailwindcss/cli -i ./assets/css/input.css -o ./assets/css/output.css"]
 cmd = "go build -o ./tmp/main main.go"
 bin = "tmp/main"
 include_ext = ["go", "templ", "json", "html", "js", "css", "env"]
 include_dir = ["internal", "cmd", "assets"]
 exclude_dir = ["tmp", "vendor", "data", "logs", ".git"]
+exclude_file = ["assets/css/output.css"]
 exclude_regex = ["_test\\.go$", "_templ\\.go$"]
 poll = true
 poll_interval = 200
