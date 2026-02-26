@@ -26,6 +26,19 @@ type Stream struct {
 	UpdatedAt   time.Time `bun:",nullzero,notnull,default:current_timestamp" json:"updated_at"`
 }
 
+type StreamProgram struct {
+	bun.BaseModel `bun:"table:stream_programs,alias:sp"`
+
+	ID          uuid.UUID   `bun:",pk,type:text" json:"id"`
+	StreamID    uuid.UUID   `bun:",notnull,type:text,unique" json:"stream_id"`
+	VideoIDs    []uuid.UUID `bun:",type:json" json:"video_ids"`
+	RTMPTargets []string    `bun:",type:json" json:"rtmp_targets"`
+	Bitrate     int         `json:"bitrate"`
+	Resolution  string      `json:"resolution"`
+	CreatedAt   time.Time   `bun:",nullzero,notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt   time.Time   `bun:",nullzero,notnull,default:current_timestamp" json:"updated_at"`
+}
+
 type ProcessStatus string
 
 const (

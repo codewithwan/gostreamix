@@ -21,11 +21,14 @@ func NewAuthGuard(svc auth.Service, jwt *jwt.JWTService) auth.Guard {
 
 func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/setup" || strings.HasPrefix(p, "/assets") {
+	if isPublicPath(p) || p == "/setup" || p == "/login" || p == "/api/auth/setup" || p == "/api/auth/login" || p == "/api/auth/session" || p == "/api/auth/refresh" {
 		return c.Next()
 	}
 	s, _ := g.svc.IsSetup(c.Context())
 	if !s {
+		if strings.HasPrefix(p, "/api/") {
+			return c.Status(fiber.StatusPreconditionFailed).JSON(fiber.Map{"error": "system is not setup"})
+		}
 		return c.Redirect("/setup")
 	}
 	return c.Next()
@@ -33,7 +36,7 @@ func (g *AuthGuard) RequireSetup(c *fiber.Ctx) error {
 
 func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 	p := c.Path()
-	if p == "/login" || p == "/setup" || strings.HasPrefix(p, "/assets") || p == "/components/toast/setup_success" {
+	if isPublicPath(p) || p == "/login" || p == "/setup" || p == "/api/auth/login" || p == "/api/auth/setup" || p == "/api/auth/session" || p == "/api/auth/refresh" {
 		return c.Next()
 	}
 
@@ -51,13 +54,13 @@ func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 		// Try Refresh
 		rt := c.Cookies("refresh_token")
 		if rt == "" {
-			return c.Redirect("/login")
+			return unauthorizedResponse(c)
 		}
 
 		at, newRt, err := g.svc.RefreshSession(c.Context(), rt, c.IP(), c.Get("User-Agent"))
 		if err != nil {
 			c.ClearCookie("jwt", "refresh_token")
-			return c.Redirect("/login")
+			return unauthorizedResponse(c)
 		}
 
 		secure := c.Protocol() == "https"
@@ -83,6 +86,23 @@ func (g *AuthGuard) RequireAuth(c *fiber.Ctx) error {
 	}
 
 	return c.Next()
+}
+
+func unauthorizedResponse(c *fiber.Ctx) error {
+	if strings.HasPrefix(c.Path(), "/api/") {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	return c.Redirect("/login")
+}
+
+func isPublicPath(path string) bool {
+	return strings.HasPrefix(path, "/assets") ||
+		strings.HasPrefix(path, "/uploads") ||
+		strings.HasPrefix(path, "/thumbnails") ||
+		strings.HasPrefix(path, "/web") ||
+		strings.HasPrefix(path, "/ws") ||
+		path == "/health" ||
+		path == "/favicon.ico"
 }
 
 func (g *AuthGuard) GuestOnly(c *fiber.Ctx) error {

@@ -86,7 +86,7 @@ func printBanner(port, dbPath, appURL string) {
 }
 
 func checkHealth(port string) bool {
-	url := fmt.Sprintf("http://127.0.0.1:%s/login", port)
+	url := fmt.Sprintf("http://127.0.0.1:%s/health", port)
 	client := http.Client{Timeout: 5 * time.Second}
 	resp, err := client.Get(url)
 	if err != nil {

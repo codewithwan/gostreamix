@@ -3,13 +3,14 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-pre_cmd = ["templ generate"]
+pre_cmd = ["npm run build:embed --prefix web"]
 cmd = "go build -o ./tmp/main main.go"
 bin = "tmp/main"
-include_ext = ["go", "templ", "json", "html", "js", "css", "env"]
-include_dir = ["internal", "cmd", "assets"]
-exclude_dir = ["tmp", "vendor", "data", "logs", ".git"]
-exclude_regex = ["_test\\.go$", "_templ\\.go$"]
+include_ext = ["go", "json", "html", "js", "css", "env", "ts", "tsx"]
+include_dir = ["internal", "cmd", "assets", "web"]
+include_file = ["main.go"]
+exclude_dir = ["tmp", "vendor", "data", "logs", ".git", "web/node_modules", "web/dist", "internal/infrastructure/frontend/build"]
+exclude_regex = ["_test\\.go$"]
 poll = true
 poll_interval = 200
 delay = 500

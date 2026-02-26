@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   gostreamix:
     build:
@@ -11,6 +9,7 @@ services:
     volumes:
       - ./:/app
       - /app/tmp
+      - /app/web/node_modules
       - go-mod-cache:/go/pkg/mod
       - go-build-cache:/root/.cache/go-build
     env_file:

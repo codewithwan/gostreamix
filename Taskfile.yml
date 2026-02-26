@@ -1,26 +1,28 @@
 version: "3"
 
-vars:
-  TEMPL_CMD: go run github.com/a-h/templ/cmd/templ@latest
-  TAILWIND_CMD: npx -y @tailwindcss/cli@latest
-
 tasks:
-  templ:
-    desc: Run templ with integrated server and hot reload
+  web:install:
+    desc: Install frontend dependencies
     cmds:
-      - "{{.TEMPL_CMD}} generate --watch --proxy='http://localhost:8080' --cmd='go run ./main.go' --open-browser=false"
+      - npm install --prefix ./web
 
-  tailwind:
-    desc: Watch Tailwind CSS changes
+  web:dev:
+    desc: Start Vite dev server
     cmds:
-      - "{{.TAILWIND_CMD}} -i ./assets/css/input.css -o ./assets/css/output.css --watch"
+      - npm run dev --prefix ./web
+
+  web:build:
+    desc: Build frontend assets for embed.FS
+    cmds:
+      - npm run build --prefix ./web
+
+  run:
+    desc: Build frontend assets and run app
+    cmds:
+      - npm run build --prefix ./web
+      - go run ./main.go
 
   dev:
-    desc: Start development server with hot reload
+    desc: Start Air hot-reload (builds frontend before each rebuild)
     cmds:
-      - task: tailwind
-      - task: templ
-    sources:
-      - ./**/*.templ
-      - ./**/*.go
-      - ./assets/css/input.css
+      - air -c .air.toml

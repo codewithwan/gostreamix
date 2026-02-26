@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -11,12 +12,12 @@ import (
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/frontend"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
-	"github.com/codewithwan/gostreamix/internal/shared/utils"
-	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -55,6 +56,17 @@ func NewServer(
 	app.Static("/thumbnails", "./data/thumbnails")
 	app.Static("/uploads", "./data/uploads")
 
+	frontendFS, err := frontend.StaticFS()
+	if err != nil {
+		log.Fatal("failed to load embedded frontend", zap.Error(err))
+	}
+
+	app.Use("/web", filesystem.New(filesystem.Config{
+		Root:       http.FS(frontendFS),
+		PathPrefix: "",
+		Browse:     false,
+	}))
+
 	app.Use(recover.New())
 	app.Use(helmet.New())
 	app.Use(cors.New(cors.Config{
@@ -67,7 +79,7 @@ func NewServer(
 		Max:        500,
 		Expiration: 1 * time.Minute,
 		LimitReached: func(c *fiber.Ctx) error {
-			if c.Get("Accept") == "application/json" {
+			if strings.HasPrefix(c.Path(), "/api/") || strings.Contains(c.Get("Accept"), "application/json") {
 				return c.Status(429).JSON(fiber.Map{"error": "Too many requests"})
 			}
 			return c.Status(429).SendString("Too many requests. Please try again later.")
@@ -89,20 +101,19 @@ func NewServer(
 		Expiration:     1 * time.Hour,
 		ContextKey:     "csrf",
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			if c.Get("Accept") == "application/json" {
+			if strings.HasPrefix(c.Path(), "/api/") || strings.Contains(c.Get("Accept"), "application/json") {
 				return c.Status(403).JSON(fiber.Map{"error": "Invalid CSRF Token"})
 			}
-			return c.Redirect("/login?error=expired")
+			return c.Redirect("/login")
 		},
 	}))
 
 	limitHandler := func(c *fiber.Ctx) error {
-		csrfToken, _ := c.Locals("csrf").(string)
-		return utils.Render(c, pages.Login(pages.AuthProps{
-			Error:     "Too many requests. Please try again later.",
-			Lang:      utils.GetLang(c),
-			CsrfToken: csrfToken,
-		}))
+		if strings.HasPrefix(c.Path(), "/api/") || strings.Contains(c.Get("Accept"), "application/json") {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{"error": "Too many requests. Please try again later."})
+		}
+
+		return c.Status(fiber.StatusTooManyRequests).SendString("Too many requests. Please try again later.")
 	}
 
 	loginLimiter := limiter.New(limiter.Config{
@@ -158,9 +169,32 @@ func NewServer(
 	videoH.Routes(app)
 	platformH.Routes(app)
 
+	serveSPA := func(c *fiber.Ctx) error {
+		indexHTML, readErr := frontend.ReadIndex()
+		if readErr != nil {
+			log.Error("failed to read embedded frontend index", zap.Error(readErr))
+			return c.Status(fiber.StatusInternalServerError).SendString("frontend not available")
+		}
+
+		c.Type("html", "utf-8")
+		return c.Send(indexHTML)
+	}
+
+	app.Get("/health", func(c *fiber.Ctx) error {
+		return c.SendStatus(fiber.StatusOK)
+	})
+
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.Redirect("/dashboard")
 	})
+	app.Get("/setup", serveSPA)
+	app.Get("/login", serveSPA)
+	app.Get("/dashboard", serveSPA)
+	app.Get("/streams", serveSPA)
+	app.Get("/streams/:id/editor", serveSPA)
+	app.Get("/videos", serveSPA)
+	app.Get("/platforms", serveSPA)
+	app.Get("/settings", serveSPA)
 
 	return s
 }

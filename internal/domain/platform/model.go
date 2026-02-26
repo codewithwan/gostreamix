@@ -10,13 +10,13 @@ import (
 type Platform struct {
 	bun.BaseModel `bun:"table:platforms,alias:p"`
 
-	ID           uuid.UUID `bun:"id,pk,type:uuid"`
-	UserID       uuid.UUID `bun:"user_id,type:uuid"`
-	Name         string    `bun:"name,notnull"`
-	PlatformType string    `bun:"platform_type,notnull"`
-	StreamKey    string    `bun:"stream_key,notnull"`
-	CustomURL    string    `bun:"custom_url"`
-	Enabled      bool      `bun:"enabled,default:true"`
-	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
-	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
+	ID           uuid.UUID `bun:"id,pk,type:uuid" json:"id"`
+	UserID       uuid.UUID `bun:"user_id,type:uuid" json:"user_id"`
+	Name         string    `bun:"name,notnull" json:"name"`
+	PlatformType string    `bun:"platform_type,notnull" json:"platform_type"`
+	StreamKey    string    `bun:"stream_key,notnull" json:"stream_key"`
+	CustomURL    string    `bun:"custom_url" json:"custom_url"`
+	Enabled      bool      `bun:"enabled,default:true" json:"enabled"`
+	CreatedAt    time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp" json:"created_at"`
+	UpdatedAt    time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp" json:"updated_at"`
 }

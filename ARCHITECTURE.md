@@ -16,20 +16,19 @@ Gostreamix follows a domain-driven architectural pattern with clear separation o
       - `dto.go`: Data Transfer Objects for requests.
       - `interfaces.go`: Service and Repository interface definitions.
       - `test/`: Unit and integration tests.
-  - `infrastructure/`: External dependencies and setup (database, server, logger, config).
+  - `infrastructure/`: External dependencies and setup (database, server, logger, config, embedded frontend build).
   - `shared/`: Utilities and middlewares used across multiple domains.
-  - `ui/`: Frontend components and pages using Templ.
+- `web/`: React + Vite frontend source code.
 - `assets/`: Static files (images, css, js).
 - `data/`: Local storage for SQLite, uploads, and thumbnails.
 
 ## Core Technologies
 
 - **Web Framework**: [Fiber](https://gofiber.io/) (v2)
-- **Templating**: [Templ](https://templ.guide/)
+- **Frontend**: React + Vite
 - **ORM**: [Bun](https://bun.uptrace.dev/)
 - **Database**: SQLite3
-- **Styling**: Tailwind CSS
-- **Interactivity**: HTMX
+- **Styling**: Tailwind CSS + shadcn/ui
 - **Logging**: Zap
 - **Dependency Injection**: [dig](https://github.com/uber-go/dig)
 

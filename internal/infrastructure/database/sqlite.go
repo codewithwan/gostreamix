@@ -40,6 +40,7 @@ func migrate(ctx context.Context, db *bun.DB, log *zap.Logger) error {
 		(*auth.User)(nil),
 		(*auth.RefreshToken)(nil),
 		(*stream.Stream)(nil),
+		(*stream.StreamProgram)(nil),
 		(*video.Video)(nil),
 		(*platform.Platform)(nil),
 	}

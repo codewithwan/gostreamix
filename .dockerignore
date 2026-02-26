@@ -29,3 +29,5 @@ docker-compose*.yml
 .env.dev
 .env.local
 node_modules/
+web/node_modules/
+**/node_modules/

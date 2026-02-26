@@ -1,19 +1,10 @@
 package video
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
-	"github.com/codewithwan/gostreamix/internal/shared/middleware"
-	"github.com/codewithwan/gostreamix/internal/shared/middleware/i18n"
-	"github.com/codewithwan/gostreamix/internal/shared/utils"
-	"github.com/codewithwan/gostreamix/internal/ui/components/modals"
-	"github.com/codewithwan/gostreamix/internal/ui/components/toast"
-	component_video "github.com/codewithwan/gostreamix/internal/ui/components/video"
-	"github.com/codewithwan/gostreamix/internal/ui/pages"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -30,39 +21,22 @@ func NewHandler(svc Service, authSvc auth.Service, log *zap.Logger) *Handler {
 }
 
 func (h *Handler) Routes(app *fiber.App) {
-	// API Routes
 	api := app.Group("/api/videos")
 	api.Get("/", h.ApiGetVideos)
 	api.Post("/upload", h.ApiUploadVideo)
 	api.Delete("/:id", h.ApiDeleteVideo)
-
-	// UI Routes
-	app.Get("/videos", h.GetVideos)
-	app.Get("/dashboard/videos/upload", h.GetUploadVideoModal)
-	app.Post("/dashboard/videos/upload", h.UploadVideo)
-
-	// Components
-	app.Get("/components/modals/delete-video/:id", h.GetDeleteVideoModal)
-	app.Get("/components/modals/video-preview/:id", h.GetVideoPreviewModal)
-	app.Delete("/dashboard/videos/:id", h.DeleteVideo)
 }
 
-// UI Handlers
-
-func (h *Handler) GetVideos(c *fiber.Ctx) error {
-	u := middleware.GetUser(c, h.authSvc)
-	if u == nil {
-		return c.Redirect("/login")
-	}
-	videos, err := h.svc.GetVideos(c.Context())
-	if err != nil {
-		return utils.Render(c, pages.Videos(u.Username, u.Email, utils.GetLang(c), []component_video.VideoView{}))
-	}
-	return utils.Render(c, pages.Videos(u.Username, u.Email, utils.GetLang(c), ToVideoViews(videos)))
+type VideoView struct {
+	ID        uuid.UUID `json:"id"`
+	Filename  string    `json:"filename"`
+	Size      int64     `json:"size"`
+	Thumbnail string    `json:"thumbnail"`
+	Duration  int       `json:"duration"`
 }
 
-func ToVideoView(v *Video) component_video.VideoView {
-	return component_video.VideoView{
+func ToVideoView(v *Video) VideoView {
+	return VideoView{
 		ID:        v.ID,
 		Filename:  v.Filename,
 		Size:      v.Size,
@@ -71,143 +45,19 @@ func ToVideoView(v *Video) component_video.VideoView {
 	}
 }
 
-func ToVideoViews(videos []*Video) []component_video.VideoView {
-	views := make([]component_video.VideoView, len(videos))
+func ToVideoViews(videos []*Video) []VideoView {
+	views := make([]VideoView, len(videos))
 	for i, v := range videos {
 		views[i] = ToVideoView(v)
 	}
 	return views
 }
 
-func (h *Handler) GetUploadVideoModal(c *fiber.Ctx) error {
-	csrfToken, _ := c.Locals("csrf").(string)
-	return utils.Render(c, modals.UploadVideo(utils.GetLang(c), csrfToken))
-}
-
-func (h *Handler) UploadVideo(c *fiber.Ctx) error {
-	form, err := c.MultipartForm()
-	if err != nil {
-		return c.Status(400).SendString("invalid form data")
-	}
-
-	files := form.File["video"]
-	if len(files) == 0 {
-		return c.Status(400).SendString("no video files found")
-	}
-
-	var results []string
-	for _, file := range files {
-		ext := filepath.Ext(file.Filename)
-		filename := uuid.New().String() + ext
-		path := filepath.Join("data", "uploads", filename)
-
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			continue
-		}
-
-		if err := c.SaveFile(file, path); err != nil {
-			continue
-		}
-
-		v, err := h.svc.ProcessVideo(c.Context(), ProcessVideoDTO{
-			Filename:     filename,
-			OriginalName: file.Filename,
-			Path:         path,
-		})
-		if err != nil {
-			_ = os.Remove(path)
-			continue
-		}
-
-		// video card
-		var sb strings.Builder
-		if err := component_video.Card(ToVideoView(v)).Render(c.Context(), &sb); err == nil {
-			results = append(results, sb.String())
-		}
-	}
-
-	if len(results) == 0 {
-		return c.Status(500).SendString("failed to process any videos")
-	}
-
-	// success toast
-	var toastSb strings.Builder
-	lang := utils.GetLang(c)
-	_ = toast.Toast(toast.Props{
-		Variant:       toast.VariantSuccess,
-		Title:         "Success",
-		Description:   fmt.Sprintf("%s (%d %s)", i18n.Tr(lang, "videos.notifications.upload_success"), len(results), i18n.Tr(lang, "videos.notifications.upload_desc")),
-		ShowIndicator: true,
-		Icon:          true,
-		Duration:      5000,
-		Dismissible:   true,
-	}).Render(c.Context(), &toastSb)
-	results = append(results, toastSb.String())
-
-	c.Set("Content-Type", "text/html")
-	return c.SendString(strings.Join(results, ""))
-}
-
-func (h *Handler) GetDeleteVideoModal(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
-	if err != nil {
-		return c.Status(400).SendString("invalid id")
-	}
-	v, err := h.svc.GetVideo(c.Context(), id)
-	if err != nil {
-		return c.Status(404).SendString("video not found")
-	}
-	csrfToken, _ := c.Locals("csrf").(string)
-	return utils.Render(c, modals.DeleteVideo(utils.GetLang(c), v.ID, v.Filename, csrfToken))
-}
-
-func (h *Handler) GetVideoPreviewModal(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
-	if err != nil {
-		return c.Status(400).SendString("invalid id")
-	}
-	v, err := h.svc.GetVideo(c.Context(), id)
-	if err != nil {
-		return c.Status(404).SendString("video not found")
-	}
-	src := "/uploads/" + v.Filename
-	var poster string
-	if v.Thumbnail != "" {
-		poster = "/thumbnails/" + v.Thumbnail
-	}
-	return utils.Render(c, modals.VideoPreview(utils.GetLang(c), src, poster, v.Filename))
-}
-
-func (h *Handler) DeleteVideo(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
-	if err != nil {
-		return c.Status(400).SendString("invalid id")
-	}
-
-	if err := h.svc.DeleteVideo(c.Context(), id); err != nil {
-		return c.Status(500).SendString("failed to delete video")
-	}
-
-	c.Set("Content-Type", "text/html")
-	lang := utils.GetLang(c)
-	return utils.Render(c, toast.Toast(toast.Props{
-		Variant:       toast.VariantSuccess,
-		Title:         "Success",
-		Description:   i18n.Tr(lang, "videos.notifications.delete_success"),
-		ShowIndicator: true,
-		Icon:          true,
-		Duration:      5000,
-		Dismissible:   true,
-	}))
-}
-
-// API Handlers
-
 func (h *Handler) ApiGetVideos(c *fiber.Ctx) error {
 	videos, err := h.svc.GetVideos(c.Context())
 	if err != nil {
 		h.log.Error("Failed to get videos", zap.Error(err))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to retrieve videos"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve videos"})
 	}
 	return c.JSON(videos)
 }
@@ -215,7 +65,7 @@ func (h *Handler) ApiGetVideos(c *fiber.Ctx) error {
 func (h *Handler) ApiUploadVideo(c *fiber.Ctx) error {
 	file, err := c.FormFile("video")
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "no video file found"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "no video file found"})
 	}
 
 	ext := filepath.Ext(file.Filename)
@@ -223,12 +73,12 @@ func (h *Handler) ApiUploadVideo(c *fiber.Ctx) error {
 	path := filepath.Join("data", "uploads", filename)
 
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to create upload directory"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to create upload directory"})
 	}
 
 	if err := c.SaveFile(file, path); err != nil {
 		h.log.Error("Failed to save uploaded file", zap.Error(err))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to save file"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to save file"})
 	}
 
 	v, err := h.svc.ProcessVideo(c.Context(), ProcessVideoDTO{
@@ -239,21 +89,22 @@ func (h *Handler) ApiUploadVideo(c *fiber.Ctx) error {
 	if err != nil {
 		_ = os.Remove(path)
 		h.log.Error("Failed to process video", zap.Error(err), zap.String("filename", filename))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to process video"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to process video"})
 	}
 
-	return c.Status(201).JSON(v)
+	return c.Status(fiber.StatusCreated).JSON(v)
 }
 
 func (h *Handler) ApiDeleteVideo(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": "invalid video id"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid video id"})
 	}
 
 	if err := h.svc.DeleteVideo(c.Context(), id); err != nil {
 		h.log.Error("Failed to delete video", zap.Error(err), zap.String("videoID", id.String()))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to delete video"})
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete video"})
 	}
-	return c.SendStatus(204)
+
+	return c.SendStatus(fiber.StatusNoContent)
 }

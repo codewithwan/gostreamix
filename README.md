@@ -39,19 +39,31 @@ Access the application at: http://localhost:8080
 
 If you prefer to run the application directly on your machine without Docker:
 
-1. **Install Prerequisites**: Go (1.25 or later) and Templ CLI.
-2. **Generate UI Components**:
+1. **Install Prerequisites**: Go (1.25 or later) and Node.js.
+2. **Install Frontend Dependencies**:
    ```bash
-   templ generate
+   npm install --prefix ./web
    ```
-3. **Run the Server**:
+3. **Build Frontend Assets**:
+   ```bash
+   npm run build --prefix ./web
+   ```
+4. **Run the Server**:
    ```bash
    go run main.go
    ```
 
+### Frontend Development (Optional)
+
+Run Vite separately for frontend iteration:
+
+```bash
+npm run dev --prefix ./web
+```
+
 ## Development Features
 
-- **Hot Reload**: Powered by Air, the system detects changes in code, templates, and translations, performing automatic updates without manual intervention.
+- **Hot Reload**: Powered by Air, the system detects changes in Go and frontend source files, then rebuilds and restarts automatically.
 - **Data Persistence**: Development data and databases are stored in Docker volumes, ensuring your progress is not lost when containers are stopped.
 
 ---

@@ -2,6 +2,7 @@ package stream
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -39,5 +40,34 @@ func (r *repository) Update(ctx context.Context, s *Stream) error {
 
 func (r *repository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model((*Stream)(nil)).Where("id = ?", id).Exec(ctx)
+	return err
+}
+
+func (r *repository) GetProgram(ctx context.Context, streamID uuid.UUID) (*StreamProgram, error) {
+	p := new(StreamProgram)
+	err := r.db.NewSelect().Model(p).Where("stream_id = ?", streamID).Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return p, nil
+}
+
+func (r *repository) UpsertProgram(ctx context.Context, p *StreamProgram) error {
+	existing, err := r.GetProgram(ctx, p.StreamID)
+	if err != nil {
+		return err
+	}
+
+	if existing == nil {
+		_, err := r.db.NewInsert().Model(p).Exec(ctx)
+		return err
+	}
+
+	p.ID = existing.ID
+	_, err = r.db.NewUpdate().Model(p).Where("stream_id = ?", p.StreamID).Exec(ctx)
 	return err
 }

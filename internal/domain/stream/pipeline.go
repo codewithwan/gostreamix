@@ -32,6 +32,7 @@ func NewPipeline(pm *ProcessManager, hub *ws.Hub, log *zap.Logger) Pipeline {
 
 func (p *pipeline) Start(ctx context.Context, s *Stream, videoPath string) error {
 	p.log.Info("Starting pipeline", zap.String("stream_id", s.ID.String()))
+	p.emitLog("info", "pipeline_starting", s.ID, "Preparing ffmpeg pipeline")
 
 	if _, running := p.pm.Get(s.ID); running {
 		return fmt.Errorf("stream %s is already running", s.ID.String())
@@ -39,6 +40,7 @@ func (p *pipeline) Start(ctx context.Context, s *Stream, videoPath string) error
 
 	if _, err := os.Stat(videoPath); err != nil {
 		p.log.Error("Video file not found", zap.String("path", videoPath), zap.Error(err))
+		p.emitLog("error", "video_missing", s.ID, "Video source not found")
 		return fmt.Errorf("video file not found at %s: %w", videoPath, err)
 	}
 
@@ -67,6 +69,7 @@ func (p *pipeline) Start(ctx context.Context, s *Stream, videoPath string) error
 	if err := cmd.Start(); err != nil {
 		p.pm.Unregister(s.ID)
 		p.log.Error("Failed to start ffmpeg", zap.Error(err))
+		p.emitLog("error", "pipeline_start_failed", s.ID, "Failed to start ffmpeg")
 		return fmt.Errorf("failed to start ffmpeg: %w", err)
 	}
 
@@ -75,6 +78,7 @@ func (p *pipeline) Start(ctx context.Context, s *Stream, videoPath string) error
 		"stream_id": s.ID.String(),
 		"status":    "running",
 	})
+	p.emitLog("info", "pipeline_running", s.ID, "Pipeline is live")
 
 	go p.monitorProcess(proc, s.ID, stderr)
 
@@ -119,9 +123,11 @@ func (p *pipeline) monitorProcess(proc *Process, streamID uuid.UUID, stderr io.R
 			zap.Error(err),
 			zap.String("context", errorContext),
 		)
+		p.emitLog("error", "pipeline_error", streamID, "ffmpeg exited with error")
 		status = StatusError
 	} else {
 		p.log.Info("ffmpeg exited successfully", zap.String("stream_id", streamID.String()))
+		p.emitLog("info", "pipeline_stopped", streamID, "Pipeline stopped")
 	}
 
 	proc.SetStatus(status)
@@ -136,6 +142,7 @@ func (p *pipeline) Stop(ctx context.Context, s *Stream) error {
 	if !ok {
 		return nil
 	}
+	p.emitLog("info", "pipeline_stopping", s.ID, "Stopping pipeline")
 
 	proc.SetStatus(StatusStopping)
 	p.hub.Broadcast("stream_status", map[string]interface{}{
@@ -160,4 +167,42 @@ func (p *pipeline) Stop(ctx context.Context, s *Stream) error {
 	case <-done:
 		return nil
 	}
+}
+
+func (p *pipeline) Reload(ctx context.Context, s *Stream, videoPath string) error {
+	p.emitLog("info", "pipeline_reload", s.ID, "Applying live changes")
+
+	if err := p.Stop(ctx, s); err != nil {
+		p.emitLog("error", "pipeline_reload_failed", s.ID, "Failed to stop previous process")
+		return fmt.Errorf("stop old process: %w", err)
+	}
+
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if _, running := p.pm.Get(s.ID); !running {
+			break
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("timeout waiting old process to exit")
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	if err := p.Start(ctx, s, videoPath); err != nil {
+		p.emitLog("error", "pipeline_reload_failed", s.ID, "Failed to start reloaded process")
+		return fmt.Errorf("start reloaded process: %w", err)
+	}
+
+	p.emitLog("info", "pipeline_reloaded", s.ID, "Live changes applied")
+	return nil
+}
+
+func (p *pipeline) emitLog(level, event string, streamID uuid.UUID, message string) {
+	p.hub.Broadcast("stream_log", map[string]interface{}{
+		"stream_id":   streamID.String(),
+		"level":       level,
+		"event":       event,
+		"message":     message,
+		"occurred_at": time.Now().UTC().Format(time.RFC3339),
+	})
 }
