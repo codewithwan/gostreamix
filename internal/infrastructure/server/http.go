@@ -50,6 +50,7 @@ func NewServer(
 	fiberConfig := fiber.Config{
 		DisableStartupMessage: true,
 		ReadBufferSize:        8192,
+		BodyLimit:             int(video.MaxUploadBytes),
 	}
 
 	if cfg.ProxyHeader != "" {

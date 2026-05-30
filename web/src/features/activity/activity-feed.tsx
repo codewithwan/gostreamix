@@ -45,7 +45,7 @@ export function ActivityFeed({ items, t }: ActivityFeedProps) {
               </div>
             </div>
 
-            <p className="mt-2 text-xs text-muted-foreground">{metadata.join(" • ") || "-"}</p>
+            <p className="mt-2 text-xs text-muted-foreground">{metadata.join(" - ") || "-"}</p>
           </article>
         )
       })}

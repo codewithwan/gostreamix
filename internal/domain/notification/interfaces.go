@@ -11,5 +11,6 @@ type Repository interface {
 type Service interface {
 	GetSettings(ctx context.Context) (*Settings, error)
 	SaveSettings(ctx context.Context, dto SaveSettingsDTO) (*Settings, error)
-	SendTest(ctx context.Context, message string) error
+	SendTest(ctx context.Context, dto SendTestDTO) (*TestResult, error)
+	DetectTelegramChats(ctx context.Context, dto DetectTelegramChatsDTO) ([]TelegramChatCandidate, error)
 }

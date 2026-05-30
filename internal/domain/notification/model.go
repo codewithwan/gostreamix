@@ -21,3 +21,29 @@ type SaveSettingsDTO struct {
 	TelegramBotToken string `json:"telegram_bot_token"`
 	TelegramChatID   string `json:"telegram_chat_id"`
 }
+
+type SendTestDTO struct {
+	Channel string `json:"channel"`
+	Message string `json:"message"`
+}
+
+type TestResult struct {
+	Channel     string            `json:"channel"`
+	Destination string            `json:"destination"`
+	Method      string            `json:"method"`
+	ContentType string            `json:"content_type"`
+	Payload     map[string]string `json:"payload"`
+	Sent        bool              `json:"sent"`
+}
+
+type DetectTelegramChatsDTO struct {
+	BotToken string `json:"bot_token"`
+}
+
+type TelegramChatCandidate struct {
+	ID       string `json:"id"`
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	Username string `json:"username"`
+	Preview  string `json:"preview"`
+}

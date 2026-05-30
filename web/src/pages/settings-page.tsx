@@ -1,16 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
-import { Bell, Send, User } from "lucide-react"
+import { Bell, Search, Send, User } from "lucide-react"
 import { toast } from "sonner"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
+  detectTelegramChats,
   getNotificationSettings,
   getProfile,
   saveNotificationSettings,
   sendNotificationTest,
+  type TelegramChatCandidate,
   type NotificationSettings,
 } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
@@ -59,8 +62,11 @@ export function SettingsPage() {
   const [discordWebhookDraft, setDiscordWebhookDraft] = useState("")
   const [telegramTokenDraft, setTelegramTokenDraft] = useState("")
   const [telegramChatDraft, setTelegramChatDraft] = useState("")
+  const [telegramStep, setTelegramStep] = useState<1 | 2>(1)
   const [savingChannel, setSavingChannel] = useState(false)
   const [testingChannel, setTestingChannel] = useState<Channel | "">("")
+  const [detectingTelegramChats, setDetectingTelegramChats] = useState(false)
+  const [telegramChatCandidates, setTelegramChatCandidates] = useState<TelegramChatCandidate[]>([])
 
   const channelRows = useMemo(
     () => [
@@ -123,6 +129,8 @@ export function SettingsPage() {
     setDiscordWebhookDraft(notification.discord_webhook || "")
     setTelegramTokenDraft(notification.telegram_bot_token || "")
     setTelegramChatDraft(notification.telegram_chat_id || "")
+    setTelegramStep(1)
+    setTelegramChatCandidates([])
     setDialogOpen(true)
   }
 
@@ -142,6 +150,12 @@ export function SettingsPage() {
     if (activeChannel === "telegram") {
       payload.telegram_bot_token = telegramTokenDraft.trim()
       payload.telegram_chat_id = telegramChatDraft.trim()
+    }
+
+    if (activeChannel === "telegram" && !payload.telegram_chat_id) {
+      toast.error(t("settingsTelegramChatRequired", "Choose a Telegram chat ID first"))
+      setSavingChannel(false)
+      return
     }
 
     try {
@@ -179,9 +193,9 @@ export function SettingsPage() {
     setTestingChannel(channel)
     try {
       const channelLabel = channel === "discord" ? t("settingsDiscord") : t("settingsTelegram")
-      await sendNotificationTest(`[${channelLabel}] GoStreamix test alert`)
+      await sendNotificationTest(channel, `[${channelLabel}] GoStreamix test alert from Settings`)
       toast.success(
-        t("settingsTestSuccess", "{channel} test sent", {
+        t("settingsTestSuccess", "{channel} test sent. Check Activity Log for details.", {
           channel: channelLabel,
         }),
       )
@@ -192,6 +206,30 @@ export function SettingsPage() {
       setTestingChannel("")
     }
   }
+
+  const detectChats = async () => {
+    const token = telegramTokenDraft.trim()
+    if (!token) {
+      toast.error(t("settingsTelegramTokenRequired", "Telegram bot token is required"))
+      return
+    }
+
+    setDetectingTelegramChats(true)
+    setTelegramChatCandidates([])
+    try {
+      const result = await detectTelegramChats(token)
+      setTelegramChatCandidates(result.items)
+      toast.success(t("settingsTelegramChatsFound", "Found {count} chat(s)", { count: result.items.length }))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t("settingsTelegramChatsFailed", "Failed to detect Telegram chats")
+      toast.error(message)
+    } finally {
+      setDetectingTelegramChats(false)
+    }
+  }
+
+  const canContinueTelegram = telegramTokenDraft.trim().length > 0
+  const canSaveTelegram = telegramTokenDraft.trim().length > 0 && telegramChatDraft.trim().length > 0
 
   return (
     <section className="space-y-5">
@@ -318,27 +356,93 @@ export function SettingsPage() {
               />
             ) : (
               <>
-                <Input
-                  placeholder={t("settingsTelegramTokenPlaceholder")}
-                  value={telegramTokenDraft}
-                  onChange={(event) => setTelegramTokenDraft(event.target.value)}
-                />
-                <Input
-                  placeholder={t("settingsTelegramChatPlaceholder")}
-                  value={telegramChatDraft}
-                  onChange={(event) => setTelegramChatDraft(event.target.value)}
-                />
+                <div className="flex items-center gap-2">
+                  <Badge variant={telegramStep === 1 ? "default" : "muted"}>{t("settingsTelegramStepToken", "1. Token")}</Badge>
+                  <Badge variant={telegramStep === 2 ? "default" : "muted"}>{t("settingsTelegramStepChat", "2. Chat ID")}</Badge>
+                </div>
+
+                {telegramStep === 1 ? (
+                  <div className="space-y-3">
+                    <Input
+                      placeholder={t("settingsTelegramTokenPlaceholder")}
+                      value={telegramTokenDraft}
+                      onChange={(event) => {
+                        setTelegramTokenDraft(event.target.value)
+                        setTelegramChatCandidates([])
+                      }}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {t("settingsTelegramTokenHelp", "Paste the bot token from BotFather. After this, send any message to the bot from Telegram.")}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="rounded-md border border-border bg-muted/30 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-muted-foreground">{t("settingsTelegramDetectHint", "Send any message to your bot, then detect chat ID.")}</p>
+                        <Button type="button" variant="outline" size="sm" disabled={detectingTelegramChats} onClick={() => void detectChats()}>
+                          <Search className="h-4 w-4" />
+                          {detectingTelegramChats ? t("settingsTelegramDetecting", "Detecting...") : t("settingsTelegramDetect", "Detect chat ID")}
+                        </Button>
+                      </div>
+                      {telegramChatCandidates.length > 0 ? (
+                        <div className="mt-3 grid gap-2">
+                          {telegramChatCandidates.map((chat) => {
+                            const selected = telegramChatDraft === chat.id
+                            return (
+                              <button
+                                key={chat.id}
+                                type="button"
+                                className={
+                                  "rounded-md border px-3 py-2 text-left hover:bg-muted " +
+                                  (selected ? "border-primary bg-primary/10" : "border-border bg-card")
+                                }
+                                onClick={() => setTelegramChatDraft(chat.id)}
+                              >
+                                <span className="block text-sm font-medium">
+                                  {chat.title || chat.username || chat.id} <span className="text-xs text-muted-foreground">({chat.type})</span>
+                                </span>
+                                <span className="block text-xs text-muted-foreground">
+                                  {chat.id}
+                                  {chat.preview ? ` - ${chat.preview}` : ""}
+                                </span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      ) : null}
+                    </div>
+                    <Input
+                      placeholder={t("settingsTelegramChatPlaceholder")}
+                      value={telegramChatDraft}
+                      onChange={(event) => setTelegramChatDraft(event.target.value)}
+                    />
+                  </div>
+                )}
               </>
             )}
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
-              {t("cancel")}
-            </Button>
-            <Button type="button" disabled={savingChannel} onClick={() => void saveChannel()}>
-              {savingChannel ? t("settingsSavingChannel") : t("settingsSaveChannel")}
-            </Button>
+            {activeChannel === "telegram" && telegramStep === 2 ? (
+              <Button type="button" variant="outline" onClick={() => setTelegramStep(1)}>
+                {t("back", "Back")}
+              </Button>
+            ) : (
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+                {t("cancel")}
+              </Button>
+            )}
+
+            {activeChannel === "telegram" && telegramStep === 1 ? (
+              <Button type="button" disabled={!canContinueTelegram} onClick={() => setTelegramStep(2)}>
+                {t("next", "Next")}
+              </Button>
+            ) : (
+              <Button type="button" disabled={savingChannel || (activeChannel === "telegram" && !canSaveTelegram)} onClick={() => void saveChannel()}>
+                {savingChannel ? t("settingsSavingChannel") : t("settingsSaveChannel")}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -33,6 +33,11 @@ func (m *MockVideoRepository) List(ctx context.Context) ([]*video.Video, error) 
 	return args.Get(0).([]*video.Video), args.Error(1)
 }
 
+func (m *MockVideoRepository) Update(ctx context.Context, v *video.Video) error {
+	args := m.Called(ctx, v)
+	return args.Error(0)
+}
+
 func (m *MockVideoRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)

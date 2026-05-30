@@ -33,6 +33,8 @@ export interface Video {
   duration: number
 }
 
+export const MAX_VIDEO_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
+
 export interface Platform {
   id: string
   user_id: string
@@ -82,6 +84,23 @@ export interface NotificationSettings {
   discord_webhook: string
   telegram_bot_token: string
   telegram_chat_id: string
+}
+
+export interface NotificationTestResult {
+  channel: string
+  destination: string
+  method: string
+  content_type: string
+  payload: Record<string, string>
+  sent: boolean
+}
+
+export interface TelegramChatCandidate {
+  id: string
+  type: string
+  title: string
+  username: string
+  preview: string
 }
 
 export interface StreamWorkspace {
@@ -267,8 +286,83 @@ export async function uploadVideo(file: File, folder = "") {
   })
 }
 
+export function uploadVideoWithProgress(file: File, folder = "", onProgress?: (progress: number) => void) {
+  const formData = new FormData()
+  formData.append("video", file)
+  if (folder.trim() !== "") {
+    formData.append("folder", folder.trim())
+  }
+
+  return new Promise<Video>((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open("POST", "/api/videos/upload")
+    xhr.withCredentials = true
+
+    if (csrfToken) {
+      xhr.setRequestHeader("X-CSRF-Token", csrfToken)
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || !onProgress) {
+        return
+      }
+      onProgress(Math.round((event.loaded / event.total) * 100))
+    }
+
+    xhr.onload = () => {
+      let data: unknown = null
+      if (xhr.responseText) {
+        try {
+          data = JSON.parse(xhr.responseText) as unknown
+        } catch {
+          data = xhr.responseText
+        }
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        const message =
+          typeof data === "object" &&
+          data !== null &&
+          "error" in data &&
+          typeof (data as { error: unknown }).error === "string"
+            ? (data as { error: string }).error
+            : `Upload failed with status ${xhr.status}`
+        reject(new Error(message))
+        return
+      }
+
+      resolve(data as Video)
+    }
+
+    xhr.onerror = () => reject(new Error("Upload failed"))
+    xhr.onabort = () => reject(new Error("Upload cancelled"))
+    xhr.send(formData)
+  })
+}
+
 export async function deleteVideo(videoID: string) {
   return request<void>(`/api/videos/${videoID}`, { method: "DELETE" })
+}
+
+export async function renameVideo(videoID: string, name: string) {
+  return request<Video>(`/api/videos/${videoID}/rename`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  })
+}
+
+export async function moveVideo(videoID: string, folder: string) {
+  return request<Video>(`/api/videos/${videoID}/move`, {
+    method: "PATCH",
+    body: JSON.stringify({ folder }),
+  })
+}
+
+export async function copyVideo(videoID: string, folder: string) {
+  return request<Video>(`/api/videos/${videoID}/copy`, {
+    method: "POST",
+    body: JSON.stringify({ folder }),
+  })
 }
 
 export async function getPlatforms() {
@@ -319,9 +413,16 @@ export async function saveNotificationSettings(payload: NotificationSettings) {
   })
 }
 
-export async function sendNotificationTest(message: string) {
-  return request<{ message: string }>("/api/settings/notifications/test", {
+export async function sendNotificationTest(channel: "discord" | "telegram", message: string) {
+  return request<{ message: string; test: NotificationTestResult }>("/api/settings/notifications/test", {
     method: "POST",
-    body: JSON.stringify({ message }),
+    body: JSON.stringify({ channel, message }),
+  })
+}
+
+export async function detectTelegramChats(botToken: string) {
+  return request<{ items: TelegramChatCandidate[] }>("/api/settings/notifications/telegram/chats", {
+    method: "POST",
+    body: JSON.stringify({ bot_token: botToken }),
   })
 }

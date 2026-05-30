@@ -1,6 +1,10 @@
 package notification
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/codewithwan/gostreamix/internal/infrastructure/activity"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
@@ -19,6 +23,7 @@ func (h *Handler) Routes(app *fiber.App) {
 	api.Get("/", h.ApiGetSettings)
 	api.Put("/", h.ApiSaveSettings)
 	api.Post("/test", h.ApiSendTest)
+	api.Post("/telegram/chats", h.ApiDetectTelegramChats)
 }
 
 func (h *Handler) ApiGetSettings(c *fiber.Ctx) error {
@@ -46,15 +51,72 @@ func (h *Handler) ApiSaveSettings(c *fiber.Ctx) error {
 }
 
 func (h *Handler) ApiSendTest(c *fiber.Ctx) error {
-	var req struct {
-		Message string `json:"message"`
+	var req SendTestDTO
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
 	}
-	_ = c.BodyParser(&req)
 
-	if err := h.svc.SendTest(c.Context(), req.Message); err != nil {
+	result, err := h.svc.SendTest(c.Context(), req)
+	if err != nil {
 		h.log.Error("failed to send notification test", zap.Error(err))
+		activity.Record(activity.Entry{
+			Timestamp: time.Now().UTC(),
+			Source:    "notification",
+			Level:     "error",
+			Event:     "notification_test_failed",
+			Message:   fmt.Sprintf("Notification test failed for %s: %s", req.Channel, err.Error()),
+			IP:        c.IP(),
+			UserAgent: c.Get("User-Agent"),
+		})
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return c.JSON(fiber.Map{"message": "test notification sent"})
+	activity.Record(activity.Entry{
+		Timestamp: time.Now().UTC(),
+		Source:    "notification",
+		Level:     "info",
+		Event:     "notification_test_sent",
+		Message:   fmt.Sprintf("Notification test sent to %s", result.Channel),
+		IP:        c.IP(),
+		UserAgent: c.Get("User-Agent"),
+	})
+
+	return c.JSON(fiber.Map{
+		"message": "test notification sent",
+		"test":    result,
+	})
+}
+
+func (h *Handler) ApiDetectTelegramChats(c *fiber.Ctx) error {
+	var req DetectTelegramChatsDTO
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+	}
+
+	chats, err := h.svc.DetectTelegramChats(c.Context(), req)
+	if err != nil {
+		h.log.Error("failed to detect telegram chats", zap.Error(err))
+		activity.Record(activity.Entry{
+			Timestamp: time.Now().UTC(),
+			Source:    "notification",
+			Level:     "warning",
+			Event:     "telegram_chats_detect_failed",
+			Message:   fmt.Sprintf("Telegram chat detection failed: %s", err.Error()),
+			IP:        c.IP(),
+			UserAgent: c.Get("User-Agent"),
+		})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	activity.Record(activity.Entry{
+		Timestamp: time.Now().UTC(),
+		Source:    "notification",
+		Level:     "info",
+		Event:     "telegram_chats_detected",
+		Message:   fmt.Sprintf("Detected %d Telegram chat(s)", len(chats)),
+		IP:        c.IP(),
+		UserAgent: c.Get("User-Agent"),
+	})
+
+	return c.JSON(fiber.Map{"items": chats})
 }

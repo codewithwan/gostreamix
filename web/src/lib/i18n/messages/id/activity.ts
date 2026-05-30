@@ -15,6 +15,7 @@ export const activityId = {
   activityLevelWarning: "Peringatan",
   activityLevelError: "Error",
   activitySourceFFmpeg: "FFmpeg",
+  activitySourceNotification: "Notifikasi",
   activityUnknownSource: "Sumber tidak diketahui",
   activityUnknownEvent: "Event tidak diketahui",
   activityStreamHint: "stream {id}",

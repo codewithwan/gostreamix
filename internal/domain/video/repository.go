@@ -32,6 +32,11 @@ func (r *repository) List(ctx context.Context) ([]*Video, error) {
 	return videos, err
 }
 
+func (r *repository) Update(ctx context.Context, v *Video) error {
+	_, err := r.db.NewUpdate().Model(v).WherePK().Exec(ctx)
+	return err
+}
+
 func (r *repository) Delete(ctx context.Context, id uuid.UUID) error {
 	_, err := r.db.NewDelete().Model((*Video)(nil)).Where("id = ?", id).Exec(ctx)
 	return err

@@ -6,3 +6,11 @@ type ProcessVideoDTO struct {
 	Path         string
 	Folder       string
 }
+
+type RenameVideoDTO struct {
+	Name string `json:"name"`
+}
+
+type MoveVideoDTO struct {
+	Folder string `json:"folder"`
+}

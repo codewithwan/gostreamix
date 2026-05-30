@@ -1,4 +1,4 @@
-import { AlertTriangle, Globe2, TerminalSquare } from "lucide-react"
+import { AlertTriangle, Bell, Globe2, TerminalSquare } from "lucide-react"
 
 import type { ActivityLogEntry } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
@@ -58,6 +58,9 @@ export function sourceLabel(item: ActivityLogEntry, t: TranslateFn) {
   if (source === "http") {
     return item.is_api ? t("activityApi") : t("activityPage")
   }
+  if (source === "notification") {
+    return t("activitySourceNotification", "Notification")
+  }
   if (!source) {
     return t("activityUnknownSource")
   }
@@ -81,6 +84,9 @@ export function itemHeadline(item: ActivityLogEntry, t: TranslateFn) {
 export function activityIcon(item: ActivityLogEntry) {
   if (item.source === "ffmpeg") {
     return TerminalSquare
+  }
+  if (item.source === "notification") {
+    return Bell
   }
   const level = resolveActivityLevel(item)
   if (level === "error" || level === "warning") {

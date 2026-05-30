@@ -15,6 +15,7 @@ export const activityEn = {
   activityLevelWarning: "Warning",
   activityLevelError: "Error",
   activitySourceFFmpeg: "FFmpeg",
+  activitySourceNotification: "Notification",
   activityUnknownSource: "Unknown source",
   activityUnknownEvent: "Unknown event",
   activityStreamHint: "stream {id}",
