@@ -111,6 +111,7 @@ export interface StreamWorkspace {
     rtmp_targets: string[]
     bitrate: number
     resolution: string
+    fps: number
   }
   videos: Video[]
   platforms: Array<{
@@ -121,6 +122,21 @@ export interface StreamWorkspace {
     enabled: boolean
     stream_key: string
   }>
+}
+
+export interface StreamStats {
+  status: string
+  started_at?: string
+  last_error?: string
+  last_output?: string[]
+  progress?: {
+    Frame?: number
+    FPS?: number
+    Drop?: number
+    Time?: string
+    Bitrate?: string
+    Speed?: number
+  }
 }
 
 let csrfToken = ""
@@ -252,6 +268,10 @@ export async function getWorkspace(streamID: string) {
   return request<StreamWorkspace>(`/api/streams/${streamID}/workspace`)
 }
 
+export async function getStreamStats(streamID: string) {
+  return request<StreamStats>(`/api/streams/${streamID}/stats`)
+}
+
 export async function applyProgram(
   streamID: string,
   payload: {
@@ -260,6 +280,7 @@ export async function applyProgram(
     rtmp_targets: string[]
     bitrate: number
     resolution: string
+    fps: number
     apply_live_now: boolean
   },
 ) {

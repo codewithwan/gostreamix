@@ -35,6 +35,7 @@ type StreamProgram struct {
 	RTMPTargets []string    `bun:",type:json" json:"rtmp_targets"`
 	Bitrate     int         `json:"bitrate"`
 	Resolution  string      `json:"resolution"`
+	FPS         int         `json:"fps"`
 	CreatedAt   time.Time   `bun:",nullzero,notnull,default:current_timestamp" json:"created_at"`
 	UpdatedAt   time.Time   `bun:",nullzero,notnull,default:current_timestamp" json:"updated_at"`
 }
@@ -55,6 +56,9 @@ type Process struct {
 	Status       ProcessStatus
 	StartedAt    time.Time
 	LastProgress *ffmpeg.Progress
+	LastError    string
+	LastOutput   []string
+	Done         chan struct{}
 	mu           sync.RWMutex
 }
 
@@ -74,4 +78,31 @@ func (p *Process) UpdateProgress(progress *ffmpeg.Progress) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 	p.LastProgress = progress
+}
+
+func (p *Process) SetLastError(message string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.LastError = message
+}
+
+func (p *Process) GetLastError() string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return p.LastError
+}
+
+func (p *Process) AppendOutput(line string) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.LastOutput = append(p.LastOutput, line)
+	if len(p.LastOutput) > 10 {
+		p.LastOutput = p.LastOutput[len(p.LastOutput)-10:]
+	}
+}
+
+func (p *Process) GetLastOutput() []string {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+	return append([]string(nil), p.LastOutput...)
 }

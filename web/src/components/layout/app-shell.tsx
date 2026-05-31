@@ -166,11 +166,11 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
       </header>
 
       <div className="flex min-h-[calc(100vh-57px)] w-full md:h-screen md:min-h-0 md:overflow-hidden">
-        <aside className="hidden w-[280px] border-r border-border bg-card md:sticky md:top-0 md:flex md:h-screen md:shrink-0 md:flex-col md:overflow-y-auto">
-          <div className="flex items-center gap-3 px-5 py-5">
-            <img src="/web/logo.svg" alt="GoStreamix logo" className="h-8 w-8" />
-            <div>
-              <p className="font-display text-xl font-semibold tracking-tight">GoStreamix</p>
+        <aside className="hidden w-[240px] border-r border-border bg-card md:sticky md:top-0 md:flex md:h-screen md:shrink-0 md:flex-col md:overflow-y-auto lg:w-[260px]">
+          <div className="flex min-w-0 items-center gap-3 px-4 py-4 lg:px-5 lg:py-5">
+            <img src="/web/logo.svg" alt="GoStreamix logo" className="h-8 w-8 shrink-0" />
+            <div className="min-w-0">
+              <p className="truncate font-display text-xl font-semibold tracking-tight">GoStreamix</p>
               <p className="text-xs text-muted-foreground">{t("appTagline")}</p>
             </div>
           </div>
@@ -184,56 +184,56 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
+                      "flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm",
                       isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
                     )
                   }
                 >
-                  <Icon className="h-4 w-4" />
-                  {t(item.to.replace("/", "") || "dashboard", item.label)}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{t(item.to.replace("/", "") || "dashboard", item.label)}</span>
                 </NavLink>
               )
             })}
           </nav>
 
-          <div className="relative mt-auto border-t border-border px-4 py-4" ref={desktopMenuRef}>
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2">
+          <div className="relative mt-auto border-t border-border px-3 py-3 lg:px-4 lg:py-4" ref={desktopMenuRef}>
+            <div className="flex min-w-0 items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-semibold">{initials}</span>
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold">{initials}</span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold">{username}</p>
                   <p className="truncate text-xs text-muted-foreground">{email}</p>
                 </div>
               </div>
-              <Button size="sm" variant="outline" className="h-8 px-2" onClick={() => setUserMenuOpen((current) => !current)} aria-label={t("userMenu")}>
+              <Button size="sm" variant="outline" className="h-8 shrink-0 px-2" onClick={() => setUserMenuOpen((current) => !current)} aria-label={t("userMenu")}>
                 <Menu className="h-4 w-4" />
               </Button>
             </div>
 
             {userMenuOpen ? (
-              <div className="absolute bottom-[72px] right-4 z-20 w-[240px] rounded-md border border-border bg-card p-3 shadow-lg">{userMenuPanel}</div>
+              <div className="absolute bottom-[68px] left-3 right-3 z-20 rounded-md border border-border bg-card p-3 shadow-lg lg:left-auto lg:right-4 lg:w-[240px]">{userMenuPanel}</div>
             ) : null}
           </div>
         </aside>
 
-        <main className="flex-1 px-4 py-5 md:h-screen md:overflow-y-auto md:px-8 md:py-8">
+        <main className="min-w-0 flex-1 px-4 py-5 md:h-screen md:overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-8">
           <Outlet />
         </main>
       </div>
 
       <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <DialogContent className="left-0 top-0 h-screen w-[82vw] max-w-[320px] translate-x-0 translate-y-0 rounded-none border-r border-border p-0">
-          <div className="flex items-center justify-between border-b border-border px-4 py-4">
-            <div className="flex items-center gap-2">
-              <img src="/web/logo.svg" alt="GoStreamix logo" className="h-7 w-7" />
-              <span className="font-display text-base font-semibold">GoStreamix</span>
+        <DialogContent className="left-0 top-0 flex h-[100dvh] w-[min(86vw,320px)] max-w-none translate-x-0 translate-y-0 flex-col rounded-none border-l-0 border-r border-border p-0 [&>button.absolute]:hidden">
+          <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border px-4 py-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <img src="/web/logo.svg" alt="GoStreamix logo" className="h-7 w-7 shrink-0" />
+              <span className="truncate font-display text-base font-semibold">GoStreamix</span>
             </div>
             <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={() => setMobileNavOpen(false)} aria-label={t("close")}>
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <nav className="grid gap-1 px-3 py-3">
+          <nav className="grid gap-1 overflow-y-auto px-3 py-3">
             {navItems.map((item) => {
               const Icon = item.icon
               return (
@@ -243,13 +243,13 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
                   onClick={() => setMobileNavOpen(false)}
                   className={({ isActive }) =>
                     cn(
-                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm",
+                      "flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm",
                       isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
                     )
                   }
                 >
-                  <Icon className="h-4 w-4" />
-                  {t(item.to.replace("/", "") || "dashboard", item.label)}
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">{t(item.to.replace("/", "") || "dashboard", item.label)}</span>
                 </NavLink>
               )
             })}

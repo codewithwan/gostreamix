@@ -55,38 +55,59 @@ export function VideoGrid({
   onThumbnailError,
   t,
 }: VideoGridProps) {
+  const onKeyboardActivate = (event: React.KeyboardEvent, action: () => void) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return
+    }
+    event.preventDefault()
+    action()
+  }
+
   return (
     <div className="space-y-3">
-      <div className="grid min-h-56 grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 2xl:grid-cols-8" onContextMenu={onEmptyContextMenu}>
+      <div className="grid min-h-56 grid-cols-[repeat(auto-fill,minmax(142px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(136px,1fr))]" onContextMenu={onEmptyContextMenu}>
         {!loading && parentFolder === null && folders.length === 0 && filteredVideos.length === 0 ? (
           <p className="text-sm text-muted-foreground">{selectedFolder === ALL_FOLDERS ? t("videosEmpty") : t("videosFolderEmpty")}</p>
         ) : null}
 
         {!selectMode && parentFolder !== null ? (
-          <Card className="h-fit self-start">
+          <Card
+            role="button"
+            tabIndex={0}
+            className="h-fit cursor-pointer self-start transition-colors hover:bg-muted/35 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            onClick={() => onOpenParentFolder(parentFolder)}
+            onKeyDown={(event) => onKeyboardActivate(event, () => onOpenParentFolder(parentFolder))}
+          >
             <CardHeader className="p-2.5 pb-1.5">
               <CardTitle className="truncate text-xs">{t("videosBackFolder", "Back")}</CardTitle>
               <CardDescription className="truncate text-[11px]">{t("videosParentFolder", "Parent folder")}</CardDescription>
             </CardHeader>
             <CardContent className="p-2.5 pt-0">
-              <button
-                type="button"
-                className="flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-md border border-border bg-muted/50 text-xs font-medium transition-colors hover:bg-muted"
-                onClick={() => onOpenParentFolder(parentFolder)}
-              >
+              <div className="flex aspect-video w-full flex-col items-center justify-center gap-1 rounded-md border border-border bg-muted/50 text-xs font-medium">
                 <FolderUp className="h-7 w-7" />
                 <span>{t("videosBackFolder", "Back")}</span>
-              </button>
+              </div>
             </CardContent>
           </Card>
         ) : null}
 
         {folders.map((folder) => {
           const isSelected = selectedFolderPaths.includes(folder.path)
+          const openOrSelectFolder = () => {
+            if (selectMode) {
+              onToggleFolderSelection(folder.path)
+            } else {
+              onOpenFolder(folder.path)
+            }
+          }
           return (
               <Card
                 key={folder.path}
-                className={`h-fit self-start ${isSelected ? "ring-2 ring-primary/60" : ""}`}
+                role="button"
+                tabIndex={0}
+                className={`h-fit cursor-pointer self-start transition-colors hover:bg-muted/35 focus:outline-none focus:ring-2 focus:ring-primary/50 ${isSelected ? "ring-2 ring-primary/60" : ""}`}
+                onClick={openOrSelectFolder}
+                onKeyDown={(event) => onKeyboardActivate(event, openOrSelectFolder)}
                 onContextMenu={(event) => {
                   event.stopPropagation()
                   onFolderContextMenu(event, folder)
@@ -99,17 +120,7 @@ export function VideoGrid({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-2.5 pt-0">
-                  <button
-                    type="button"
-                    className="relative flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-md border border-border bg-muted/50 text-xs font-medium transition-colors hover:bg-muted"
-                    onClick={() => {
-                      if (selectMode) {
-                        onToggleFolderSelection(folder.path)
-                      } else {
-                        onOpenFolder(folder.path)
-                      }
-                    }}
-                  >
+                  <div className="relative flex aspect-video w-full flex-col items-center justify-center gap-1 rounded-md border border-border bg-muted/50 text-xs font-medium">
                     <Folder className="h-7 w-7" />
                     <span className="max-w-full truncate px-2">{folder.label}</span>
                     {selectMode ? (
@@ -117,7 +128,7 @@ export function VideoGrid({
                         {isSelected ? t("videosSelectedLabel") : t("videosSelectLabel")}
                       </span>
                     ) : null}
-                  </button>
+                  </div>
                 </CardContent>
               </Card>
           )
@@ -128,11 +139,22 @@ export function VideoGrid({
           const showThumbnailImage = thumbnailURL && !brokenThumbnails[video.id]
           const isSelected = selectedVideoIDs.includes(video.id)
           const folderName = normalizeFolder(video.folder || "")
+          const previewOrSelectVideo = () => {
+            if (selectMode) {
+              onToggleSelection(video.id)
+            } else {
+              onOpenPreview(video)
+            }
+          }
 
           return (
             <Card
               key={video.id}
-              className={`h-fit self-start ${isSelected ? "ring-2 ring-primary/60" : ""}`}
+              role="button"
+              tabIndex={0}
+              className={`h-fit cursor-pointer self-start transition-colors hover:bg-muted/35 focus:outline-none focus:ring-2 focus:ring-primary/50 ${isSelected ? "ring-2 ring-primary/60" : ""}`}
+              onClick={previewOrSelectVideo}
+              onKeyDown={(event) => onKeyboardActivate(event, previewOrSelectVideo)}
               onContextMenu={(event) => {
                 event.stopPropagation()
                 onVideoContextMenu(event, video)
@@ -146,17 +168,7 @@ export function VideoGrid({
               </CardHeader>
 
               <CardContent className="space-y-2 p-2.5 pt-0">
-                <button
-                  type="button"
-                  className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-border bg-muted/60 text-left"
-                  onClick={() => {
-                    if (selectMode) {
-                      onToggleSelection(video.id)
-                    } else {
-                      onOpenPreview(video)
-                    }
-                  }}
-                >
+                <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden rounded-md border border-border bg-muted/60 text-left">
                   {showThumbnailImage ? (
                     <img
                       src={thumbnailURL}
@@ -186,7 +198,7 @@ export function VideoGrid({
                       {isSelected ? t("videosSelectedLabel") : t("videosSelectLabel")}
                     </span>
                   )}
-                </button>
+                </div>
               </CardContent>
             </Card>
           )

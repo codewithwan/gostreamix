@@ -20,6 +20,8 @@ export const mediaEn = {
   videosLoadFailed: "Failed to load videos",
   videosUploadFailed: "Failed to upload video",
   videosUploadTooLarge: "{name} is larger than the 2 GB upload limit",
+  videosDuplicateName: "A file named {name} already exists in this folder",
+  videosDuplicateFolder: "A folder named {name} already exists here",
   videosUploadQueueSummary: "{done}/{total} uploaded",
   videosUploadQueueComplete: "{count} video(s) uploaded",
   videosUploadQueueFinishedWithErrors: "{done}/{total} uploaded, {failed} failed",

@@ -13,6 +13,11 @@ type repository struct {
 }
 
 func NewRepository(db *bun.DB) Repository {
+	_, _ = db.NewUpdate().
+		Model((*Stream)(nil)).
+		Set("status = ?", string(StatusStopped)).
+		Where("status IN (?)", bun.In([]string{string(StatusStarting), string(StatusRunning), string(StatusStopping)})).
+		Exec(context.Background())
 	return &repository{db: db}
 }
 

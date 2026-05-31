@@ -349,11 +349,14 @@ export function SettingsPage() {
 
           <div className="space-y-3">
             {activeChannel === "discord" ? (
-              <Input
-                placeholder={t("settingsDiscordWebhookPlaceholder")}
-                value={discordWebhookDraft}
-                onChange={(event) => setDiscordWebhookDraft(event.target.value)}
-              />
+              <label className="block space-y-1.5">
+                <span className="text-sm font-medium">{t("settingsDiscordWebhookPlaceholder")}</span>
+                <Input
+                  placeholder={t("settingsDiscordWebhookPlaceholder")}
+                  value={discordWebhookDraft}
+                  onChange={(event) => setDiscordWebhookDraft(event.target.value)}
+                />
+              </label>
             ) : (
               <>
                 <div className="flex items-center gap-2">
@@ -363,14 +366,17 @@ export function SettingsPage() {
 
                 {telegramStep === 1 ? (
                   <div className="space-y-3">
-                    <Input
-                      placeholder={t("settingsTelegramTokenPlaceholder")}
-                      value={telegramTokenDraft}
-                      onChange={(event) => {
-                        setTelegramTokenDraft(event.target.value)
-                        setTelegramChatCandidates([])
-                      }}
-                    />
+                    <label className="block space-y-1.5">
+                      <span className="text-sm font-medium">{t("settingsTelegramTokenPlaceholder")}</span>
+                      <Input
+                        placeholder={t("settingsTelegramTokenPlaceholder")}
+                        value={telegramTokenDraft}
+                        onChange={(event) => {
+                          setTelegramTokenDraft(event.target.value)
+                          setTelegramChatCandidates([])
+                        }}
+                      />
+                    </label>
                     <p className="text-xs text-muted-foreground">
                       {t("settingsTelegramTokenHelp", "Paste the bot token from BotFather. After this, send any message to the bot from Telegram.")}
                     </p>
@@ -412,11 +418,14 @@ export function SettingsPage() {
                         </div>
                       ) : null}
                     </div>
-                    <Input
-                      placeholder={t("settingsTelegramChatPlaceholder")}
-                      value={telegramChatDraft}
-                      onChange={(event) => setTelegramChatDraft(event.target.value)}
-                    />
+                    <label className="block space-y-1.5">
+                      <span className="text-sm font-medium">{t("settingsTelegramChatPlaceholder")}</span>
+                      <Input
+                        placeholder={t("settingsTelegramChatPlaceholder")}
+                        value={telegramChatDraft}
+                        onChange={(event) => setTelegramChatDraft(event.target.value)}
+                      />
+                    </label>
                   </div>
                 )}
               </>

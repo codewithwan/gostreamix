@@ -65,6 +65,9 @@ func migrate(ctx context.Context, db *bun.DB, log *zap.Logger) error {
 	if err := ensureColumnExists(ctx, db, "videos", "folder", "TEXT NOT NULL DEFAULT ''"); err != nil {
 		return err
 	}
+	if err := ensureColumnExists(ctx, db, "stream_programs", "fps", "INTEGER NOT NULL DEFAULT 30"); err != nil {
+		return err
+	}
 
 	return nil
 }

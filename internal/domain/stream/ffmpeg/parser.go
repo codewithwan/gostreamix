@@ -9,6 +9,7 @@ import (
 var (
 	frameReg   = regexp.MustCompile(`frame=\s*(\d+)`)
 	fpsReg     = regexp.MustCompile(`fps=\s*([\d.]+)`)
+	dropReg    = regexp.MustCompile(`drop=\s*(\d+)`)
 	timeReg    = regexp.MustCompile(`time=\s*([\d:.]+)`)
 	bitrateReg = regexp.MustCompile(`bitrate=\s*([\d.kM]+bits/s)`)
 	speedReg   = regexp.MustCompile(`speed=\s*([\d.]+)x`)
@@ -26,6 +27,9 @@ func ParseProgress(line string) *Progress {
 	}
 	if m := fpsReg.FindStringSubmatch(line); len(m) > 1 {
 		p.FPS, _ = strconv.ParseFloat(m[1], 64)
+	}
+	if m := dropReg.FindStringSubmatch(line); len(m) > 1 {
+		p.Drop, _ = strconv.Atoi(m[1])
 	}
 	if m := timeReg.FindStringSubmatch(line); len(m) > 1 {
 		p.Time = m[1]

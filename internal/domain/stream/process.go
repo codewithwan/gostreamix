@@ -28,6 +28,7 @@ func (m *ProcessManager) Register(id uuid.UUID, cmd *exec.Cmd) *Process {
 		Cmd:       cmd,
 		Status:    StatusStarting,
 		StartedAt: time.Now(),
+		Done:      make(chan struct{}),
 	}
 	m.processes[id] = p
 	return p

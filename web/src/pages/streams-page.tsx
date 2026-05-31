@@ -35,6 +35,14 @@ import { cn } from "@/lib/utils"
 
 const NIL_UUID = "00000000-0000-0000-0000-000000000000"
 
+type StreamWSMessage = {
+  type: string
+  payload?: {
+    stream_id?: string
+    status?: string
+  }
+}
+
 function statusVariant(status: string) {
   if (status === "running") {
     return "success" as const
@@ -109,6 +117,7 @@ export function StreamsPage() {
   const [videoID, setVideoID] = useState(NIL_UUID)
   const [selectedPlatformIDs, setSelectedPlatformIDs] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [deleteDialog, setDeleteDialog] = useState<Stream | null>(null)
 
   const selectedTargets = useMemo(
     () =>
@@ -146,6 +155,27 @@ export function StreamsPage() {
 
   useEffect(() => {
     void Promise.all([loadStreams(), loadDependencies()])
+  }, [])
+
+  useEffect(() => {
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws"
+    const socket = new WebSocket(`${protocol}://${window.location.host}/ws`)
+
+    socket.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data) as StreamWSMessage
+        if (message.type !== "stream_status" || !message.payload?.stream_id || !message.payload.status) {
+          return
+        }
+        setStreams((current) =>
+          current.map((stream) => (stream.id === message.payload?.stream_id ? { ...stream, status: message.payload.status || stream.status } : stream)),
+        )
+      } catch {
+        // Ignore malformed websocket frames; polling and manual refresh remain available.
+      }
+    }
+
+    return () => socket.close()
   }, [])
 
   const togglePlatform = (platformID: string) => {
@@ -240,16 +270,12 @@ export function StreamsPage() {
     }
   }
 
-  const handleDelete = async (streamID: string) => {
-    const ok = window.confirm(t("streamsDeleteConfirm"))
-    if (!ok) {
-      return
-    }
-
+  const performDelete = async (streamID: string) => {
     setError("")
     try {
       await deleteStream(streamID)
       await loadStreams()
+      setDeleteDialog(null)
       toast.success(t("streamsDeleteSuccess"))
     } catch (err) {
       const message = err instanceof Error ? err.message : t("streamsDeleteFailed")
@@ -287,29 +313,41 @@ export function StreamsPage() {
 
               <form className="space-y-4" onSubmit={handleCreate}>
                 <div className="grid gap-3 md:grid-cols-2">
-                  <Input value={name} onChange={(event) => setName(event.target.value)} required placeholder={t("streamsNamePlaceholder")} />
-                  <Select value={videoID} onValueChange={setVideoID}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={t("streamsSelectVideo")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NIL_UUID}>{t("streamsSelectVideo")}</SelectItem>
-                      {videos.map((video) => (
-                        <SelectItem key={video.id} value={video.id}>
-                          {video.original_name || video.filename}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">{t("streamsNamePlaceholder")}</span>
+                    <Input value={name} onChange={(event) => setName(event.target.value)} required placeholder={t("streamsNamePlaceholder")} />
+                  </label>
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">{t("streamsSelectVideo")}</span>
+                    <Select value={videoID} onValueChange={setVideoID}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("streamsSelectVideo")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NIL_UUID}>{t("streamsSelectVideo")}</SelectItem>
+                        {videos.map((video) => (
+                          <SelectItem key={video.id} value={video.id}>
+                            {video.original_name || video.filename}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </label>
 
-                  <Input value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder={t("streamsResolutionPlaceholder")} />
-                  <Input
-                    type="number"
-                    min={500}
-                    value={bitrate}
-                    onChange={(event) => setBitrate(Number(event.target.value))}
-                    placeholder={t("streamsBitratePlaceholder")}
-                  />
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">{t("streamsResolutionPlaceholder")}</span>
+                    <Input value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder={t("streamsResolutionPlaceholder")} />
+                  </label>
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">{t("streamsBitratePlaceholder")}</span>
+                    <Input
+                      type="number"
+                      min={500}
+                      value={bitrate}
+                      onChange={(event) => setBitrate(Number(event.target.value))}
+                      placeholder={t("streamsBitratePlaceholder")}
+                    />
+                  </label>
                 </div>
 
                 <div className="space-y-2">
@@ -390,7 +428,7 @@ export function StreamsPage() {
                   <Button size="sm" variant="subtle" disabled={!isRunning || isStarting || isStopping} onClick={() => void handleStop(stream.id)}>
                     {t("streamsStop")}
                   </Button>
-                  <Button size="sm" variant="danger" onClick={() => void handleDelete(stream.id)}>
+                  <Button size="sm" variant="danger" onClick={() => setDeleteDialog(stream)}>
                     {t("delete")}
                   </Button>
                 </div>
@@ -399,6 +437,27 @@ export function StreamsPage() {
           )
         })}
       </div>
+
+      <Dialog open={deleteDialog !== null} onOpenChange={(open) => !open && setDeleteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("delete")}</DialogTitle>
+            <DialogDescription>
+              {deleteDialog?.status === "running"
+                ? t("streamsDeleteRunningConfirm", "This stream is currently running. Deleting it will stop the pipeline first.")
+                : t("streamsDeleteConfirm")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setDeleteDialog(null)}>
+              {t("cancel")}
+            </Button>
+            <Button type="button" variant="danger" onClick={() => deleteDialog && void performDelete(deleteDialog.id)}>
+              {t("delete")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   )
 }

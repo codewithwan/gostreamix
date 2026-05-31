@@ -7,6 +7,7 @@ import (
 
 type CommandBuilder struct {
 	inputFile    string
+	concatFile   string
 	bitrate      int
 	resolution   string
 	fps          int
@@ -27,6 +28,13 @@ func NewCommandBuilder() *CommandBuilder {
 
 func (b *CommandBuilder) WithInput(file string) *CommandBuilder {
 	b.inputFile = file
+	b.concatFile = ""
+	return b
+}
+
+func (b *CommandBuilder) WithConcatFile(file string) *CommandBuilder {
+	b.concatFile = file
+	b.inputFile = ""
 	return b
 }
 
@@ -61,7 +69,7 @@ func (b *CommandBuilder) WithPreset(p string) *CommandBuilder {
 }
 
 func (b *CommandBuilder) Build() ([]string, error) {
-	if b.inputFile == "" {
+	if b.inputFile == "" && b.concatFile == "" {
 		return nil, fmt.Errorf("input file is required")
 	}
 	if len(b.destinations) == 0 {
@@ -74,7 +82,12 @@ func (b *CommandBuilder) Build() ([]string, error) {
 		args = append(args, "-stream_loop", "-1")
 	}
 
-	args = append(args, "-thread_queue_size", "1024", "-i", b.inputFile)
+	args = append(args, "-thread_queue_size", "1024")
+	if b.concatFile != "" {
+		args = append(args, "-f", "concat", "-safe", "0", "-i", b.concatFile)
+	} else {
+		args = append(args, "-i", b.inputFile)
+	}
 
 	bitrateVal := b.bitrate
 	if bitrateVal == 0 {

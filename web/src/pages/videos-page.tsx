@@ -154,6 +154,23 @@ export function VideosPage() {
   const allSelectableVideoIDs = filteredVideos.map((video) => video.id)
   const allSelectableFolderPaths = visibleFolders.map((folder) => folder.path)
 
+  const videoName = (video: Video) => (video.original_name || video.filename).trim()
+  const sameName = (left: string, right: string) => left.trim().toLocaleLowerCase() === right.trim().toLocaleLowerCase()
+  const folderContains = (folder: string, candidate: string) => candidate === folder || candidate.startsWith(`${folder}/`)
+  const videoIsInsideFolder = (video: Video, folder: string) => folderContains(folder, normalizeFolder(video.folder || ""))
+  const videoIDIsInsideFolder = (videoID: string, folder: string) => {
+    const video = videos.find((item) => item.id === videoID)
+    return video ? videoIsInsideFolder(video, folder) : false
+  }
+  const folderExists = (path: string) => {
+    const clean = normalizeFolder(path)
+    return folderOptions.some((folder) => normalizeFolder(folder) === clean)
+  }
+  const videoNameExistsInFolder = (name: string, folder: string, excludeID?: string) => {
+    const cleanFolder = normalizeFolder(folder)
+    return videos.some((video) => video.id !== excludeID && normalizeFolder(video.folder || "") === cleanFolder && sameName(videoName(video), name))
+  }
+
   const loadVideos = async ({ showLoader }: { showLoader: boolean }) => {
     if (showLoader) {
       setLoading(true)
@@ -187,6 +204,17 @@ export function VideosPage() {
       return
     }
 
+    const cleanFolder = normalizeFolder(folder)
+    const names = new Set<string>()
+    for (const file of files) {
+      const key = file.name.trim().toLocaleLowerCase()
+      if (names.has(key) || videoNameExistsInFolder(file.name, cleanFolder)) {
+        toast.error(t("videosDuplicateName", "A file named {name} already exists in this folder", { name: file.name }))
+        return
+      }
+      names.add(key)
+    }
+
     setUploading(true)
     setError("")
     setUploadQueueOpen(true)
@@ -200,7 +228,6 @@ export function VideosPage() {
     setUploadItems(queueItems)
 
     try {
-      const cleanFolder = normalizeFolder(folder)
       for (const file of files) {
         const id = `${file.name}-${file.size}-${file.lastModified}`
         setUploadItems((current) => current.map((item) => (item.id === id ? { ...item, status: "uploading", progress: 1 } : item)))
@@ -304,6 +331,10 @@ export function VideosPage() {
     if (!nextFolder) {
       return
     }
+    if (folderExists(nextFolder)) {
+      toast.error(t("videosDuplicateFolder", "A folder named {name} already exists here", { name: cleanFolderName }))
+      return
+    }
 
     setCustomFolders((current) => {
       if (current.includes(nextFolder)) {
@@ -322,11 +353,16 @@ export function VideosPage() {
   }
 
   const performRenameVideo = async (video: Video, nextName: string) => {
-    if (nextName.trim() === "") {
+    const cleanName = nextName.trim()
+    if (cleanName === "") {
+      return
+    }
+    if (videoNameExistsInFolder(cleanName, video.folder || "", video.id)) {
+      toast.error(t("videosDuplicateName", "A file named {name} already exists in this folder", { name: cleanName }))
       return
     }
     try {
-      await renameVideo(video.id, nextName.trim())
+      await renameVideo(video.id, cleanName)
       await loadVideos({ showLoader: false })
       setRenameDialog(null)
       toast.success(t("videosRenameSuccess", "Video renamed"))
@@ -336,6 +372,10 @@ export function VideosPage() {
   }
 
   const handleMoveVideo = async (video: Video, folder = uploadFolder) => {
+    if (videoNameExistsInFolder(videoName(video), folder, video.id)) {
+      toast.error(t("videosDuplicateName", "A file named {name} already exists in this folder", { name: videoName(video) }))
+      return
+    }
     try {
       await moveVideo(video.id, folder)
       await loadVideos({ showLoader: false })
@@ -390,6 +430,24 @@ export function VideosPage() {
     clearSelection()
   }
 
+  const copyFolderToClipboard = (mode: "cut" | "copy", path: string) => {
+    if (selectedItemCount > 0) {
+      copySelectionToClipboard(mode)
+      return
+    }
+    setClipboard({ mode, kind: "folder", path })
+    clearSelection()
+  }
+
+  const copyVideoToClipboard = (mode: "cut" | "copy", video: Video) => {
+    if (selectedItemCount > 0) {
+      copySelectionToClipboard(mode)
+      return
+    }
+    setClipboard({ mode, kind: "video", video })
+    clearSelection()
+  }
+
   const pasteSelection = async (videoIDs: string[], folderPaths: string[], destinationBase: string, mode: "cut" | "copy") => {
     const movedVideoIDs = new Set<string>()
     try {
@@ -398,6 +456,10 @@ export function VideosPage() {
         const destination = folderDestination(path, destinationBase)
         if (destination === path || destination.startsWith(`${path}/`)) {
           continue
+        }
+        if (folderExists(destination)) {
+          toast.error(t("videosDuplicateFolder", "A folder named {name} already exists here", { name: destination.split("/").pop() || destination }))
+          return
         }
         for (const video of affected) {
           const nextFolder = remapFolderPath(video.folder || "", path, destination)
@@ -429,8 +491,27 @@ export function VideosPage() {
   }
 
   const selectAllVisible = () => {
-    setSelectedVideoIDs(allSelectableVideoIDs)
+    setSelectedVideoIDs(allSelectableVideoIDs.filter((id) => !allSelectableFolderPaths.some((folder) => videoIDIsInsideFolder(id, folder))))
     setSelectedFolderPaths(allSelectableFolderPaths)
+    setSelectMode(true)
+  }
+
+  const toggleFolderSelection = (folder: string) => {
+    setSelectedFolderPaths((current) => {
+      if (current.includes(folder)) {
+        return current.filter((entry) => entry !== folder)
+      }
+      return [...current.filter((entry) => !folderContains(folder, entry) && !folderContains(entry, folder)), folder]
+    })
+    setSelectedVideoIDs((current) => current.filter((id) => !videoIDIsInsideFolder(id, folder)))
+    setSelectMode(true)
+  }
+
+  const toggleVideoSelection = (videoID: string) => {
+    const video = videos.find((item) => item.id === videoID)
+    const folder = normalizeFolder(video?.folder || "")
+    setSelectedFolderPaths((current) => current.filter((entry) => !folder || !folderContains(entry, folder)))
+    setSelectedVideoIDs((current) => (current.includes(videoID) ? current.filter((entry) => entry !== videoID) : [...current, videoID]))
     setSelectMode(true)
   }
 
@@ -488,6 +569,10 @@ export function VideosPage() {
 
     const affected = videosInFolder(source)
     try {
+      if (folderExists(destination)) {
+        toast.error(t("videosDuplicateFolder", "A folder named {name} already exists here", { name: destination.split("/").pop() || destination }))
+        return
+      }
       for (const video of affected) {
         const nextFolder = remapFolderPath(video.folder || "", source, destination)
         if (mode === "cut") {
@@ -527,6 +612,10 @@ export function VideosPage() {
 
     const parent = parentFolder(path)
     const destination = normalizeFolder(parent ? `${parent}/${cleanName}` : cleanName)
+    if (destination !== path && folderExists(destination)) {
+      toast.error(t("videosDuplicateFolder", "A folder named {name} already exists here", { name: cleanName }))
+      return
+    }
     try {
       for (const video of videosInFolder(path)) {
         await moveVideo(video.id, remapFolderPath(video.folder || "", path, destination))
@@ -656,20 +745,15 @@ export function VideosPage() {
           onCancelSelectMode={() => {
             setSelectMode(false)
             setSelectedVideoIDs([])
+            setSelectedFolderPaths([])
           }}
           onDeleteSelected={() => void handleDeleteSelected()}
           onOpenParentFolder={setSelectedFolder}
           onOpenFolder={setSelectedFolder}
           onToggleFolderSelection={(folder) => {
-            setSelectedFolderPaths((current) => (current.includes(folder) ? current.filter((entry) => entry !== folder) : [...current, folder]))
-            setSelectMode(true)
+            toggleFolderSelection(folder)
           }}
-          onToggleSelection={(videoID) => {
-            setSelectedVideoIDs((current) =>
-              current.includes(videoID) ? current.filter((entry) => entry !== videoID) : [...current, videoID],
-            )
-            setSelectMode(true)
-          }}
+          onToggleSelection={toggleVideoSelection}
           onOpenPreview={(video) => {
             setSelectedVideo(video)
             setPreviewOpen(true)
@@ -692,8 +776,8 @@ export function VideosPage() {
       </div>
 
       {selectedItemCount > 0 ? (
-        <div className="fixed bottom-4 left-4 z-40 flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm shadow-lg">
-          <span>{t("videosSelectedCount", undefined, { count: selectedItemCount })}</span>
+        <div className="fixed bottom-20 left-3 right-3 z-40 flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm shadow-lg sm:bottom-4 sm:left-4 sm:right-auto sm:justify-start">
+          <span className="font-medium">{t("videosSelectedCount", undefined, { count: selectedItemCount })}</span>
           <Button size="sm" variant="outline" onClick={selectAllVisible}>
             {t("videosSelectAll", "Select all")}
           </Button>
@@ -707,7 +791,10 @@ export function VideosPage() {
         <div className="fixed inset-0 z-50" onClick={() => setContextMenu(null)} onContextMenu={(event) => event.preventDefault()}>
           <div
             className="absolute w-44 rounded-md border border-border bg-card p-1 text-sm shadow-lg"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
+            style={{
+              left: `min(${contextMenu.x}px, calc(100vw - 11.5rem))`,
+              top: `min(${contextMenu.y}px, calc(100vh - 18rem))`,
+            }}
             onClick={(event) => event.stopPropagation()}
           >
             {contextMenu.type === "space" ? (
@@ -751,11 +838,23 @@ export function VideosPage() {
                 <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { setRenameDialog({ kind: "folder", path: contextMenu.folder.path, value: contextMenu.folder.label }); setContextMenu(null) }}>
                   {t("videosRename", "Rename")}
                 </button>
-                <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { setClipboard({ mode: "cut", kind: "folder", path: contextMenu.folder.path }); setContextMenu(null) }}>
-                  {t("videosCut", "Cut")}
+                <button
+                  className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
+                  onClick={() => {
+                    copyFolderToClipboard("cut", contextMenu.folder.path)
+                    setContextMenu(null)
+                  }}
+                >
+                  {selectedItemCount > 0 ? t("videosCutSelected", "Cut selected") : t("videosCut", "Cut")}
                 </button>
-                <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { setClipboard({ mode: "copy", kind: "folder", path: contextMenu.folder.path }); setContextMenu(null) }}>
-                  {t("videosCopy", "Copy")}
+                <button
+                  className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
+                  onClick={() => {
+                    copyFolderToClipboard("copy", contextMenu.folder.path)
+                    setContextMenu(null)
+                  }}
+                >
+                  {selectedItemCount > 0 ? t("videosCopySelected", "Copy selected") : t("videosCopy", "Copy")}
                 </button>
                 {clipboard ? (
                   <button
@@ -781,10 +880,7 @@ export function VideosPage() {
                 <button
                   className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
                   onClick={() => {
-                    setSelectedFolderPaths((current) =>
-                      current.includes(contextMenu.folder.path) ? current.filter((path) => path !== contextMenu.folder.path) : [...current, contextMenu.folder.path],
-                    )
-                    setSelectMode(true)
+                    toggleFolderSelection(contextMenu.folder.path)
                     setContextMenu(null)
                   }}
                 >
@@ -811,11 +907,23 @@ export function VideosPage() {
                 <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { void handleRenameVideo(contextMenu.video); setContextMenu(null) }}>
                   {t("videosRename", "Rename")}
                 </button>
-                <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { setClipboard({ mode: "cut", kind: "video", video: contextMenu.video }); setContextMenu(null) }}>
-                  {t("videosCut", "Cut")}
+                <button
+                  className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
+                  onClick={() => {
+                    copyVideoToClipboard("cut", contextMenu.video)
+                    setContextMenu(null)
+                  }}
+                >
+                  {selectedItemCount > 0 ? t("videosCutSelected", "Cut selected") : t("videosCut", "Cut")}
                 </button>
-                <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { setClipboard({ mode: "copy", kind: "video", video: contextMenu.video }); setContextMenu(null) }}>
-                  {t("videosCopy", "Copy")}
+                <button
+                  className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
+                  onClick={() => {
+                    copyVideoToClipboard("copy", contextMenu.video)
+                    setContextMenu(null)
+                  }}
+                >
+                  {selectedItemCount > 0 ? t("videosCopySelected", "Copy selected") : t("videosCopy", "Copy")}
                 </button>
                 {clipboard ? (
                   <button className="w-full rounded px-2 py-1.5 text-left hover:bg-muted" onClick={() => { void handlePaste(); setContextMenu(null) }}>
@@ -825,10 +933,7 @@ export function VideosPage() {
                 <button
                   className="w-full rounded px-2 py-1.5 text-left hover:bg-muted"
                   onClick={() => {
-                    setSelectedVideoIDs((current) =>
-                      current.includes(contextMenu.video.id) ? current.filter((id) => id !== contextMenu.video.id) : [...current, contextMenu.video.id],
-                    )
-                    setSelectMode(true)
+                    toggleVideoSelection(contextMenu.video.id)
                     setContextMenu(null)
                   }}
                 >
@@ -927,14 +1032,17 @@ export function VideosPage() {
               {renameDialog?.kind === "folder" ? t("videosRenameFolderDescription", "Rename this folder and update contained videos.") : t("videosRenamePrompt", "Rename video")}
             </DialogDescription>
           </DialogHeader>
-          <Input
-            value={renameDialog?.value ?? ""}
-            onChange={(event) => {
-              const value = event.target.value
-              setRenameDialog((current) => (current ? { ...current, value } : current))
-            }}
-            autoFocus
-          />
+          <label className="block space-y-1.5">
+            <span className="text-sm font-medium">{renameDialog?.kind === "folder" ? t("videosFolderNamePlaceholder") : t("videosRenamePrompt", "Rename video")}</span>
+            <Input
+              value={renameDialog?.value ?? ""}
+              onChange={(event) => {
+                const value = event.target.value
+                setRenameDialog((current) => (current ? { ...current, value } : current))
+              }}
+              autoFocus
+            />
+          </label>
           <DialogFooter>
             <Button variant="outline" onClick={() => setRenameDialog(null)}>
               {t("cancel")}
@@ -1004,27 +1112,28 @@ export function VideosPage() {
           }
         }}
       >
-        <DialogContent className="max-w-4xl">
-          <DialogHeader>
-            <DialogTitle>{selectedVideo?.original_name || selectedVideo?.filename}</DialogTitle>
-            <DialogDescription>{selectedVideo ? `${bytesLabel(selectedVideo.size)} | ${selectedVideo.duration}s` : ""}</DialogDescription>
+        <DialogContent className="flex max-h-[92dvh] w-[calc(100vw-1rem)] max-w-5xl flex-col overflow-hidden p-0 sm:w-[calc(100vw-2rem)]">
+          <DialogHeader className="shrink-0 border-b border-border px-4 py-3 pr-11 sm:px-5">
+            <DialogTitle className="truncate text-base sm:text-lg">{selectedVideo?.original_name || selectedVideo?.filename}</DialogTitle>
+            <DialogDescription className="truncate">{selectedVideo ? `${bytesLabel(selectedVideo.size)} | ${selectedVideo.duration}s` : ""}</DialogDescription>
           </DialogHeader>
           {selectedVideo ? (
-            <div className="overflow-hidden rounded-md border border-border bg-black">
-              <button type="button" className="block w-full" onClick={togglePreviewPlayback}>
+            <div className="flex min-h-0 flex-1 flex-col bg-black">
+              <button type="button" className="flex min-h-0 flex-1 items-center justify-center bg-black" onClick={togglePreviewPlayback}>
                 <video
                   key={selectedVideo.id}
                   ref={previewVideoRef}
                   src={`/uploads/${selectedVideo.filename}`}
                   muted={previewMuted}
-                  className="aspect-video w-full bg-black object-contain"
+                  playsInline
+                  className="max-h-[calc(92dvh-11rem)] w-full bg-black object-contain"
                   onPlay={() => setPreviewPlaying(true)}
                   onPause={() => setPreviewPlaying(false)}
                   onTimeUpdate={(event) => setPreviewCurrentTime(event.currentTarget.currentTime)}
                   onLoadedMetadata={(event) => setPreviewDuration(event.currentTarget.duration)}
                 />
               </button>
-              <div className="space-y-2 bg-card p-3">
+              <div className="shrink-0 space-y-3 border-t border-border bg-card p-3 sm:p-4">
                 <input
                   type="range"
                   min={0}
@@ -1040,20 +1149,20 @@ export function VideosPage() {
                   }}
                   className="w-full accent-current"
                 />
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" type="button" onClick={togglePreviewPlayback}>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="grid grid-cols-[1fr_auto_auto] gap-2 sm:flex sm:items-center">
+                    <Button size="sm" type="button" className="min-w-0" onClick={togglePreviewPlayback}>
                       {previewPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                      {previewPlaying ? t("videosPause", "Pause") : t("videosPlay", "Play")}
+                      <span className="truncate">{previewPlaying ? t("videosPause", "Pause") : t("videosPlay", "Play")}</span>
                     </Button>
-                    <Button size="sm" type="button" variant="outline" onClick={() => setPreviewMuted((muted) => !muted)}>
+                    <Button size="sm" type="button" variant="outline" className="w-10 px-0" onClick={() => setPreviewMuted((muted) => !muted)}>
                       {previewMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                     </Button>
-                    <Button size="sm" type="button" variant="outline" onClick={() => void previewVideoRef.current?.requestFullscreen()}>
+                    <Button size="sm" type="button" variant="outline" className="w-10 px-0" onClick={() => void previewVideoRef.current?.requestFullscreen()}>
                       <Maximize2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-center text-xs tabular-nums text-muted-foreground sm:text-right">
                     {formatTime(previewCurrentTime)} / {formatTime(previewDuration)}
                   </span>
                 </div>

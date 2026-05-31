@@ -39,23 +39,23 @@ export function VideosToolbar({
   t,
 }: VideosToolbarProps) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div>
-        <h1 className="font-display text-3xl font-semibold tracking-tight">{t("videosTitle")}</h1>
+    <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{t("videosTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("videosDescription")}</p>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button variant="outline" onClick={onRefresh}>
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
+        <Button variant="outline" onClick={onRefresh} className="min-w-0 px-2 sm:px-3">
           <RefreshCw className="h-4 w-4" />
-          {t("refresh")}
+          <span className="hidden sm:inline">{t("refresh")}</span>
         </Button>
 
         <Dialog open={createFolderOpen} onOpenChange={onCreateFolderOpenChange}>
           <DialogTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" className="min-w-0 px-2 sm:px-3">
               <FolderPlus className="h-4 w-4" />
-              {t("videosCreateFolder")}
+              <span className="truncate">{t("videosCreateFolder")}</span>
             </Button>
           </DialogTrigger>
 
@@ -65,7 +65,10 @@ export function VideosToolbar({
               <DialogDescription>{t("videosCreateFolderDescription", undefined, { folder: createFolderBaseLabel })}</DialogDescription>
             </DialogHeader>
 
-            <Input placeholder={t("videosFolderNamePlaceholder")} value={newFolderName} onChange={(event) => onNewFolderNameChange(event.target.value)} />
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">{t("videosFolderNamePlaceholder")}</span>
+              <Input placeholder={t("videosFolderNamePlaceholder")} value={newFolderName} onChange={(event) => onNewFolderNameChange(event.target.value)} />
+            </label>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onCreateFolderOpenChange(false)}>
@@ -76,9 +79,9 @@ export function VideosToolbar({
           </DialogContent>
         </Dialog>
 
-        <Button onClick={onOpenFileDialog} disabled={uploading}>
+        <Button onClick={onOpenFileDialog} disabled={uploading} className="min-w-0 px-2 sm:px-3">
           <Upload className="h-4 w-4" />
-          {uploading ? t("videosUploading") : t("videosBrowse")}
+          <span className="truncate">{uploading ? t("videosUploading") : t("videosBrowse")}</span>
         </Button>
       </div>
     </div>

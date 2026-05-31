@@ -66,3 +66,33 @@ func TestVideoService_DeleteVideo(t *testing.T) {
 		mockRepo.AssertExpectations(t)
 	})
 }
+
+func TestVideoService_RenameVideoDuplicateName(t *testing.T) {
+	ctx := context.Background()
+	vidID := uuid.New()
+	otherID := uuid.New()
+	mockRepo := new(MockVideoRepository)
+	service := video.NewService(mockRepo)
+
+	current := &video.Video{
+		ID:           vidID,
+		Filename:     "current.mp4",
+		OriginalName: "current.mp4",
+		Folder:       "clips",
+	}
+	existing := &video.Video{
+		ID:           otherID,
+		Filename:     "existing.mp4",
+		OriginalName: "Launch.mp4",
+		Folder:       "clips",
+	}
+
+	mockRepo.On("GetByID", ctx, vidID).Return(current, nil)
+	mockRepo.On("List", ctx).Return([]*video.Video{current, existing}, nil)
+
+	res, err := service.RenameVideo(ctx, vidID, video.RenameVideoDTO{Name: "launch.mp4"})
+	assert.Nil(t, res)
+	assert.ErrorIs(t, err, video.ErrVideoDuplicateName)
+	mockRepo.AssertNotCalled(t, "Update")
+	mockRepo.AssertExpectations(t)
+}

@@ -109,12 +109,14 @@ export function ActivityPage() {
 
         <CardContent className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Input
-              placeholder={t("activitySearchPlaceholder")}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              className="max-w-[460px]"
-            />
+            <label className="block w-full max-w-[460px] space-y-1.5">
+              <span className="text-sm font-medium">{t("activitySearchPlaceholder")}</span>
+              <Input
+                placeholder={t("activitySearchPlaceholder")}
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
 
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="muted">{t("activityTotalCount", undefined, { count: result.total })}</Badge>

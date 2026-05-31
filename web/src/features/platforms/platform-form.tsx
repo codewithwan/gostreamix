@@ -36,29 +36,38 @@ export function PlatformForm({
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
-      <Input
-        placeholder={t("platformsNamePlaceholder")}
-        value={draft.name}
-        onChange={(event) => updateField("name", event.target.value)}
-        required
-      />
+      <label className="block space-y-1.5">
+        <span className="text-sm font-medium">{t("platformsNamePlaceholder")}</span>
+        <Input
+          placeholder={t("platformsNamePlaceholder")}
+          value={draft.name}
+          onChange={(event) => updateField("name", event.target.value)}
+          required
+        />
+      </label>
 
-      <Select value={draft.platform_type} onValueChange={(value) => updateField("platform_type", value)}>
-        <SelectTrigger>
-          <SelectValue placeholder={t("platformTypeCustom")} />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="youtube">{t("platformTypeYoutube")}</SelectItem>
-          <SelectItem value="twitch">{t("platformTypeTwitch")}</SelectItem>
-          <SelectItem value="facebook">{t("platformTypeFacebook")}</SelectItem>
-          <SelectItem value="tiktok">{t("platformTypeTiktok")}</SelectItem>
-          <SelectItem value="custom">{t("platformTypeCustom")}</SelectItem>
-        </SelectContent>
-      </Select>
+      <label className="block space-y-1.5">
+        <span className="text-sm font-medium">{t("platformsType")}</span>
+        <Select value={draft.platform_type} onValueChange={(value) => updateField("platform_type", value)}>
+          <SelectTrigger>
+            <SelectValue placeholder={t("platformTypeCustom")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="youtube">{t("platformTypeYoutube")}</SelectItem>
+            <SelectItem value="twitch">{t("platformTypeTwitch")}</SelectItem>
+            <SelectItem value="facebook">{t("platformTypeFacebook")}</SelectItem>
+            <SelectItem value="tiktok">{t("platformTypeTiktok")}</SelectItem>
+            <SelectItem value="custom">{t("platformTypeCustom")}</SelectItem>
+          </SelectContent>
+        </Select>
+      </label>
 
       <div className="space-y-1">
         <div className="flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">{t("platformsStreamKeyHelp")}</p>
+          <div>
+            <p className="text-sm font-medium">{t("platformsStreamKeyPlaceholder")}</p>
+            <p className="text-xs text-muted-foreground">{t("platformsStreamKeyHelp")}</p>
+          </div>
           <Button type="button" size="sm" variant="outline" className="h-7 px-2" onClick={onToggleShowKey}>
             {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             {showKey ? t("hide") : t("show")}
@@ -73,11 +82,14 @@ export function PlatformForm({
         />
       </div>
 
-      <Input
-        placeholder={t("platformsCustomURLPlaceholder")}
-        value={draft.custom_url}
-        onChange={(event) => updateField("custom_url", event.target.value)}
-      />
+      <label className="block space-y-1.5">
+        <span className="text-sm font-medium">{t("platformsCustomURLPlaceholder")}</span>
+        <Input
+          placeholder={t("platformsCustomURLPlaceholder")}
+          value={draft.custom_url}
+          onChange={(event) => updateField("custom_url", event.target.value)}
+        />
+      </label>
 
       <DialogFooter>
         <Button type="submit" disabled={saving}>

@@ -76,33 +76,28 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-3">
-            <Input
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder={t("authUsernamePlaceholder")}
-              required
-            />
-            <Input
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder={t("setupEmailPlaceholder")}
-              type="email"
-              required
-            />
-            <Input
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder={t("authPasswordPlaceholder")}
-              type="password"
-              required
-            />
-            <Input
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder={t("setupConfirmPasswordPlaceholder")}
-              type="password"
-              required
-            />
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">{t("authUsernamePlaceholder")}</span>
+              <Input value={username} onChange={(event) => setUsername(event.target.value)} placeholder={t("authUsernamePlaceholder")} required />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">{t("setupEmailPlaceholder")}</span>
+              <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder={t("setupEmailPlaceholder")} type="email" required />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">{t("authPasswordPlaceholder")}</span>
+              <Input value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t("authPasswordPlaceholder")} type="password" required />
+            </label>
+            <label className="block space-y-1.5">
+              <span className="text-sm font-medium">{t("setupConfirmPasswordPlaceholder")}</span>
+              <Input
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                placeholder={t("setupConfirmPasswordPlaceholder")}
+                type="password"
+                required
+              />
+            </label>
             {error ? <p className="text-sm text-danger">{error}</p> : null}
             <Button className="w-full" disabled={loading}>
               {loading ? t("setupLoading") : t("setupButton")}

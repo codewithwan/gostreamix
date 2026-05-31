@@ -30,7 +30,7 @@ type Service interface {
 }
 
 type Pipeline interface {
-	Start(ctx context.Context, s *Stream, videoPath string) error
+	Start(ctx context.Context, s *Stream, videoPaths []string) error
 	Stop(ctx context.Context, s *Stream) error
-	Reload(ctx context.Context, s *Stream, videoPath string) error
+	Reload(ctx context.Context, s *Stream, videoPaths []string) error
 }

@@ -28,5 +28,6 @@ type SaveProgramDTO struct {
 	RTMPTargets  []string    `json:"rtmp_targets"`
 	Bitrate      int         `json:"bitrate"`
 	Resolution   string      `json:"resolution"`
+	FPS          int         `json:"fps"`
 	ApplyLiveNow bool        `json:"apply_live_now"`
 }

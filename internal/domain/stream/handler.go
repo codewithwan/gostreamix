@@ -2,6 +2,7 @@ package stream
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
@@ -155,6 +156,7 @@ func (h *Handler) ApiApplyProgram(c *fiber.Ctx) error {
 		RTMPTargets []string `json:"rtmp_targets"`
 		Bitrate     int      `json:"bitrate"`
 		Resolution  string   `json:"resolution"`
+		FPS         int      `json:"fps"`
 		ApplyLive   bool     `json:"apply_live_now"`
 	}
 
@@ -177,13 +179,14 @@ func (h *Handler) ApiApplyProgram(c *fiber.Ctx) error {
 		RTMPTargets:  payload.RTMPTargets,
 		Bitrate:      payload.Bitrate,
 		Resolution:   payload.Resolution,
+		FPS:          payload.FPS,
 		ApplyLiveNow: payload.ApplyLive,
 	}
 
 	program, err := h.svc.SaveProgram(c.Context(), id, dto)
 	if err != nil {
 		h.log.Error("Failed to apply stream program", zap.Error(err), zap.String("streamID", id.String()))
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to save and apply program"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.JSON(program)
@@ -197,10 +200,13 @@ func (h *Handler) ApiStartStream(c *fiber.Ctx) error {
 
 	if err := h.svc.StartStream(c.Context(), id); err != nil {
 		h.log.Error("Failed to start stream", zap.Error(err), zap.String("streamID", id.String()))
-		if strings.Contains(err.Error(), ErrStreamProgramEmpty.Error()) {
+		if errors.Is(err, ErrStreamAlreadyRunning) {
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": "stream is already running"})
+		}
+		if errors.Is(err, ErrStreamProgramEmpty) || strings.Contains(err.Error(), ErrStreamProgramEmpty.Error()) {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "project has no video queue"})
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to start stream"})
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return c.SendStatus(fiber.StatusOK)

@@ -20,6 +20,8 @@ export const mediaId = {
   videosLoadFailed: "Gagal memuat video",
   videosUploadFailed: "Gagal upload video",
   videosUploadTooLarge: "{name} lebih besar dari batas upload 2 GB",
+  videosDuplicateName: "File bernama {name} sudah ada di folder ini",
+  videosDuplicateFolder: "Folder bernama {name} sudah ada di sini",
   videosUploadQueueSummary: "{done}/{total} terupload",
   videosUploadQueueComplete: "{count} video berhasil diupload",
   videosUploadQueueFinishedWithErrors: "{done}/{total} terupload, {failed} gagal",
