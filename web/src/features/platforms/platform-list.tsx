@@ -27,9 +27,9 @@ export function PlatformList({ loading, platforms, onEdit, onDelete, t }: Platfo
 
   return (
     <>
-      <div className="grid gap-3 md:hidden">
+      <div className="divide-y divide-border md:hidden">
         {platforms.map((platform) => (
-          <div key={platform.id} className="rounded-md border border-border bg-muted/35 p-3">
+          <div key={platform.id} className="py-3 first:pt-0 last:pb-0">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 font-medium">
                 <PlatformIcon type={platform.platform_type} />
@@ -68,33 +68,33 @@ export function PlatformList({ loading, platforms, onEdit, onDelete, t }: Platfo
       </div>
 
       <div className="hidden md:block">
-        <table className="min-w-full border-separate border-spacing-y-2 text-sm">
+        <table className="min-w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-muted-foreground">
-              <th className="px-2 py-1">{t("platformsTitle")}</th>
-              <th className="px-2 py-1">{t("platformsType")}</th>
-              <th className="px-2 py-1">{t("platformsTarget")}</th>
-              <th className="px-2 py-1">{t("platformsStatus")}</th>
-              <th className="px-2 py-1">{t("platformsActions")}</th>
+              <th className="border-b border-border px-2 pb-2">{t("platformsTitle")}</th>
+              <th className="border-b border-border px-2 pb-2">{t("platformsType")}</th>
+              <th className="border-b border-border px-2 pb-2">{t("platformsTarget")}</th>
+              <th className="border-b border-border px-2 pb-2">{t("platformsStatus")}</th>
+              <th className="border-b border-border px-2 pb-2">{t("platformsActions")}</th>
             </tr>
           </thead>
           <tbody>
             {platforms.map((platform) => (
-              <tr key={platform.id} className="rounded-md bg-muted/35">
-                <td className="rounded-l-md px-2 py-2">
+              <tr key={platform.id} className="border-b border-border/70 last:border-0">
+                <td className="px-2 py-3">
                   <div className="flex items-center gap-2 font-medium">
                     <PlatformIcon type={platform.platform_type} />
                     <span>{platform.name}</span>
                   </div>
                 </td>
-                <td className="px-2 py-2 text-muted-foreground">{platformTypeLabel(platform.platform_type, t)}</td>
-                <td className="max-w-[240px] px-2 py-2 text-xs text-muted-foreground">
+                <td className="px-2 py-3 text-muted-foreground">{platformTypeLabel(platform.platform_type, t)}</td>
+                <td className="max-w-[240px] px-2 py-3 text-xs text-muted-foreground">
                   <span className="block truncate">{buildMaskedTarget(platform) || t("platformsIncompleteTarget")}</span>
                 </td>
-                <td className="px-2 py-2">
+                <td className="px-2 py-3">
                   <Badge variant={platform.enabled ? "success" : "muted"}>{platform.enabled ? t("platformsEnabled") : t("platformsDisabled")}</Badge>
                 </td>
-                <td className="rounded-r-md px-2 py-2">
+                <td className="px-2 py-3">
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"

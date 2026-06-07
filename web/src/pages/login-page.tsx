@@ -3,6 +3,7 @@ import { Moon, Sun } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { BrandMark } from "@/components/brand/app-brand"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { login } from "@/lib/api"
@@ -60,10 +61,7 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
 
       <Card className="w-full max-w-md">
         <CardHeader>
-          <div className="mb-2 flex items-center gap-2">
-            <img src="/web/logo.svg" alt="GoStreamix logo" className="h-7 w-7" />
-            <span className="font-display text-base font-semibold">GoStreamix</span>
-          </div>
+          <BrandMark className="mb-2" iconClassName="h-7 w-7" textClassName="text-base" />
           <CardTitle>{t("authWelcomeBack")}</CardTitle>
           <CardDescription>{t("authLoginDescription")}</CardDescription>
         </CardHeader>

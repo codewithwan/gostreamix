@@ -11,6 +11,7 @@ export interface EditorVideo {
 export interface PlatformTarget {
   id: string
   name: string
+  type: string
   rtmp_url: string
   enabled: boolean
 }

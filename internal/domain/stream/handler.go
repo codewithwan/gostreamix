@@ -30,6 +30,7 @@ func (h *Handler) Routes(app *fiber.App) {
 	api.Get("/", h.ApiGetStreams)
 	api.Post("/", h.ApiCreateStream)
 	api.Post("/:id/reload", h.ApiReloadStream)
+	api.Patch("/:id/name", h.ApiRenameStream)
 	api.Get("/:id/workspace", h.ApiGetWorkspace)
 	api.Post("/:id/program/apply", h.ApiApplyProgram)
 	api.Post("/:id/start", h.ApiStartStream)

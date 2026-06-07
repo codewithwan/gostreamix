@@ -66,6 +66,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
             .map((platform) => ({
               id: platform.id,
               name: platform.name,
+              type: platform.type,
               rtmp_url: platform.rtmp_url,
               enabled: platform.enabled,
             })),
@@ -155,7 +156,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
       if (targets.length === 0) throw new Error(t("streamEditorTargetRequired"))
       await applyProgram(streamID, { name, video_ids: timeline, rtmp_targets: targets, bitrate, resolution, fps, apply_live_now: applyLive })
       setSnapshot(currentSnapshot)
-      toast.success(applyLive ? t("streamEditorApplySuccess") : t("streamEditorSaveSuccess", "Draft saved"))
+      toast.success(t("streamEditorSaveSuccess", "Draft saved"))
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("streamEditorApplyFailed")
       setError(message)

@@ -18,6 +18,7 @@ type Repository interface {
 
 type Service interface {
 	CreateStream(ctx context.Context, dto CreateStreamDTO) (*Stream, error)
+	RenameStream(ctx context.Context, id uuid.UUID, dto RenameStreamDTO) (*Stream, error)
 	UpdateStream(ctx context.Context, id uuid.UUID, dto UpdateStreamDTO) (*Stream, error)
 	GetStreams(ctx context.Context) ([]*Stream, error)
 	GetStream(ctx context.Context, id uuid.UUID) (*Stream, error)

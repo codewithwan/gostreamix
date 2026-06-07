@@ -27,6 +27,11 @@ export const settingsEn = {
   settingsTestSuccess: "{channel} test sent. Check Activity Log for details.",
   settingsTestFailed: "Failed to send test notification",
   settingsLoadFailed: "Failed to load settings",
+  settingsSampleNotificationTitle: "Sample error notification",
+  settingsSampleNotificationDescription: "This is the payload sent by the test button, matching a failed stream trigger.",
+  settingsSampleTrigger: "Error trigger",
+  settingsSampleNotificationMessage:
+    "[GoStreamix] Stream error detected\nStream: Main Live Broadcast\nStatus: error\nTrigger: FFmpeg exited unexpectedly\nDetail: RTMP target rejected the connection. Check destination key or network.\nTime: 2026-06-08 21:15 WIB",
   settingsLastTestTitle: "Last test payload",
   settingsLastTestDescription: "The validated payload sent by the latest notification test. Secrets are masked.",
   settingsChannel: "Channel",

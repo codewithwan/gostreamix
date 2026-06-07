@@ -27,6 +27,7 @@ export const commonId = {
   delete: "Hapus",
   refresh: "Segarkan",
   back: "Kembali",
+  next: "Lanjut",
   name: "Nama",
   status: "Status",
   show: "Tampilkan",

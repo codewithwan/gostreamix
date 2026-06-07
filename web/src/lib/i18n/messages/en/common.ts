@@ -27,6 +27,7 @@ export const commonEn = {
   delete: "Delete",
   refresh: "Refresh",
   back: "Back",
+  next: "Next",
   name: "Name",
   status: "Status",
   show: "Show",

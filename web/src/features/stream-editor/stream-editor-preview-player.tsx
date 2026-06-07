@@ -79,6 +79,23 @@ export function PreviewPlayer(props: PreviewPlayerProps) {
                 <button type="button" onClick={togglePlayback} className="text-foreground hover:text-primary transition">{props.playing ? <Pause className="h-4 w-4 fill-current" /> : <Play className="h-4 w-4 fill-current" />}</button>
                 <button type="button" onClick={() => props.onMutedChange(!props.muted)} className="text-foreground hover:text-primary transition">{props.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</button>
                 <span className="text-[10px] font-mono text-muted-foreground">{formatTime(props.currentTime)} / {formatTime(props.duration || props.selectedVideo.duration)}</span>
+                
+                {/* Wave visualizer */}
+                <div className="flex items-end gap-[3px] h-4 px-1 select-none">
+                  {[...Array(6)].map((_, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "w-[2px] bg-primary rounded-full transition-all duration-150",
+                        props.playing ? "animate-wave" : "h-[3px]"
+                      )}
+                      style={{
+                        animationDelay: `${i * 0.15}s`,
+                        animationDuration: `${0.6 + (i % 3) * 0.2}s`
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
               <button type="button" onClick={() => document.getElementById("preview-player-box")?.requestFullscreen()} className="text-foreground hover:text-primary transition p-1" title="Fullscreen">
                 {document.fullscreenElement ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}

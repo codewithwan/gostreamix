@@ -3,6 +3,7 @@ package stream
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
@@ -67,12 +68,20 @@ func (r *repository) UpsertProgram(ctx context.Context, p *StreamProgram) error 
 		return err
 	}
 
+	now := time.Now()
+	if p.UpdatedAt.IsZero() {
+		p.UpdatedAt = now
+	}
 	if existing == nil {
+		if p.CreatedAt.IsZero() {
+			p.CreatedAt = now
+		}
 		_, err := r.db.NewInsert().Model(p).Exec(ctx)
 		return err
 	}
 
 	p.ID = existing.ID
+	p.CreatedAt = existing.CreatedAt
 	_, err = r.db.NewUpdate().Model(p).Where("stream_id = ?", p.StreamID).Exec(ctx)
 	return err
 }

@@ -2,6 +2,7 @@ import { Maximize2, Pause, Play, Volume2, VolumeX } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import type { Video } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
 import { bytesLabel } from "./video-utils"
@@ -80,6 +81,23 @@ export function PreviewDialog(props: {
                   <Button size="sm" type="button" className="min-w-0" onClick={togglePlayback}>{props.playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}<span className="truncate">{props.playing ? props.t("videosPause", "Pause") : props.t("videosPlay", "Play")}</span></Button>
                   <Button size="sm" type="button" variant="outline" className="w-10 px-0" onClick={() => props.onMutedChange(!props.muted)}>{props.muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}</Button>
                   <Button size="sm" type="button" variant="outline" className="w-10 px-0" onClick={() => props.videoRef.current?.requestFullscreen()}><Maximize2 className="h-4 w-4" /></Button>
+                  
+                  {/* Wave visualizer */}
+                  <div className="flex items-end gap-[3px] h-4 px-2 select-none">
+                    {[...Array(6)].map((_, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "w-[2px] bg-primary rounded-full transition-all duration-150",
+                          props.playing ? "animate-wave" : "h-[3px]"
+                        )}
+                        style={{
+                          animationDelay: `${i * 0.15}s`,
+                          animationDuration: `${0.6 + (i % 3) * 0.2}s`
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

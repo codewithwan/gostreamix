@@ -22,6 +22,7 @@ export const dashboardId = {
   dashboardStatus: "Status",
   dashboardTargets: "Tujuan",
   dashboardQuality: "Kualitas",
+  dashboardTestConnection: "Tes Koneksi",
   speedtestTitle: "Speedtest",
   speedtestPing: "Ping",
   speedtestDownload: "Unduhan",

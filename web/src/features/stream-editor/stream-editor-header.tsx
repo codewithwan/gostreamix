@@ -1,4 +1,4 @@
-import { ArrowLeft, Folder, Monitor, Save, Sliders, Tv, Zap } from "lucide-react"
+import { ArrowLeft, Folder, Monitor, Save, Sliders, Tv } from "lucide-react"
 import type { ReactNode } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,14 +10,12 @@ interface EditorHeaderProps {
   dirty: boolean
   isLive: boolean
   saving: boolean
-  applying: boolean
   onBack: () => void
   onToggleLibrary: () => void
   onOpenSettings: () => void
   onOpenTargets: () => void
   onOpenMonitor: () => void
-  onSaveDraft: () => void
-  onConfirmApply: () => void
+  onOpenSave: () => void
   t: (key: string, fallback?: string) => string
 }
 
@@ -53,15 +51,10 @@ export function EditorHeader(props: EditorHeaderProps) {
         <IconButton title="Destinations" onClick={props.onOpenTargets} icon={<Tv className="h-3.5 w-3.5" />} label="Destinations" />
         <IconButton title="Monitor" onClick={props.onOpenMonitor} icon={<Monitor className="h-3.5 w-3.5" />} label="Monitor" />
         <div className="h-4 w-px bg-border mx-0.5 sm:mx-1 shrink-0" />
-        <Button type="button" variant="outline" size="sm" disabled={props.saving || !props.dirty} onClick={props.onSaveDraft} className="h-8 text-xs px-2 sm:px-3 gap-1 shrink-0 max-w-[90px] sm:max-w-none">
+        <Button type="button" variant="outline" size="sm" disabled={props.saving || !props.dirty} onClick={props.onOpenSave} className="h-8 text-xs px-2 sm:px-3 gap-1 shrink-0 max-w-[90px] sm:max-w-none">
           <Save className="h-3.5 w-3.5 shrink-0" />
           <span className="hidden sm:inline truncate">{props.saving ? props.t("streamEditorSavingButton", "Saving...") : props.t("streamEditorSaveDraftButton", "Save draft")}</span>
           <span className="sm:hidden text-[10px] truncate">{props.saving ? "..." : "Save"}</span>
-        </Button>
-        <Button type="button" size="sm" disabled={props.applying || !props.dirty || !props.isLive} onClick={props.onConfirmApply} className="h-8 text-xs px-2 sm:px-3 gap-1 shrink-0 max-w-[92px] sm:max-w-none overflow-hidden">
-          <Zap className="h-3.5 w-3.5 shrink-0" />
-          <span className="hidden sm:inline truncate">{props.applying ? props.t("streamEditorApplyingButton") : props.t("streamEditorApplyLiveButton", "Apply live")}</span>
-          <span className="sm:hidden text-[10px] truncate">{props.applying ? "..." : "Terapkan"}</span>
         </Button>
       </div>
     </header>

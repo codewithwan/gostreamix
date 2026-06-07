@@ -109,7 +109,7 @@ export function useSettingsPage(t: (key: string, fallback?: string, values?: Rec
     setTestingChannel(channel)
     try {
       const channelLabel = channel === "discord" ? t("settingsDiscord") : t("settingsTelegram")
-      await sendNotificationTest(channel, `[${channelLabel}] GoStreamix test alert from Settings`)
+      await sendNotificationTest(channel, t("settingsSampleNotificationMessage"))
       toast.success(t("settingsTestSuccess", "{channel} test sent. Check Activity Log for details.", { channel: channelLabel }))
     } catch (err) {
       toast.error(err instanceof Error ? err.message : t("settingsTestFailed"))

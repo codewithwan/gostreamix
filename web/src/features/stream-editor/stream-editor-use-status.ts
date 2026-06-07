@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { toast } from "sonner"
 import { getStreamStats, type StreamStats } from "@/lib/api"
 import type { StreamWSMessage } from "./stream-editor-types"
 
@@ -38,7 +39,22 @@ export function useStreamStatus({ streamID, setStats, setStatus }: UseStreamStat
         if (message.payload?.stream_id !== streamID) return
         if (message.type === "stream_status" && message.payload.status) {
           const status = message.payload.status
-          setStatus(status)
+          setStatus((currentStatus) => {
+            if (currentStatus !== status) {
+              if (status === "running") {
+                toast.success("Stream is now active & running! 🚀")
+              } else if (status === "starting") {
+                toast.info("Stream is starting...")
+              } else if (status === "stopping") {
+                toast.info("Stream is stopping...")
+              } else if (status === "stopped") {
+                toast.success("Stream has stopped.")
+              } else if (status === "error") {
+                toast.error("Stream encountered an error. ❌")
+              }
+            }
+            return status
+          })
           setStats((current) => ({ ...(current || { status }), status }))
         }
         if (message.type === "stream_progress" && message.payload.progress) {

@@ -69,6 +69,14 @@ export async function deleteStream(streamID: string) {
   return request<void>(`/api/streams/${streamID}`, { method: "DELETE" })
 }
 
+export async function renameStream(streamID: string, name: string) {
+  const stream = await request<NullableStream>(`/api/streams/${streamID}/name`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  })
+  return normalizeStream(stream)
+}
+
 export async function getWorkspace(streamID: string) {
   const workspace = await request<NullableStreamWorkspace>(`/api/streams/${streamID}/workspace`)
   return normalizeWorkspace(workspace)

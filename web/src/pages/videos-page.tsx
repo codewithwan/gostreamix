@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { ChevronRight, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DeleteDialog, PreviewDialog, RenameDialog } from "@/features/videos/videos-dialogs"
@@ -12,6 +13,15 @@ import type { Video } from "@/lib/api"
 export function VideosPage() {
   const { t } = useI18n()
   const library = useVideoLibrary(t)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await library.loadVideos({ showLoader: false })
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 1500)
+  }
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? []).filter((file) => file.type.startsWith("video/"))
@@ -43,9 +53,9 @@ export function VideosPage() {
   const currentFolderLabel = library.selectedFolder === ALL_FOLDERS ? t("videosAllFolders") : library.selectedFolder === ROOT_FOLDER ? t("videosRootFolder") : library.selectedFolder
 
   return (
-    <section className="-mt-2 space-y-4 md:-mt-3">
-      <input ref={library.fileInputRef} type="file" accept="video/*" multiple className="hidden" onChange={handleFileChange} />
-      <VideosToolbar createFolderOpen={library.createFolderOpen} onCreateFolderOpenChange={library.setCreateFolderOpen} newFolderName={library.newFolderName} onNewFolderNameChange={library.setNewFolderName} createFolderBaseLabel={library.createFolderBaseLabel} onCreateFolder={library.createFolder} uploading={library.uploading} onOpenFileDialog={() => library.fileInputRef.current?.click()} onRefresh={() => library.loadVideos({ showLoader: false })} t={t} />
+    <section className="space-y-5">
+      {/* hidden input at bottom — avoids adding phantom space-y-5 top margin */}
+      <VideosToolbar createFolderOpen={library.createFolderOpen} onCreateFolderOpenChange={library.setCreateFolderOpen} newFolderName={library.newFolderName} onNewFolderNameChange={library.setNewFolderName} createFolderBaseLabel={library.createFolderBaseLabel} onCreateFolder={library.createFolder} uploading={library.uploading} onOpenFileDialog={() => library.fileInputRef.current?.click()} onRefresh={handleRefresh} isRefreshing={isRefreshing} t={t} />
       {library.error ? <p className="text-sm text-danger">{library.error}</p> : null}
       {library.loading ? <p className="text-sm text-muted-foreground">{t("videosLoading")}</p> : null}
       <div className="space-y-3">
@@ -83,6 +93,7 @@ export function VideosPage() {
       <RenameDialog target={library.renameTarget} onChange={library.setRenameTarget} onClose={() => library.setRenameTarget(null)} onSubmit={() => void library.rename()} t={t} />
       <DeleteDialog target={library.deleteTarget} selectedCount={library.selectedCount} onClose={() => library.setDeleteTarget(null)} onSubmit={() => void library.remove()} t={t} />
       <PreviewDialog video={library.previewVideo} open={library.previewOpen} muted={library.previewMuted} playing={library.previewPlaying} currentTime={library.previewTime} duration={library.previewDuration} videoRef={library.previewRef} onOpenChange={(open) => { library.setPreviewOpen(open); if (!open) library.setPreviewPlaying(false) }} onMutedChange={library.setPreviewMuted} onPlayingChange={library.setPreviewPlaying} onTimeChange={library.setPreviewTime} onDurationChange={library.setPreviewDuration} t={t} />
+      <input ref={library.fileInputRef} type="file" accept="video/*" multiple className="hidden" onChange={handleFileChange} />
     </section>
   )
 }

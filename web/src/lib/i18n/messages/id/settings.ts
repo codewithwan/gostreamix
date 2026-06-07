@@ -27,6 +27,11 @@ export const settingsId = {
   settingsTestSuccess: "Test {channel} berhasil dikirim. Cek Log Aktivitas untuk detailnya.",
   settingsTestFailed: "Gagal mengirim test notifikasi",
   settingsLoadFailed: "Gagal memuat pengaturan",
+  settingsSampleNotificationTitle: "Contoh notifikasi error",
+  settingsSampleNotificationDescription: "Payload ini dikirim oleh tombol test, formatnya seperti trigger stream gagal.",
+  settingsSampleTrigger: "Trigger error",
+  settingsSampleNotificationMessage:
+    "[GoStreamix] Error stream terdeteksi\nStream: Main Live Broadcast\nStatus: error\nPemicu: FFmpeg berhenti mendadak\nDetail: Target RTMP menolak koneksi. Cek stream key atau jaringan.\nWaktu: 2026-06-08 21:15 WIB",
   settingsLastTestTitle: "Payload test terakhir",
   settingsLastTestDescription: "Payload tervalidasi yang dikirim oleh test notifikasi terakhir. Secret disamarkan.",
   settingsChannel: "Channel",

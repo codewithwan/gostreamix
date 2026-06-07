@@ -1,10 +1,11 @@
-import { Plus, X } from "lucide-react"
+import { X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { PlatformIcon } from "@/features/platforms/platform-icon"
 import type { PlatformTarget } from "./stream-editor-types"
-import { OUTPUT_PROFILES, formatTime, maskRTMPTarget } from "./stream-editor-utils"
+import { OUTPUT_PROFILES, formatTime } from "./stream-editor-utils"
 import type { StreamStats } from "@/lib/api"
 
 interface SettingsDialogProps {
@@ -62,26 +63,20 @@ export function TargetsDialog(props: {
   onRemoveTarget: (target: string) => void
   t: (key: string, fallback?: string) => string
 }) {
+  const selected = new Set(props.targets)
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto bg-card">
-        <DialogHeader><DialogTitle>RTMP Destinations</DialogTitle><DialogDescription>Add custom targets or use platform presets.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle>RTMP Destinations</DialogTitle><DialogDescription>{props.t("streamEditorTargetsDescription", "Choose platform presets for this stream.")}</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="flex gap-1.5">
-            <Input value={props.draft} onChange={(event) => props.onDraftChange(event.target.value)} placeholder="rtmp://server/live/stream_key" className="h-9 text-xs flex-1 bg-background/50" />
-            <Button type="button" variant="outline" onClick={() => { props.onAddTarget(props.draft); props.onDraftChange("") }} className="h-9 shrink-0 text-xs px-3 gap-1"><Plus className="h-3.5 w-3.5" />{props.t("add")}</Button>
-          </div>
-          <TargetList targets={props.targets} onRemoveTarget={props.onRemoveTarget} t={props.t} />
+          <TargetList targets={props.targets} platforms={props.platforms} onRemoveTarget={props.onRemoveTarget} t={props.t} />
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{props.t("platforms", "Platform Presets")}</label>
             <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
               {props.platforms.map((platform) => (
-                <button key={platform.id} type="button" onClick={() => props.onAddTarget(platform.rtmp_url)} className="w-full flex items-center justify-between rounded-lg border border-border/80 bg-card/45 hover:bg-muted p-2 text-left transition">
-                  <span className="min-w-0 flex-1 mr-2">
-                    <span className="flex items-center gap-1.5"><span className="block text-[11px] font-semibold truncate">{platform.name}</span><Badge variant={platform.enabled ? "success" : "muted"} className="text-[8px] py-0 px-1 font-normal">{platform.enabled ? props.t("platformsEnabled", "enabled") : props.t("platformsDisabled", "disabled")}</Badge></span>
-                    <span className="block truncate text-[9px] text-muted-foreground font-mono mt-0.5">{maskRTMPTarget(platform.rtmp_url)}</span>
-                  </span>
-                  <span className="text-[10px] font-bold text-primary shrink-0 hover:underline">{props.t("streamEditorAdd", "Add")}</span>
+                <button key={platform.id} type="button" onClick={() => props.onAddTarget(platform.rtmp_url)} disabled={selected.has(platform.rtmp_url)} className="w-full flex items-center gap-2 rounded-lg border border-border/80 bg-card/45 hover:bg-muted p-2 text-left transition disabled:opacity-55">
+                  <PlatformIcon type={platform.type} />
+                  <span className="block text-xs font-semibold truncate">{platform.name}</span>
                 </button>
               ))}
             </div>
@@ -115,16 +110,13 @@ export function MonitorDialog({ open, onOpenChange, status, stats, onActivity, t
   )
 }
 
-export function ApplyLiveDialog({ open, applying, onOpenChange, onApply, t }: { open: boolean; applying: boolean; onOpenChange: (open: boolean) => void; onApply: () => void; t: (key: string, fallback?: string) => string }) {
-  return <Dialog open={open} onOpenChange={onOpenChange}><DialogContent><DialogHeader><DialogTitle>{t("streamEditorApplyLiveTitle", "Apply live changes?")}</DialogTitle><DialogDescription>{t("streamEditorApplyLiveDescription", "This reloads the running FFmpeg pipeline with the current draft.")}</DialogDescription></DialogHeader><DialogFooter><Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("cancel")}</Button><Button type="button" disabled={applying} onClick={onApply}>{applying ? t("streamEditorApplyingButton") : t("streamEditorApplyLiveButton", "Apply live")}</Button></DialogFooter></DialogContent></Dialog>
-}
-
 function InputBlock({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (value: string) => void; type?: string }) {
   return <label className="space-y-1.5 block"><span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider block">{label}</span><Input type={type} value={value} onChange={(event) => onChange(event.target.value)} className="h-9 text-xs bg-background/50" /></label>
 }
 
-function TargetList({ targets, onRemoveTarget, t }: { targets: string[]; onRemoveTarget: (target: string) => void; t: (key: string, fallback?: string) => string }) {
-  return <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">{targets.map((target) => <div key={target} className="flex items-center justify-between gap-2 rounded-lg border bg-background/40 p-2 text-xs"><span className="truncate font-mono text-[9px] text-muted-foreground flex-1">{maskRTMPTarget(target)}</span><button type="button" onClick={() => onRemoveTarget(target)} className="text-muted-foreground hover:text-red-500 transition"><X className="h-3.5 w-3.5" /></button></div>)}{targets.length === 0 ? <p className="text-[10px] text-muted-foreground text-center py-4 border border-dashed rounded-lg">{t("streamEditorNoTargets")}</p> : null}</div>
+function TargetList({ targets, platforms, onRemoveTarget, t }: { targets: string[]; platforms: PlatformTarget[]; onRemoveTarget: (target: string) => void; t: (key: string, fallback?: string) => string }) {
+  const byTarget = new Map(platforms.map((platform) => [platform.rtmp_url, platform]))
+  return <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">{targets.map((target) => { const platform = byTarget.get(target); return <div key={target} className="flex items-center justify-between gap-2 rounded-lg border bg-background/40 p-2 text-xs"><span className="flex min-w-0 items-center gap-2"><PlatformIcon type={platform?.type || "custom"} /><span className="truncate font-semibold">{platform?.name || t("platformTypeCustom", "Custom")}</span></span><button type="button" onClick={() => onRemoveTarget(target)} className="text-muted-foreground hover:text-red-500 transition"><X className="h-3.5 w-3.5" /></button></div>})}{targets.length === 0 ? <p className="text-[10px] text-muted-foreground text-center py-4 border border-dashed rounded-lg">{t("streamEditorNoTargets")}</p> : null}</div>
 }
 
 function Stat({ label, value }: { label: string; value: string }) {

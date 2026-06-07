@@ -2,8 +2,9 @@ import { useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { EditorHeader } from "@/features/stream-editor/stream-editor-header"
-import { ApplyLiveDialog, MonitorDialog, SettingsDialog, TargetsDialog } from "@/features/stream-editor/stream-editor-dialogs"
+import { MonitorDialog, SettingsDialog, TargetsDialog } from "@/features/stream-editor/stream-editor-dialogs"
 import { MediaLibraryPanel } from "@/features/stream-editor/stream-editor-media-library"
+import { ProgramSaveDialog } from "@/features/stream-editor/program-save-dialog"
 import { PreviewPlayer } from "@/features/stream-editor/stream-editor-preview-player"
 import { TimelineStrip } from "@/features/stream-editor/stream-editor-timeline-strip"
 import { useStreamEditor } from "@/features/stream-editor/stream-editor-use-page"
@@ -21,7 +22,7 @@ export function StreamEditorPage() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [targetsOpen, setTargetsOpen] = useState(false)
   const [monitorOpen, setMonitorOpen] = useState(false)
-  const [applyOpen, setApplyOpen] = useState(false)
+  const [saveOpen, setSaveOpen] = useState(false)
 
   const selectClip = (videoID: string, index: number) => {
     editor.setSelectedVideoID(videoID)
@@ -67,11 +68,19 @@ export function StreamEditorPage() {
     editor.setActiveIndex(-1)
   }
 
+  const handleSave = () => {
+    if (editor.name.trim() && editor.targets.length > 0) {
+      void editor.saveProgram(false)
+    } else {
+      setSaveOpen(true)
+    }
+  }
+
   const transform = editor.transforms[editor.activeIndex] || editor.defaultTransform
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden bg-background">
-      <EditorHeader name={editor.name} status={editor.status} dirty={editor.dirty} isLive={editor.isLive} saving={editor.saving} applying={editor.applying} onBack={() => navigate("/streams")} onToggleLibrary={() => setLibraryOpen((open) => !open)} onOpenSettings={() => setSettingsOpen(true)} onOpenTargets={() => setTargetsOpen(true)} onOpenMonitor={() => setMonitorOpen(true)} onSaveDraft={() => editor.saveProgram(false)} onConfirmApply={() => setApplyOpen(true)} t={t} />
+      <EditorHeader name={editor.name} status={editor.status} dirty={editor.dirty} isLive={editor.isLive} saving={editor.saving} onBack={() => navigate("/streams")} onToggleLibrary={() => setLibraryOpen((open) => !open)} onOpenSettings={() => setSettingsOpen(true)} onOpenTargets={() => setTargetsOpen(true)} onOpenMonitor={() => setMonitorOpen(true)} onOpenSave={handleSave} t={t} />
       {editor.error ? <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-center justify-between shrink-0"><span className="truncate mr-4">{editor.error}</span><Button variant="subtle" size="sm" onClick={() => editor.setError("")} className="h-7 text-[10px] px-2">Dismiss</Button></div> : null}
       {editor.loading ? (
         <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{t("streamEditorLoading")}</div>
@@ -95,8 +104,8 @@ export function StreamEditorPage() {
       )}
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} name={editor.name} bitrate={editor.bitrate} resolution={editor.resolution} fps={editor.fps} onNameChange={editor.setName} onBitrateChange={editor.setBitrate} onResolutionChange={editor.setResolution} onFpsChange={editor.setFps} t={t} />
       <TargetsDialog open={targetsOpen} onOpenChange={setTargetsOpen} targets={editor.targets} platforms={editor.platforms} draft={editor.targetDraft} onDraftChange={editor.setTargetDraft} onAddTarget={editor.addTarget} onRemoveTarget={(target) => editor.setTargets((current) => current.filter((item) => item !== target))} t={t} />
-      <MonitorDialog open={monitorOpen} onOpenChange={setMonitorOpen} status={editor.status} stats={editor.stats} onActivity={() => navigate("/activity")} t={t} />
-      <ApplyLiveDialog open={applyOpen} applying={editor.applying} onOpenChange={setApplyOpen} onApply={() => { editor.saveProgram(true); setApplyOpen(false) }} t={t} />
+      <MonitorDialog open={monitorOpen} onOpenChange={setMonitorOpen} status={editor.status} stats={editor.stats} onActivity={() => navigate("/settings?tab=activity")} t={t} />
+      <ProgramSaveDialog open={saveOpen} onOpenChange={setSaveOpen} name={editor.name} bitrate={editor.bitrate} resolution={editor.resolution} fps={editor.fps} targets={editor.targets} platforms={editor.platforms} saving={editor.saving} onNameChange={editor.setName} onBitrateChange={editor.setBitrate} onResolutionChange={editor.setResolution} onFpsChange={editor.setFps} onSetTargets={editor.setTargets} onSave={() => editor.saveProgram(false)} t={t} />
     </div>
   )
 }

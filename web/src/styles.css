@@ -58,3 +58,160 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Custom styling for Sonner Toasts */
+[data-sonner-toaster] {
+  --mobile-offset-top: 8px !important;
+  --mobile-offset-right: 8px !important;
+  --mobile-offset-left: 8px !important;
+}
+[data-sonner-toaster][data-y-position=top] {
+  top: 8px !important;
+}
+[data-sonner-toast] {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 12px 16px !important;
+  font-family: inherit !important;
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  position: relative !important;
+  overflow: hidden !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* Light / Dark themed pastel background and text colors */
+:root {
+  --toast-success-bg: #ffffff;
+  --toast-success-text: #18181b;
+  --toast-success-border: rgba(16, 185, 129, 0.3);
+  --toast-success-bar: #10b981;
+
+  --toast-error-bg: #ffffff;
+  --toast-error-text: #18181b;
+  --toast-error-border: rgba(239, 68, 68, 0.3);
+  --toast-error-bar: #ef4444;
+
+  --toast-info-bg: #ffffff;
+  --toast-info-text: #18181b;
+  --toast-info-border: rgba(59, 130, 246, 0.3);
+  --toast-info-bar: #3b82f6;
+
+  --toast-warning-bg: #ffffff;
+  --toast-warning-text: #18181b;
+  --toast-warning-border: rgba(245, 158, 11, 0.3);
+  --toast-warning-bar: #f59e0b;
+}
+
+.dark {
+  --toast-success-bg: #18181b;
+  --toast-success-text: #f4f4f5;
+  --toast-success-border: rgba(16, 185, 129, 0.25);
+  --toast-success-bar: #10b981;
+
+  --toast-error-bg: #18181b;
+  --toast-error-text: #f4f4f5;
+  --toast-error-border: rgba(239, 68, 68, 0.25);
+  --toast-error-bar: #ef4444;
+
+  --toast-info-bg: #18181b;
+  --toast-info-text: #f4f4f5;
+  --toast-info-border: rgba(59, 130, 246, 0.25);
+  --toast-info-bar: #3b82f6;
+
+  --toast-warning-bg: #18181b;
+  --toast-warning-text: #f4f4f5;
+  --toast-warning-border: rgba(245, 158, 11, 0.25);
+  --toast-warning-bar: #f59e0b;
+}
+
+[data-sonner-toast][data-type="success"] {
+  background-color: var(--toast-success-bg) !important;
+  color: var(--toast-success-text) !important;
+  border-color: var(--toast-success-border) !important;
+}
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: #10b981 !important;
+}
+[data-sonner-toast][data-type="error"] {
+  background-color: var(--toast-error-bg) !important;
+  color: var(--toast-error-text) !important;
+  border-color: var(--toast-error-border) !important;
+}
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: #ef4444 !important;
+}
+[data-sonner-toast][data-type="info"],
+[data-sonner-toast][data-type="default"] {
+  background-color: var(--toast-info-bg) !important;
+  color: var(--toast-info-text) !important;
+  border-color: var(--toast-info-border) !important;
+}
+[data-sonner-toast][data-type="info"] [data-icon],
+[data-sonner-toast][data-type="default"] [data-icon] {
+  color: #3b82f6 !important;
+}
+[data-sonner-toast][data-type="warning"] {
+  background-color: var(--toast-warning-bg) !important;
+  color: var(--toast-warning-text) !important;
+  border-color: var(--toast-warning-border) !important;
+}
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: #f59e0b !important;
+}
+
+/* Keep progress bar clipped to toast bounds */
+[data-sonner-toast] {
+  overflow: hidden;
+}
+
+/* Time indicator bar (duration bar) */
+[data-sonner-toast]::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: toast-progress 4000ms linear forwards;
+}
+
+[data-sonner-toast][data-type="success"]::after {
+  background-color: var(--toast-success-bar);
+}
+[data-sonner-toast][data-type="error"]::after {
+  background-color: var(--toast-error-bar);
+}
+[data-sonner-toast][data-type="info"]::after,
+[data-sonner-toast][data-type="default"]::after {
+  background-color: var(--toast-info-bar);
+}
+[data-sonner-toast][data-type="warning"]::after {
+  background-color: var(--toast-warning-bar);
+}
+
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* Audio wave animation */
+@keyframes wave-animation {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 14px;
+  }
+}
+
+.animate-wave {
+  animation: wave-animation 1s ease-in-out infinite;
+}

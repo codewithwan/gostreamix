@@ -33,7 +33,7 @@ export function DashboardPage() {
           className="h-8 shrink-0 gap-1.5 border-primary/20 bg-primary/[0.02] px-3 text-xs text-primary hover:border-primary/50"
         >
           <Wifi className="h-4 w-4" />
-          <span>Test Connection</span>
+          <span>{t("dashboardTestConnection")}</span>
         </Button>
       </div>
 

@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { LogOut, Menu, X } from "lucide-react"
-import { Outlet, useLocation } from "react-router-dom"
+import { LogOut, Menu } from "lucide-react"
+import { Outlet, useLocation, NavLink } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BrandMark } from "@/components/brand/app-brand"
 import { useI18n } from "@/lib/i18n"
 import { useTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
 import { NavList } from "./nav-list"
 import { UserMenuPanel } from "./user-menu-panel"
+import { navItems } from "./nav-items"
 
 interface AppShellProps {
   username: string
@@ -45,7 +47,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
   }, [username])
 
   useEffect(() => {
-    if (!userMenuOpen) {
+    if (!userMenuOpen && !mobileNavOpen) {
       return
     }
 
@@ -55,6 +57,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
       const inMobile = mobileMenuRef.current?.contains(target)
       if (!inDesktop && !inMobile) {
         setUserMenuOpen(false)
+        setMobileNavOpen(false)
       }
     }
 
@@ -62,7 +65,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
     return () => {
       window.removeEventListener("mousedown", onPointerDown)
     }
-  }, [userMenuOpen])
+  }, [mobileNavOpen, userMenuOpen])
 
   const handleLogoutConfirm = async () => {
     setLogoutLoading(true)
@@ -78,18 +81,14 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
   const userMenuPanel = <UserMenuPanel lang={lang} setLang={setLang} setTheme={setTheme} t={t} theme={theme} onLogoutClick={() => setLogoutConfirmOpen(true)} />
 
   return (
-    <div className={cn("bg-background text-foreground", isStudio ? "h-screen overflow-hidden flex flex-col" : "min-h-screen")}>
+    <div className={cn("bg-background text-foreground", isStudio ? "h-screen overflow-hidden flex flex-col" : "min-h-screen relative")}>
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:hidden shrink-0">
         <div className="relative flex items-center justify-between" ref={mobileMenuRef}>
           <div className="flex items-center gap-2">
-            <img src="/web/logo.svg" alt="GoStreamix logo" className="h-7 w-7" />
-            <span className="font-display text-base font-semibold">GoStreamix</span>
+            <BrandMark iconClassName="h-7 w-7" textClassName="text-base" />
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={() => setMobileNavOpen(true)} aria-label={t("menu")}>
-              <Menu className="h-4 w-4" />
-            </Button>
             <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={() => setUserMenuOpen((current) => !current)} aria-label={t("userMenu")}>
               {initials}
             </Button>
@@ -104,11 +103,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
       <div className={cn("flex w-full md:h-screen md:min-h-0 md:overflow-hidden", isStudio ? "h-[calc(100dvh-57px)] overflow-hidden" : "min-h-[calc(100vh-57px)]")}>
         <aside className="hidden w-[240px] border-r border-border bg-card md:sticky md:top-0 md:flex md:h-screen md:shrink-0 md:flex-col md:overflow-y-auto lg:w-[260px]">
           <div className="flex min-w-0 items-center gap-3 px-4 py-4 lg:px-5 lg:py-5">
-            <img src="/web/logo.svg" alt="GoStreamix logo" className="h-8 w-8 shrink-0" />
-            <div className="min-w-0">
-              <p className="truncate font-display text-xl font-semibold tracking-tight">GoStreamix</p>
-              <p className="text-xs text-muted-foreground">{t("appTagline")}</p>
-            </div>
+            <BrandMark iconClassName="h-8 w-8" textClassName="text-xl" showTagline tagline={t("appTagline")} />
           </div>
 
           <nav className="grid gap-1 border-t border-border px-3 py-4">
@@ -140,30 +135,38 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
             "min-w-0 flex-1",
             isStudio
               ? "h-[calc(100dvh-57px)] md:h-screen overflow-hidden p-0"
-              : "px-4 py-5 md:h-screen md:overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-8",
+              : "px-4 py-5 pb-24 md:h-screen md:overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-8",
           )}
         >
           <Outlet />
         </main>
       </div>
 
-      <Dialog open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-        <DialogContent className="left-0 top-0 flex h-[100dvh] w-[min(86vw,320px)] max-w-none translate-x-0 translate-y-0 flex-col rounded-none border-l-0 border-r border-border p-0 [&>button.absolute]:hidden">
-          <div className="flex min-w-0 items-center justify-between gap-3 border-b border-border px-4 py-4">
-            <div className="flex min-w-0 items-center gap-2">
-              <img src="/web/logo.svg" alt="GoStreamix logo" className="h-7 w-7 shrink-0" />
-              <span className="truncate font-display text-base font-semibold">GoStreamix</span>
-            </div>
-            <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={() => setMobileNavOpen(false)} aria-label={t("close")}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <nav className="grid gap-1 overflow-y-auto px-3 py-3">
-            <NavList t={t} onNavigate={() => setMobileNavOpen(false)} />
-          </nav>
-        </DialogContent>
-      </Dialog>
+      {/* Mobile Floating Bottom Nav Bar */}
+      {!isStudio && (
+        <nav className="md:hidden fixed bottom-3 left-3 right-3 z-40 flex items-center justify-around bg-card/90 border border-border backdrop-blur-md py-2 px-2 rounded-2xl shadow-xl select-none">
+          {navItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  cn(
+                    "flex flex-col items-center justify-center flex-1 h-12 rounded-xl transition-all relative px-0.5",
+                    isActive ? "text-primary bg-primary/10 font-bold" : "text-muted-foreground hover:text-foreground"
+                  )
+                }
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                <span className="text-[10px] font-medium mt-1 truncate max-w-full text-center">
+                  {t(item.to.replace("/", "") || "dashboard", item.label)}
+                </span>
+              </NavLink>
+            )
+          })}
+        </nav>
+      )}
 
       <Dialog open={logoutConfirmOpen} onOpenChange={setLogoutConfirmOpen}>
         <DialogContent>

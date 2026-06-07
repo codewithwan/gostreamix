@@ -6,7 +6,6 @@ import { AppShell } from "@/components/layout/app-shell"
 import { getSession, logout, type SessionResponse } from "@/lib/api"
 import { I18nProvider, useI18n } from "@/lib/i18n"
 import { ThemeProvider, useTheme } from "@/lib/theme"
-import { ActivityPage } from "@/pages/activity-page"
 import { DashboardPage } from "@/pages/dashboard-page"
 import { LoginPage } from "@/pages/login-page"
 import { PlatformsPage } from "@/pages/platforms-page"
@@ -27,7 +26,7 @@ function LoadingScreen() {
 function AppToaster() {
   const { resolvedTheme } = useTheme()
 
-  return <Toaster position="top-right" closeButton richColors theme={resolvedTheme === "dark" ? "dark" : "light"} />
+  return <Toaster position="top-right" richColors offset={8} theme={resolvedTheme === "dark" ? "dark" : "light"} />
 }
 
 function AuthenticatedRouter({ session, refreshSession }: { session: SessionResponse; refreshSession: () => Promise<void> }) {
@@ -55,7 +54,6 @@ function AuthenticatedRouter({ session, refreshSession }: { session: SessionResp
         <Route path="/streams/:streamID/editor" element={<StreamEditorPage />} />
         <Route path="/videos" element={<VideosPage />} />
         <Route path="/platforms" element={<PlatformsPage />} />
-        <Route path="/activity" element={<ActivityPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="/" element={<Navigate to="/dashboard" replace />} />

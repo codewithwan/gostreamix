@@ -22,6 +22,7 @@ export const dashboardEn = {
   dashboardStatus: "Status",
   dashboardTargets: "Targets",
   dashboardQuality: "Quality",
+  dashboardTestConnection: "Test Connection",
   speedtestTitle: "Speedtest",
   speedtestPing: "Ping",
   speedtestDownload: "Download",

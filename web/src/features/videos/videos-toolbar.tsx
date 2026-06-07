@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import type { TranslateFn } from "@/lib/i18n"
+import { cn } from "@/lib/utils"
 
 interface VideosToolbarProps {
   createFolderOpen: boolean
@@ -23,6 +24,7 @@ interface VideosToolbarProps {
   uploading: boolean
   onOpenFileDialog: () => void
   onRefresh: () => void
+  isRefreshing: boolean
   t: TranslateFn
 }
 
@@ -36,18 +38,19 @@ export function VideosToolbar({
   uploading,
   onOpenFileDialog,
   onRefresh,
+  isRefreshing,
   t,
 }: VideosToolbarProps) {
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">{t("videosTitle")}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{t("videosTitle")}</h1>
         <p className="text-sm text-muted-foreground">{t("videosDescription")}</p>
       </div>
 
       <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
-        <Button variant="outline" onClick={onRefresh} className="min-w-0 px-2 sm:px-3">
-          <RefreshCw className="h-4 w-4" />
+        <Button variant="outline" onClick={onRefresh} disabled={isRefreshing} className="min-w-0 px-2 sm:px-3">
+          <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
           <span className="hidden sm:inline">{t("refresh")}</span>
         </Button>
 

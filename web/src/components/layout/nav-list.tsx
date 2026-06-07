@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils"
 import { navItems } from "./nav-items"
 
 interface NavListProps {
+  mobile?: boolean
   onNavigate?: () => void
   t: (key: string, fallback?: string) => string
 }
 
-export function NavList({ onNavigate, t }: NavListProps) {
+export function NavList({ mobile = false, onNavigate, t }: NavListProps) {
   return (
     <>
       {navItems.map((item) => {
@@ -19,7 +20,11 @@ export function NavList({ onNavigate, t }: NavListProps) {
             to={item.to}
             onClick={onNavigate}
             className={({ isActive }) =>
-              cn("flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm", isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted")
+              cn(
+                "flex min-w-0 items-center gap-2 rounded-md text-sm transition-colors",
+                mobile ? "px-3 py-2.5" : "px-3 py-2",
+                isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
+              )
             }
           >
             <Icon className="h-4 w-4 shrink-0" />

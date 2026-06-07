@@ -22,6 +22,10 @@ type UpdateStreamDTO struct {
 	Loop        bool      `json:"loop"`
 }
 
+type RenameStreamDTO struct {
+	Name string `json:"name"`
+}
+
 type SaveProgramDTO struct {
 	Name         string      `json:"name"`
 	VideoIDs     []uuid.UUID `json:"video_ids"`

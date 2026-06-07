@@ -20,7 +20,7 @@ const emptyActivityResponse: ActivityLogsResponse = {
   total_pages: 0,
 }
 
-export function ActivityPage() {
+export function ActivityPage({ embed = false }: { embed?: boolean }) {
   const { t } = useI18n()
 
   const [result, setResult] = useState<ActivityLogsResponse>(emptyActivityResponse)
@@ -94,6 +94,81 @@ export function ActivityPage() {
   const pageStart = result.total === 0 ? 0 : (result.page - 1) * result.per_page + 1
   const pageEnd = result.total === 0 ? 0 : Math.min(result.total, pageStart + result.items.length - 1)
 
+  const content = (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{t("activityTitle")}</CardTitle>
+        <CardDescription>{t("activityDescriptionLong")}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <label className="block w-full max-w-[460px] space-y-1.5">
+            <span className="text-sm font-medium">{t("activitySearchPlaceholder")}</span>
+            <Input
+              placeholder={t("activitySearchPlaceholder")}
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="muted">{t("activityTotalCount", undefined, { count: result.total })}</Badge>
+            <Badge variant="muted">{t("activityPageSummary", undefined, { page: result.page, total: Math.max(result.total_pages, 1) })}</Badge>
+          </div>
+        </div>
+
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        {loading ? <p className="text-sm text-muted-foreground">{t("activityLoading")}</p> : null}
+
+        {!loading && filtered.length === 0 ? <p className="text-sm text-muted-foreground">{t("activityNoData")}</p> : null}
+
+        {!loading && filtered.length > 0 ? <ActivityFeed items={filtered} t={t} /> : null}
+
+        {!loading ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+            <p className="text-xs text-muted-foreground">
+              {t("activityRangeSummary", undefined, {
+                start: pageStart,
+                end: pageEnd,
+                total: result.total,
+              })}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={loading || result.page <= 1}>
+                {t("activityPrevious")}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setPage((current) => Math.min(Math.max(result.total_pages, 1), current + 1))}
+                disabled={loading || result.total_pages === 0 || result.page >= result.total_pages}
+              >
+                {t("activityNext")}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  )
+
+  if (embed) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-muted-foreground">{lastUpdated ? t("activityUpdated", undefined, { time: lastUpdated }) : ""}</span>
+          <Button size="sm" variant="outline" onClick={() => void handleRefresh()} disabled={isRefreshing || loading}>
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+            {t("refresh")}
+          </Button>
+        </div>
+        {content}
+      </div>
+    )
+  }
+
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -110,64 +185,7 @@ export function ActivityPage() {
           </Button>
         </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("activityTitle")}</CardTitle>
-          <CardDescription>{t("activityDescriptionLong")}</CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <label className="block w-full max-w-[460px] space-y-1.5">
-              <span className="text-sm font-medium">{t("activitySearchPlaceholder")}</span>
-              <Input
-                placeholder={t("activitySearchPlaceholder")}
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="muted">{t("activityTotalCount", undefined, { count: result.total })}</Badge>
-              <Badge variant="muted">{t("activityPageSummary", undefined, { page: result.page, total: Math.max(result.total_pages, 1) })}</Badge>
-            </div>
-          </div>
-
-          {error ? <p className="text-sm text-danger">{error}</p> : null}
-          {loading ? <p className="text-sm text-muted-foreground">{t("activityLoading")}</p> : null}
-
-          {!loading && filtered.length === 0 ? <p className="text-sm text-muted-foreground">{t("activityNoData")}</p> : null}
-
-          {!loading && filtered.length > 0 ? <ActivityFeed items={filtered} t={t} /> : null}
-
-          {!loading ? (
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
-              <p className="text-xs text-muted-foreground">
-                {t("activityRangeSummary", undefined, {
-                  start: pageStart,
-                  end: pageEnd,
-                  total: result.total,
-                })}
-              </p>
-
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={() => setPage((current) => Math.max(1, current - 1))} disabled={loading || result.page <= 1}>
-                  {t("activityPrevious")}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setPage((current) => Math.min(Math.max(result.total_pages, 1), current + 1))}
-                  disabled={loading || result.total_pages === 0 || result.page >= result.total_pages}
-                >
-                  {t("activityNext")}
-                </Button>
-              </div>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
+      {content}
     </section>
   )
 }

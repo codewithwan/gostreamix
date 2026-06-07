@@ -3,6 +3,7 @@ import { Bell, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Channel } from "./settings-utils"
+import { SampleNotification } from "./sample-notification"
 
 interface ChannelRow {
   channel: Channel
@@ -35,6 +36,7 @@ export function NotificationsCard(props: NotificationsCardProps) {
           {channelRows.map((row) => <MobileChannelRow key={row.channel} onConfigure={onConfigure} onTest={onTest} row={row} t={t} testingChannel={testingChannel} />)}
         </div>
         <DesktopChannelTable channelRows={channelRows} onConfigure={onConfigure} onTest={onTest} t={t} testingChannel={testingChannel} />
+        <SampleNotification t={t} />
       </CardContent>
     </Card>
   )
@@ -97,3 +99,4 @@ function Status({ configured, t }: { configured: boolean; t: NotificationsCardPr
     ? <span className="text-xs text-green-600 dark:text-green-400">{t("settingsConnected")}</span>
     : <span className="text-xs text-muted-foreground">{t("settingsNotConfigured")}</span>
 }
+
