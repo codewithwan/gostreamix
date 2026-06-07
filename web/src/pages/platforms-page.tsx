@@ -1,12 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react"
-import { Plus, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Card, CardContent } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PlatformForm } from "@/features/platforms/platform-form"
 import { PlatformList } from "@/features/platforms/platform-list"
+import { PlatformsPageHeader } from "@/features/platforms/platforms-page-header"
 import { createEmptyPlatformDraft, type PlatformDraft } from "@/features/platforms/platform-utils"
 import { createPlatform, getPlatforms, removePlatform, updatePlatform, type Platform } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
@@ -26,6 +26,7 @@ export function PlatformsPage() {
 
   const [draft, setDraft] = useState<PlatformDraft>(createEmptyPlatformDraft)
   const [editingID, setEditingID] = useState("")
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const loadPlatforms = async () => {
     try {
@@ -39,6 +40,14 @@ export function PlatformsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await loadPlatforms()
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 1500)
   }
 
   useEffect(() => {
@@ -118,53 +127,24 @@ export function PlatformsPage() {
 
   return (
     <section className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">{t("platformsTitle")}</h1>
-          <p className="text-sm text-muted-foreground">{t("platformsDescription")}</p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => void loadPlatforms()}>
-            <RefreshCw className="h-4 w-4" />
-            {t("refresh")}
-          </Button>
-
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreate}>
-                <Plus className="h-4 w-4" />
-                {t("platformsAddButton")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{t("platformsCreateTitle")}</DialogTitle>
-                <DialogDescription>{t("platformsCreateDescription")}</DialogDescription>
-              </DialogHeader>
-
-              <PlatformForm
-                draft={draft}
-                onSubmit={handleCreate}
-                onDraftChange={setDraft}
-                showKey={showCreateKey}
-                onToggleShowKey={() => setShowCreateKey((current) => !current)}
-                saving={saving}
-                submitLabel={t("create")}
-                t={t}
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+      <PlatformsPageHeader
+        createOpen={createOpen}
+        draft={draft}
+        isRefreshing={isRefreshing}
+        loading={loading} saving={saving}
+        showCreateKey={showCreateKey}
+        onCreateOpenChange={setCreateOpen}
+        onOpenCreate={openCreate}
+        onRefresh={() =>
+          void handleRefresh()}
+        onDraftChange={setDraft}
+        onSubmit={handleCreate}
+        onToggleShowKey={() => setShowCreateKey((current) => !current)}
+        t={t} />
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">{t("platformsTitle")}</CardTitle>
-          <CardDescription>{t("platformsDescription")}</CardDescription>
-        </CardHeader>
+      <Card className="pt-6">
         <CardContent className="overflow-x-auto">
           <PlatformList loading={loading} platforms={platforms} onEdit={openEdit} onDelete={handleDelete} t={t} />
         </CardContent>

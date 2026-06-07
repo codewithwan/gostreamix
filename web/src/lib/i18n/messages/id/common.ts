@@ -5,20 +5,17 @@ export const commonId = {
   platforms: "Platform",
   settings: "Pengaturan",
   activity: "Aktivitas",
-
   logout: "Keluar",
   logoutFailed: "Gagal keluar",
   logoutConfirmTitle: "Konfirmasi keluar",
   logoutConfirmDescription: "Tindakan ini akan mengakhiri sesi pada browser ini.",
   logoutConfirmAction: "Ya, keluar",
-
   language: "Bahasa",
   appearance: "Tampilan",
   notifications: "Notifikasi",
   dark: "Gelap",
   light: "Terang",
   themeSystem: "Sistem",
-
   menu: "Menu",
   cancel: "Batal",
   close: "Tutup",
@@ -34,11 +31,9 @@ export const commonId = {
   status: "Status",
   show: "Tampilkan",
   hide: "Sembunyikan",
-
   appTagline: "Pusat kendali stream",
   userMenu: "Menu pengguna",
   userMenuDescription: "Atur tampilan, bahasa, dan sesi akun.",
-
   authWelcomeBack: "Selamat datang kembali",
   authLoginDescription: "Masuk untuk melanjutkan pengelolaan pipeline siaran.",
   authSignIn: "Masuk",
@@ -47,7 +42,6 @@ export const commonId = {
   authPasswordPlaceholder: "Kata sandi",
   authInvalidCredentials: "Kredensial tidak valid",
   authLoginSuccess: "Berhasil masuk",
-
   setupTitle: "Setup awal",
   setupDescription: "Buat akun admin pertama untuk membuka GoStreamix.",
   setupEmailPlaceholder: "Email",
@@ -56,7 +50,6 @@ export const commonId = {
   setupLoading: "Sedang setup...",
   setupFailed: "Gagal melakukan setup sistem",
   setupSuccess: "Setup selesai. Silakan masuk.",
-
   platformTypeYoutube: "YouTube",
   platformTypeTwitch: "Twitch",
   platformTypeFacebook: "Facebook",

@@ -70,7 +70,6 @@ export const mediaEn = {
   videosCut: "Cut",
   videosCopy: "Copy",
   videosUnselect: "Unselect",
-
   platformsTitle: "Platforms",
   platformsDescription: "Manage distribution targets in one table.",
   platformsAddButton: "Add Platform",

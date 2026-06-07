@@ -1,7 +1,6 @@
 package stream
 
 import (
-	"encoding/json"
 	"errors"
 	"strings"
 
@@ -144,54 +143,6 @@ func (h *Handler) ApiGetWorkspace(c *fiber.Ctx) error {
 	})
 }
 
-func (h *Handler) ApiApplyProgram(c *fiber.Ctx) error {
-	id, err := uuid.Parse(c.Params("id"))
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid stream id"})
-	}
-
-	var payload struct {
-		Name        string   `json:"name"`
-		VideoIDs    []string `json:"video_ids"`
-		RTMPTargets []string `json:"rtmp_targets"`
-		Bitrate     int      `json:"bitrate"`
-		Resolution  string   `json:"resolution"`
-		FPS         int      `json:"fps"`
-		ApplyLive   bool     `json:"apply_live_now"`
-	}
-
-	if err := json.Unmarshal(c.Body(), &payload); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid payload"})
-	}
-
-	videoIDs := make([]uuid.UUID, 0, len(payload.VideoIDs))
-	for _, rawID := range payload.VideoIDs {
-		parsed, err := uuid.Parse(rawID)
-		if err != nil {
-			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid video id in queue"})
-		}
-		videoIDs = append(videoIDs, parsed)
-	}
-
-	dto := SaveProgramDTO{
-		Name:         payload.Name,
-		VideoIDs:     videoIDs,
-		RTMPTargets:  payload.RTMPTargets,
-		Bitrate:      payload.Bitrate,
-		Resolution:   payload.Resolution,
-		FPS:          payload.FPS,
-		ApplyLiveNow: payload.ApplyLive,
-	}
-
-	program, err := h.svc.SaveProgram(c.Context(), id, dto)
-	if err != nil {
-		h.log.Error("Failed to apply stream program", zap.Error(err), zap.String("streamID", id.String()))
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	return c.JSON(program)
-}
-
 func (h *Handler) ApiStartStream(c *fiber.Ctx) error {
 	id, err := uuid.Parse(c.Params("id"))
 	if err != nil {
@@ -224,64 +175,4 @@ func (h *Handler) ApiStopStream(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusOK)
-}
-
-type platformOption struct {
-	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
-	Type      string    `json:"type"`
-	RTMPURL   string    `json:"rtmp_url"`
-	Enabled   bool      `json:"enabled"`
-	StreamKey string    `json:"stream_key"`
-}
-
-func toPlatformOptions(plats []*platform.Platform) []platformOption {
-	options := make([]platformOption, 0, len(plats))
-	for _, p := range plats {
-		if p == nil {
-			continue
-		}
-
-		options = append(options, platformOption{
-			ID:        p.ID,
-			Name:      p.Name,
-			Type:      p.PlatformType,
-			RTMPURL:   buildRTMPTarget(p.PlatformType, p.CustomURL, p.StreamKey),
-			Enabled:   p.Enabled,
-			StreamKey: p.StreamKey,
-		})
-	}
-
-	return options
-}
-
-func buildRTMPTarget(platformType, baseURL, streamKey string) string {
-	platformType = strings.ToLower(strings.TrimSpace(platformType))
-	baseURL = strings.TrimSpace(baseURL)
-	streamKey = strings.TrimSpace(streamKey)
-
-	if baseURL == "" {
-		switch platformType {
-		case "youtube":
-			baseURL = "rtmp://a.rtmp.youtube.com/live2"
-		case "twitch":
-			baseURL = "rtmp://live.twitch.tv/app"
-		case "facebook":
-			baseURL = "rtmps://live-api-s.facebook.com:443/rtmp"
-		case "tiktok":
-			baseURL = "rtmp://push-rtmp-global.tiktok.com/live"
-		}
-	}
-
-	if baseURL == "" {
-		return ""
-	}
-
-	if streamKey == "" {
-		return baseURL
-	}
-	if strings.HasSuffix(baseURL, "/") {
-		return baseURL + streamKey
-	}
-	return baseURL + "/" + streamKey
 }

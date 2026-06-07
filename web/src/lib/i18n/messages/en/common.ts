@@ -5,20 +5,17 @@ export const commonEn = {
   platforms: "Platforms",
   settings: "Settings",
   activity: "Activity",
-
   logout: "Logout",
   logoutFailed: "Failed to logout",
   logoutConfirmTitle: "Confirm logout",
   logoutConfirmDescription: "This will end your current session on this browser.",
   logoutConfirmAction: "Yes, log out",
-
   language: "Language",
   appearance: "Appearance",
   notifications: "Notifications",
   dark: "Dark",
   light: "Light",
   themeSystem: "System",
-
   menu: "Menu",
   cancel: "Cancel",
   close: "Close",
@@ -34,11 +31,9 @@ export const commonEn = {
   status: "Status",
   show: "Show",
   hide: "Hide",
-
   appTagline: "Stream control plane",
   userMenu: "User menu",
   userMenuDescription: "Manage appearance, language, and account session.",
-
   authWelcomeBack: "Welcome Back",
   authLoginDescription: "Login to continue managing your broadcast pipelines.",
   authSignIn: "Sign in",
@@ -47,7 +42,6 @@ export const commonEn = {
   authPasswordPlaceholder: "Password",
   authInvalidCredentials: "Invalid credentials",
   authLoginSuccess: "Login successful",
-
   setupTitle: "Initial Setup",
   setupDescription: "Create the first administrator account to unlock GoStreamix.",
   setupEmailPlaceholder: "Email",
@@ -56,7 +50,6 @@ export const commonEn = {
   setupLoading: "Setting up...",
   setupFailed: "Failed to setup system",
   setupSuccess: "Setup completed. Please login.",
-
   platformTypeYoutube: "YouTube",
   platformTypeTwitch: "Twitch",
   platformTypeFacebook: "Facebook",

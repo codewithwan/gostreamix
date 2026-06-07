@@ -32,7 +32,6 @@ export const streamsEn = {
   streamsDeleteFailed: "Failed to delete stream",
   streamsDeleteConfirm: "Delete selected stream?",
   streamsDeleteRunningConfirm: "This stream is currently running. Deleting it will stop the pipeline first.",
-
   streamEditorTitle: "Stream Editor",
   streamEditorDescription: "Configure queue, outputs, and quality profile in one place.",
   streamEditorBack: "Back to streams",

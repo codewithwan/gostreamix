@@ -32,7 +32,6 @@ export const streamsId = {
   streamsDeleteFailed: "Gagal menghapus stream",
   streamsDeleteConfirm: "Hapus stream yang dipilih?",
   streamsDeleteRunningConfirm: "Stream ini sedang berjalan. Menghapusnya akan menghentikan pipeline terlebih dahulu.",
-
   streamEditorTitle: "Editor Stream",
   streamEditorDescription: "Atur antrean, output, dan profil kualitas dalam satu halaman.",
   streamEditorBack: "Kembali ke stream",

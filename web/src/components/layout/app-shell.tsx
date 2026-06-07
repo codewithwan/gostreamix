@@ -1,21 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react"
-import { History, Languages, LayoutDashboard, Layers, LogOut, Menu, Monitor, Moon, PlaySquare, Settings, Sun, Video, X } from "lucide-react"
-import { NavLink, Outlet } from "react-router-dom"
+import { LogOut, Menu, X } from "lucide-react"
+import { Outlet, useLocation } from "react-router-dom"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { useI18n } from "@/lib/i18n"
 import { useTheme } from "@/lib/theme"
 import { cn } from "@/lib/utils"
-
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/streams", label: "Streams", icon: PlaySquare },
-  { to: "/videos", label: "Videos", icon: Video },
-  { to: "/platforms", label: "Platforms", icon: Layers },
-  { to: "/activity", label: "Activity", icon: History },
-  { to: "/settings", label: "Settings", icon: Settings },
-]
+import { NavList } from "./nav-list"
+import { UserMenuPanel } from "./user-menu-panel"
 
 interface AppShellProps {
   username: string
@@ -26,6 +19,8 @@ interface AppShellProps {
 export function AppShell({ username, email, onLogout }: AppShellProps) {
   const { lang, setLang, t } = useI18n()
   const { theme, setTheme } = useTheme()
+  const location = useLocation()
+  const isStudio = location.pathname.includes("/editor")
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
@@ -80,70 +75,11 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
     }
   }
 
-  const userMenuPanel = (
-    <>
-      <p className="text-xs text-muted-foreground">{t("userMenuDescription")}</p>
-
-      <div className="mt-3 flex items-center justify-between">
-        <p className="text-xs font-medium text-muted-foreground">{t("appearance")}</p>
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            size="sm"
-            variant={theme === "light" ? "default" : "outline"}
-            className="h-8 w-8 px-0"
-            onClick={() => setTheme("light")}
-            title={t("light")}
-          >
-            <Sun className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={theme === "dark" ? "default" : "outline"}
-            className="h-8 w-8 px-0"
-            onClick={() => setTheme("dark")}
-            title={t("dark")}
-          >
-            <Moon className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={theme === "system" ? "default" : "outline"}
-            className="h-8 w-8 px-0"
-            onClick={() => setTheme("system")}
-            title={t("themeSystem")}
-          >
-            <Monitor className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <p className="text-xs font-medium text-muted-foreground">{t("language")}</p>
-        <div className="grid grid-cols-2 gap-1">
-          <Button size="sm" variant={lang === "en" ? "default" : "outline"} className="h-8 px-2 text-[11px]" onClick={() => setLang("en")}>
-            <Languages className="h-3.5 w-3.5" />
-            EN
-          </Button>
-          <Button size="sm" variant={lang === "id" ? "default" : "outline"} className="h-8 px-2 text-[11px]" onClick={() => setLang("id")}>
-            <Languages className="h-3.5 w-3.5" />
-            ID
-          </Button>
-        </div>
-      </div>
-
-      <Button size="sm" className="mt-3 w-full" variant="outline" onClick={() => setLogoutConfirmOpen(true)}>
-        <LogOut className="h-4 w-4" />
-        {t("logout")}
-      </Button>
-    </>
-  )
+  const userMenuPanel = <UserMenuPanel lang={lang} setLang={setLang} setTheme={setTheme} t={t} theme={theme} onLogoutClick={() => setLogoutConfirmOpen(true)} />
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:hidden">
+    <div className={cn("bg-background text-foreground", isStudio ? "h-screen overflow-hidden flex flex-col" : "min-h-screen")}>
+      <header className="sticky top-0 z-30 border-b border-border bg-card/95 px-4 py-3 backdrop-blur md:hidden shrink-0">
         <div className="relative flex items-center justify-between" ref={mobileMenuRef}>
           <div className="flex items-center gap-2">
             <img src="/web/logo.svg" alt="GoStreamix logo" className="h-7 w-7" />
@@ -165,7 +101,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
         </div>
       </header>
 
-      <div className="flex min-h-[calc(100vh-57px)] w-full md:h-screen md:min-h-0 md:overflow-hidden">
+      <div className={cn("flex w-full md:h-screen md:min-h-0 md:overflow-hidden", isStudio ? "h-[calc(100dvh-57px)] overflow-hidden" : "min-h-[calc(100vh-57px)]")}>
         <aside className="hidden w-[240px] border-r border-border bg-card md:sticky md:top-0 md:flex md:h-screen md:shrink-0 md:flex-col md:overflow-y-auto lg:w-[260px]">
           <div className="flex min-w-0 items-center gap-3 px-4 py-4 lg:px-5 lg:py-5">
             <img src="/web/logo.svg" alt="GoStreamix logo" className="h-8 w-8 shrink-0" />
@@ -176,24 +112,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
           </div>
 
           <nav className="grid gap-1 border-t border-border px-3 py-4">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm",
-                      isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
-                    )
-                  }
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{t(item.to.replace("/", "") || "dashboard", item.label)}</span>
-                </NavLink>
-              )
-            })}
+            <NavList t={t} />
           </nav>
 
           <div className="relative mt-auto border-t border-border px-3 py-3 lg:px-4 lg:py-4" ref={desktopMenuRef}>
@@ -216,7 +135,14 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-4 py-5 md:h-screen md:overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-8">
+        <main
+          className={cn(
+            "min-w-0 flex-1",
+            isStudio
+              ? "h-[calc(100dvh-57px)] md:h-screen overflow-hidden p-0"
+              : "px-4 py-5 md:h-screen md:overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-8",
+          )}
+        >
           <Outlet />
         </main>
       </div>
@@ -234,25 +160,7 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
           </div>
 
           <nav className="grid gap-1 overflow-y-auto px-3 py-3">
-            {navItems.map((item) => {
-              const Icon = item.icon
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  onClick={() => setMobileNavOpen(false)}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex min-w-0 items-center gap-2 rounded-md px-3 py-2 text-sm",
-                      isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
-                    )
-                  }
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{t(item.to.replace("/", "") || "dashboard", item.label)}</span>
-                </NavLink>
-              )
-            })}
+            <NavList t={t} onNavigate={() => setMobileNavOpen(false)} />
           </nav>
         </DialogContent>
       </Dialog>

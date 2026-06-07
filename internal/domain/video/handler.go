@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
 	"github.com/gofiber/fiber/v2"
@@ -32,34 +31,6 @@ func (h *Handler) Routes(app *fiber.App) {
 	api.Patch("/:id/move", h.ApiMoveVideo)
 	api.Post("/:id/copy", h.ApiCopyVideo)
 	api.Delete("/:id", h.ApiDeleteVideo)
-}
-
-type VideoView struct {
-	ID        uuid.UUID `json:"id"`
-	Filename  string    `json:"filename"`
-	Folder    string    `json:"folder"`
-	Size      int64     `json:"size"`
-	Thumbnail string    `json:"thumbnail"`
-	Duration  int       `json:"duration"`
-}
-
-func ToVideoView(v *Video) VideoView {
-	return VideoView{
-		ID:        v.ID,
-		Filename:  v.Filename,
-		Folder:    v.Folder,
-		Size:      v.Size,
-		Thumbnail: v.Thumbnail,
-		Duration:  v.Duration,
-	}
-}
-
-func ToVideoViews(videos []*Video) []VideoView {
-	views := make([]VideoView, len(videos))
-	for i, v := range videos {
-		views[i] = ToVideoView(v)
-	}
-	return views
 }
 
 func (h *Handler) ApiGetVideos(c *fiber.Ctx) error {
@@ -179,49 +150,4 @@ func (h *Handler) ApiDeleteVideo(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusNoContent)
-}
-
-func normalizeFolder(raw string) string {
-	folder := strings.TrimSpace(strings.ReplaceAll(raw, "\\", "/"))
-	folder = strings.Trim(folder, "/")
-	if folder == "" {
-		return ""
-	}
-
-	parts := strings.Split(folder, "/")
-	clean := make([]string, 0, len(parts))
-	for _, part := range parts {
-		part = sanitizeFolderPart(part)
-		if part == "" || part == "." || part == ".." {
-			continue
-		}
-		clean = append(clean, part)
-		if len(clean) >= 4 {
-			break
-		}
-	}
-
-	return strings.Join(clean, "/")
-}
-
-func sanitizeFolderPart(part string) string {
-	part = strings.TrimSpace(part)
-	if part == "" {
-		return ""
-	}
-
-	var builder strings.Builder
-	for _, r := range part {
-		if (r >= 'a' && r <= 'z') ||
-			(r >= 'A' && r <= 'Z') ||
-			(r >= '0' && r <= '9') ||
-			r == '-' ||
-			r == '_' ||
-			r == ' ' ||
-			r == '.' {
-			builder.WriteRune(r)
-		}
-	}
-
-	return strings.TrimSpace(builder.String())
 }

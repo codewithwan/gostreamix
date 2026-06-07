@@ -3,7 +3,8 @@ import { Folder, FolderTree } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { TranslateFn } from "@/lib/i18n"
 
-import { ALL_FOLDERS, ROOT_FOLDER, type FolderItem } from "./video-utils"
+import { ALL_FOLDERS, ROOT_FOLDER } from "./video-utils"
+import type { FolderItem } from "./videos-types"
 
 interface FolderExplorerProps {
   folderItems: FolderItem[]

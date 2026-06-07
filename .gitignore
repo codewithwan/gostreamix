@@ -42,5 +42,6 @@ data/
 
 # Generated assets
 assets/css/output.css
+internal/infrastructure/frontend/build/
 TODO.md
 TASK.md

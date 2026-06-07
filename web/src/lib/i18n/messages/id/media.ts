@@ -70,7 +70,6 @@ export const mediaId = {
   videosCut: "Cut",
   videosCopy: "Copy",
   videosUnselect: "Batal pilih",
-
   platformsTitle: "Platform",
   platformsDescription: "Kelola target distribusi dalam satu tabel.",
   platformsAddButton: "Tambah Platform",

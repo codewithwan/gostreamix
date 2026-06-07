@@ -4,7 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import type { Video } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
 
-import { ALL_FOLDERS, bytesLabel, normalizeFolder, type FolderTile } from "./video-utils"
+import { ALL_FOLDERS, bytesLabel, normalizeFolder } from "./video-utils"
+import { onKeyboardActivate } from "./video-grid-keyboard"
+import type { FolderTile } from "./videos-types"
 
 interface VideoGridProps {
   loading: boolean
@@ -16,9 +18,6 @@ interface VideoGridProps {
   selectedVideoIDs: string[]
   selectedFolderPaths: string[]
   brokenThumbnails: Record<string, boolean>
-  onStartSelectMode: () => void
-  onCancelSelectMode: () => void
-  onDeleteSelected: () => void
   onOpenParentFolder: (folder: string) => void
   onOpenFolder: (folder: string) => void
   onFolderContextMenu: (event: React.MouseEvent, folder: FolderTile) => void
@@ -41,9 +40,6 @@ export function VideoGrid({
   selectedVideoIDs,
   selectedFolderPaths,
   brokenThumbnails,
-  onStartSelectMode: _onStartSelectMode,
-  onCancelSelectMode: _onCancelSelectMode,
-  onDeleteSelected: _onDeleteSelected,
   onOpenParentFolder,
   onOpenFolder,
   onFolderContextMenu,
@@ -55,14 +51,6 @@ export function VideoGrid({
   onThumbnailError,
   t,
 }: VideoGridProps) {
-  const onKeyboardActivate = (event: React.KeyboardEvent, action: () => void) => {
-    if (event.key !== "Enter" && event.key !== " ") {
-      return
-    }
-    event.preventDefault()
-    action()
-  }
-
   return (
     <div className="space-y-3">
       <div className="grid min-h-56 grid-cols-[repeat(auto-fill,minmax(142px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(136px,1fr))]" onContextMenu={onEmptyContextMenu}>

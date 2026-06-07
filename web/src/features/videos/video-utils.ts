@@ -1,18 +1,7 @@
+import type { FolderItem, FolderTile } from "./videos-types"
+
 export const ALL_FOLDERS = "__all__"
 export const ROOT_FOLDER = ""
-
-export interface FolderItem {
-  path: string
-  depth: number
-  label: string
-}
-
-export interface FolderTile {
-  path: string
-  label: string
-  childCount: number
-  videoCount: number
-}
 
 export function bytesLabel(bytes: number) {
   if (bytes < 1024) {

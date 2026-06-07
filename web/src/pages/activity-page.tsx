@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { ActivityFeed } from "@/features/activity/activity-feed"
 import { getActivityLogs, type ActivityLogsResponse } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
+import { cn } from "@/lib/utils"
 
 const PAGE_SIZE = 20
 
@@ -28,6 +29,7 @@ export function ActivityPage() {
   const [query, setQuery] = useState("")
   const [lastUpdated, setLastUpdated] = useState("")
   const [page, setPage] = useState(1)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const load = async ({ showLoader }: { showLoader: boolean }) => {
     if (showLoader) {
@@ -47,6 +49,14 @@ export function ActivityPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await load({ showLoader: false })
+    setTimeout(() => {
+      setIsRefreshing(false)
+    }, 1500)
   }
 
   useEffect(() => {
@@ -94,8 +104,8 @@ export function ActivityPage() {
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{lastUpdated ? t("activityUpdated", undefined, { time: lastUpdated }) : ""}</span>
-          <Button variant="outline" onClick={() => void load({ showLoader: false })}>
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" onClick={() => void handleRefresh()} disabled={isRefreshing || loading}>
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
             {t("refresh")}
           </Button>
         </div>

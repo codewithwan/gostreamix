@@ -1,141 +1,36 @@
-import { FormEvent, useEffect, useMemo, useState } from "react"
-import { Link } from "react-router-dom"
-import { Plus, RefreshCw } from "lucide-react"
+import { type FormEvent, useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  createStream,
-  deleteStream,
-  getPlatforms,
-  getStreams,
-  getVideos,
-  startStream,
-  stopStream,
-  type Platform,
-  type Stream,
-  type Video,
-} from "@/lib/api"
+import { CreateStreamDialog } from "@/features/streams/create-stream-dialog"
+import { DeleteStreamDialog } from "@/features/streams/delete-stream-dialog"
+import { StreamList } from "@/features/streams/stream-list"
+import type { StreamWSMessage } from "@/features/streams/stream-utils"
+import { createStream, deleteStream, getPlatforms, getStreams, getVideos, startStream, stopStream, type Stream } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { cn } from "@/lib/utils"
 
 const NIL_UUID = "00000000-0000-0000-0000-000000000000"
 
-type StreamWSMessage = {
-  type: string
-  payload?: {
-    stream_id?: string
-    status?: string
-  }
-}
-
-function statusVariant(status: string) {
-  if (status === "running") {
-    return "success" as const
-  }
-  if (status === "error") {
-    return "danger" as const
-  }
-  if (status === "starting" || status === "stopping") {
-    return "warning" as const
-  }
-  return "muted" as const
-}
-
-function platformTypeLabel(type: string, t: (key: string, fallback?: string) => string) {
-  if (type === "youtube") {
-    return t("platformTypeYoutube")
-  }
-  if (type === "twitch") {
-    return t("platformTypeTwitch")
-  }
-  if (type === "facebook") {
-    return t("platformTypeFacebook")
-  }
-  if (type === "tiktok") {
-    return t("platformTypeTiktok")
-  }
-  return t("platformTypeCustom")
-}
-
-function buildRTMPTarget(platformType: string, customURL: string, streamKey: string) {
-  const type = platformType.trim().toLowerCase()
-  const key = streamKey.trim()
-  let base = customURL.trim()
-
-  if (!base) {
-    if (type === "youtube") {
-      base = "rtmp://a.rtmp.youtube.com/live2"
-    } else if (type === "twitch") {
-      base = "rtmp://live.twitch.tv/app"
-    } else if (type === "facebook") {
-      base = "rtmps://live-api-s.facebook.com:443/rtmp"
-    } else if (type === "tiktok") {
-      base = "rtmp://push-rtmp-global.tiktok.com/live"
-    }
-  }
-
-  if (!base) {
-    return ""
-  }
-  if (!key) {
-    return base
-  }
-  if (base.endsWith("/")) {
-    return `${base}${key}`
-  }
-  return `${base}/${key}`
-}
-
 export function StreamsPage() {
   const { t } = useI18n()
-
+  const navigate = useNavigate()
   const [streams, setStreams] = useState<Stream[]>([])
-  const [videos, setVideos] = useState<Video[]>([])
-  const [platforms, setPlatforms] = useState<Platform[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
-
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const [name, setName] = useState("")
-  const [resolution, setResolution] = useState("1280x720")
-  const [bitrate, setBitrate] = useState(3000)
-  const [videoID, setVideoID] = useState(NIL_UUID)
-  const [selectedPlatformIDs, setSelectedPlatformIDs] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState<Stream | null>(null)
 
-  const selectedTargets = useMemo(
-    () =>
-      platforms
-        .filter((platform) => selectedPlatformIDs.includes(platform.id))
-        .map((platform) => buildRTMPTarget(platform.platform_type, platform.custom_url, platform.stream_key))
-        .filter(Boolean),
-    [platforms, selectedPlatformIDs],
-  )
-
   const loadStreams = async () => {
     try {
-      const data = await getStreams()
-      setStreams(data)
+      setStreams(await getStreams())
     } catch (err) {
-      const message = err instanceof Error ? err.message : t("streamsLoadFailed")
-      setError(message)
-      toast.error(message)
+      showError(err, t("streamsLoadFailed"))
     } finally {
       setLoading(false)
     }
@@ -143,14 +38,22 @@ export function StreamsPage() {
 
   const loadDependencies = async () => {
     try {
-      const [videoData, platformData] = await Promise.all([getVideos(), getPlatforms()])
-      setVideos(videoData)
-      setPlatforms(platformData)
+      await Promise.all([getVideos(), getPlatforms()])
     } catch (err) {
-      const message = err instanceof Error ? err.message : t("streamsDependencyFailed")
-      setError(message)
-      toast.error(message)
+      showError(err, t("streamsDependencyFailed"))
     }
+  }
+
+  const showError = (err: unknown, fallback: string) => {
+    const message = err instanceof Error ? err.message : fallback
+    setError(message)
+    toast.error(message)
+  }
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    await Promise.all([loadStreams(), loadDependencies()])
+    window.setTimeout(() => setIsRefreshing(false), 1500)
   }
 
   useEffect(() => {
@@ -160,13 +63,10 @@ export function StreamsPage() {
   useEffect(() => {
     const protocol = window.location.protocol === "https:" ? "wss" : "ws"
     const socket = new WebSocket(`${protocol}://${window.location.host}/ws`)
-
     socket.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data) as StreamWSMessage
-        if (message.type !== "stream_status" || !message.payload?.stream_id || !message.payload.status) {
-          return
-        }
+        if (message.type !== "stream_status" || !message.payload?.stream_id || !message.payload.status) return
         setStreams((current) =>
           current.map((stream) => (stream.id === message.payload?.stream_id ? { ...stream, status: message.payload.status || stream.status } : stream)),
         )
@@ -174,113 +74,56 @@ export function StreamsPage() {
         // Ignore malformed websocket frames; polling and manual refresh remain available.
       }
     }
-
     return () => socket.close()
   }, [])
-
-  const togglePlatform = (platformID: string) => {
-    setSelectedPlatformIDs((current) =>
-      current.includes(platformID) ? current.filter((id) => id !== platformID) : [...current, platformID],
-    )
-  }
-
-  const resetCreateState = () => {
-    setName("")
-    setVideoID(NIL_UUID)
-    setSelectedPlatformIDs([])
-    setResolution("1280x720")
-    setBitrate(3000)
-  }
 
   const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setSubmitting(true)
     setError("")
-
     const trimmedName = name.trim()
     if (!trimmedName) {
-      const message = t("streamsNameRequired")
-      setError(message)
-      toast.error(message)
+      showError(new Error(t("streamsNameRequired")), t("streamsNameRequired"))
       setSubmitting(false)
       return
     }
-    if (videoID === NIL_UUID) {
-      const message = t("streamsVideoRequired")
-      setError(message)
-      toast.error(message)
-      setSubmitting(false)
-      return
-    }
-    if (selectedTargets.length === 0) {
-      const message = t("streamsTargetRequired")
-      setError(message)
-      toast.error(message)
-      setSubmitting(false)
-      return
-    }
-
     try {
-      await createStream({
+      const created = await createStream({
         name: trimmedName,
-        video_id: videoID,
-        rtmp_targets: selectedTargets,
-        bitrate,
-        resolution,
+        video_id: NIL_UUID,
+        rtmp_targets: ["rtmp://localhost/live/placeholder"],
+        bitrate: 3000,
+        resolution: "1280x720",
         fps: 30,
         loop: true,
       })
-
       setCreateOpen(false)
-      resetCreateState()
-      await loadStreams()
+      setName("")
       toast.success(t("streamsCreateSuccess"))
+      created?.id ? navigate(`/streams/${created.id}/editor`) : await loadStreams()
     } catch (err) {
-      const message = err instanceof Error ? err.message : t("streamsCreateFailed")
-      setError(message)
-      toast.error(message)
+      showError(err, t("streamsCreateFailed"))
     } finally {
       setSubmitting(false)
     }
   }
 
-  const handleStart = async (streamID: string) => {
-    setError("")
-    try {
-      await startStream(streamID)
-      await loadStreams()
-      toast.success(t("streamsStartSuccess"))
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t("streamsStartFailed")
-      setError(message)
-      toast.error(message)
-    }
-  }
-
-  const handleStop = async (streamID: string) => {
-    setError("")
-    try {
-      await stopStream(streamID)
-      await loadStreams()
-      toast.success(t("streamsStopSuccess"))
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t("streamsStopFailed")
-      setError(message)
-      toast.error(message)
-    }
-  }
+  const handleStart = async (streamID: string) => runStreamAction(() => startStream(streamID), t("streamsStartSuccess"), t("streamsStartFailed"))
+  const handleStop = async (streamID: string) => runStreamAction(() => stopStream(streamID), t("streamsStopSuccess"), t("streamsStopFailed"))
 
   const performDelete = async (streamID: string) => {
+    await runStreamAction(() => deleteStream(streamID), t("streamsDeleteSuccess"), t("streamsDeleteFailed"))
+    setDeleteDialog(null)
+  }
+
+  const runStreamAction = async (action: () => Promise<void>, success: string, failure: string) => {
     setError("")
     try {
-      await deleteStream(streamID)
+      await action()
       await loadStreams()
-      setDeleteDialog(null)
-      toast.success(t("streamsDeleteSuccess"))
+      toast.success(success)
     } catch (err) {
-      const message = err instanceof Error ? err.message : t("streamsDeleteFailed")
-      setError(message)
-      toast.error(message)
+      showError(err, failure)
     }
   }
 
@@ -291,173 +134,17 @@ export function StreamsPage() {
           <h1 className="font-display text-3xl font-semibold tracking-tight">{t("streamsTitle")}</h1>
           <p className="text-sm text-muted-foreground">{t("streamsDescription")}</p>
         </div>
-
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" onClick={() => void loadStreams()}>
-            <RefreshCw className="h-4 w-4" />
+          <Button variant="outline" onClick={() => void handleRefresh()} disabled={isRefreshing || loading}>
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
             {t("refresh")}
           </Button>
-
-          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4" />
-                {t("streamsNewTitle")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>{t("streamsNewTitle")}</DialogTitle>
-                <DialogDescription>{t("streamsNewDescription")}</DialogDescription>
-              </DialogHeader>
-
-              <form className="space-y-4" onSubmit={handleCreate}>
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="block space-y-1.5">
-                    <span className="text-sm font-medium">{t("streamsNamePlaceholder")}</span>
-                    <Input value={name} onChange={(event) => setName(event.target.value)} required placeholder={t("streamsNamePlaceholder")} />
-                  </label>
-                  <label className="block space-y-1.5">
-                    <span className="text-sm font-medium">{t("streamsSelectVideo")}</span>
-                    <Select value={videoID} onValueChange={setVideoID}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("streamsSelectVideo")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NIL_UUID}>{t("streamsSelectVideo")}</SelectItem>
-                        {videos.map((video) => (
-                          <SelectItem key={video.id} value={video.id}>
-                            {video.original_name || video.filename}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </label>
-
-                  <label className="block space-y-1.5">
-                    <span className="text-sm font-medium">{t("streamsResolutionPlaceholder")}</span>
-                    <Input value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder={t("streamsResolutionPlaceholder")} />
-                  </label>
-                  <label className="block space-y-1.5">
-                    <span className="text-sm font-medium">{t("streamsBitratePlaceholder")}</span>
-                    <Input
-                      type="number"
-                      min={500}
-                      value={bitrate}
-                      onChange={(event) => setBitrate(Number(event.target.value))}
-                      placeholder={t("streamsBitratePlaceholder")}
-                    />
-                  </label>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{t("streamsTargetsTitle")}</p>
-                  <div className="grid gap-2 md:grid-cols-2">
-                    {platforms.length === 0 ? <p className="text-sm text-muted-foreground">{t("streamsNoPlatforms")}</p> : null}
-
-                    {platforms.map((platform) => {
-                      const target = buildRTMPTarget(platform.platform_type, platform.custom_url, platform.stream_key)
-                      const checked = selectedPlatformIDs.includes(platform.id)
-                      return (
-                        <label
-                          key={platform.id}
-                          className={cn(
-                            "flex items-start gap-3 rounded-md border border-border px-3 py-3",
-                            checked ? "bg-muted" : "bg-card",
-                          )}
-                        >
-                          <Checkbox checked={checked} onCheckedChange={() => togglePlatform(platform.id)} className="mt-0.5" />
-                          <span className="flex min-w-0 flex-1 flex-col gap-1">
-                            <span className="flex items-center gap-2">
-                              <span className="text-sm font-medium">{platform.name}</span>
-                              <Badge variant="muted">{platformTypeLabel(platform.platform_type, t)}</Badge>
-                            </span>
-                            <span className="truncate text-xs text-muted-foreground">{target || t("streamsMissingTarget")}</span>
-                          </span>
-                        </label>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setCreateOpen(false)}>
-                    {t("cancel")}
-                  </Button>
-                  <Button type="submit" disabled={submitting}>
-                    {submitting ? t("streamsCreatingButton") : t("streamsCreateButton")}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <CreateStreamDialog name={name} onNameChange={setName} onOpenChange={setCreateOpen} onSubmit={handleCreate} open={createOpen} submitting={submitting} t={t} />
         </div>
       </div>
-
       {error ? <p className="text-sm text-danger">{error}</p> : null}
-
-      <div className="grid gap-3">
-        {loading ? <p className="text-sm text-muted-foreground">{t("streamsLoading")}</p> : null}
-        {!loading && streams.length === 0 ? <p className="text-sm text-muted-foreground">{t("streamsEmpty")}</p> : null}
-
-        {streams.map((stream) => {
-          const isRunning = stream.status === "running"
-          const isStarting = stream.status === "starting"
-          const isStopping = stream.status === "stopping"
-
-          return (
-            <Card key={stream.id}>
-              <CardContent className="flex flex-col gap-4 pt-5 md:flex-row md:items-center md:justify-between">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{stream.name}</p>
-                    <Badge variant={statusVariant(stream.status)}>{stream.status}</Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {stream.resolution} | {stream.bitrate} kbps | {stream.fps} fps | {stream.rtmp_targets.length} target(s)
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link to={`/streams/${stream.id}/editor`}>{t("streamsEditor")}</Link>
-                  </Button>
-                  <Button size="sm" disabled={isRunning || isStarting || isStopping} onClick={() => void handleStart(stream.id)}>
-                    {t("streamsStart")}
-                  </Button>
-                  <Button size="sm" variant="subtle" disabled={!isRunning || isStarting || isStopping} onClick={() => void handleStop(stream.id)}>
-                    {t("streamsStop")}
-                  </Button>
-                  <Button size="sm" variant="danger" onClick={() => setDeleteDialog(stream)}>
-                    {t("delete")}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      <Dialog open={deleteDialog !== null} onOpenChange={(open) => !open && setDeleteDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("delete")}</DialogTitle>
-            <DialogDescription>
-              {deleteDialog?.status === "running"
-                ? t("streamsDeleteRunningConfirm", "This stream is currently running. Deleting it will stop the pipeline first.")
-                : t("streamsDeleteConfirm")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleteDialog(null)}>
-              {t("cancel")}
-            </Button>
-            <Button type="button" variant="danger" onClick={() => deleteDialog && void performDelete(deleteDialog.id)}>
-              {t("delete")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StreamList loading={loading} onDelete={setDeleteDialog} onStart={(id) => void handleStart(id)} onStop={(id) => void handleStop(id)} streams={streams} t={t} />
+      <DeleteStreamDialog stream={deleteDialog} onOpenChange={(open) => !open && setDeleteDialog(null)} onDelete={(id) => void performDelete(id)} t={t} />
     </section>
   )
 }
