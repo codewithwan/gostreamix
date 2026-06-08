@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, Copy, Crop, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { thumbnailFileURL, videoFileURL } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import type { EditorVideo, TimelineRange } from "./stream-editor-types"
 import { formatTime } from "./stream-editor-utils"
@@ -60,10 +61,38 @@ function TimelineClip(props: { video: EditorVideo; range: TimelineRange; index: 
         <span>{formatTime(props.range.start)}</span><span className="opacity-30">| . . . . |</span><span>{formatTime(props.range.end)}</span>
       </div>
       {props.active ? <div className="absolute top-0 bottom-0 w-px bg-red-500 z-10 shadow-xs pointer-events-none" style={{ left: `${(props.currentTime / (props.duration || 1)) * 100}%` }} /> : null}
-      <p className="my-auto min-w-0 z-10 truncate text-[10px] sm:text-xs font-semibold text-foreground">{props.video.filename}</p>
+      <div className="relative my-1.5 min-h-0 flex-1 overflow-hidden rounded-md border border-border/60 bg-muted/40">
+        {props.video.thumbnail ? (
+          <img src={thumbnailFileURL(props.video.thumbnail)} alt={props.video.filename} className="h-full w-full object-cover opacity-85" />
+        ) : (
+          <video src={videoFileURL(props.video.source)} preload="metadata" muted playsInline className="h-full w-full object-cover opacity-85" />
+        )}
+        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/80 to-transparent p-1.5">
+          <p className="truncate text-[10px] font-semibold text-white">{props.video.filename}</p>
+          <TimelineWave active={props.active} />
+        </div>
+      </div>
       <div className="flex items-center justify-end text-[8px] sm:text-[9px] text-muted-foreground shrink-0 mt-auto z-10">
         <span className="font-mono font-semibold">{formatTime(props.video.duration)}</span>
       </div>
+    </div>
+  )
+}
+
+function TimelineWave({ active }: { active: boolean }) {
+  return (
+    <div className="mt-1 flex h-4 items-end gap-[3px]">
+      {[...Array(14)].map((_, index) => (
+        <span
+          key={index}
+          className={cn("w-[2px] rounded-full bg-white/85", active ? "animate-wave" : "")}
+          style={{
+            height: `${4 + (index % 5) * 2}px`,
+            animationDelay: `${index * 0.08}s`,
+            animationDuration: `${0.65 + (index % 4) * 0.12}s`,
+          }}
+        />
+      ))}
     </div>
   )
 }

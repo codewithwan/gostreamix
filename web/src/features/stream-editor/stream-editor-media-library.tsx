@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { thumbnailFileURL, videoFileURL } from "@/lib/api"
 import type { EditorVideo } from "./stream-editor-types"
 import { formatTime } from "./stream-editor-utils"
 
@@ -37,16 +38,24 @@ export function MediaLibraryPanel(props: MediaLibraryPanelProps) {
       <div className="flex-1 overflow-y-auto p-2.5 space-y-1.5 scrollbar-thin">
         {props.videos.length === 0 ? <p className="text-center text-xs text-muted-foreground py-10">{props.t("streamEditorNoVideos")}</p> : null}
         {props.videos.map((video) => (
-          <button draggable type="button" key={video.id} onDragStart={() => props.onDragStart(`library:${video.id}`)} onClick={() => props.onAddVideo(video.id)} className="group w-full text-left flex flex-col p-2 rounded-lg border border-border/70 bg-card/70 hover:border-primary/40 hover:bg-card hover:shadow-xs transition duration-200 cursor-pointer">
-            <span className="flex items-start justify-between gap-2 min-w-0">
-              <span className="min-w-0 flex-1">
+          <button draggable type="button" key={video.id} onDragStart={() => props.onDragStart(`library:${video.id}`)} onClick={() => props.onAddVideo(video.id)} className="group w-full text-left flex gap-2 p-2 rounded-lg border border-border/70 bg-card/70 hover:border-primary/40 hover:bg-card hover:shadow-xs transition duration-200 cursor-pointer">
+            <span className="relative flex h-14 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/60">
+              {video.thumbnail ? (
+                <img src={thumbnailFileURL(video.thumbnail)} alt={video.filename} className="h-full w-full object-cover" />
+              ) : (
+                <video src={videoFileURL(video.source)} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+              )}
+              <span className="absolute bottom-1 right-1 rounded bg-black/65 px-1 py-0.5 font-mono text-[8px] text-white">{formatTime(video.duration)}</span>
+            </span>
+            <span className="flex min-w-0 flex-1 flex-col justify-between gap-1">
+              <span className="flex items-start justify-between gap-2 min-w-0">
+                <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-medium text-foreground group-hover:text-primary transition duration-150">{video.filename}</span>
                 <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded bg-muted text-[9px] text-muted-foreground font-mono max-w-full truncate">{video.folder || props.t("streamEditorRootFolder", "Root")}</span>
+                </span>
+                <Plus className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-primary group-hover:scale-110 transition duration-150 shrink-0 mt-0.5" />
               </span>
-              <Plus className="h-3.5 w-3.5 text-muted-foreground/60 group-hover:text-primary group-hover:scale-110 transition duration-150 shrink-0 mt-0.5" />
-            </span>
-            <span className="mt-1.5 flex justify-between items-center text-[10px] text-muted-foreground">
-              <span className="font-mono">{formatTime(video.duration)}</span>
+              <span className="text-[10px] text-muted-foreground">{props.t("streamEditorAddToQueue", "Add to queue")}</span>
             </span>
           </button>
         ))}

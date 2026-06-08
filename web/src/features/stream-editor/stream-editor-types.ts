@@ -4,6 +4,7 @@ export interface EditorVideo {
   id: string
   filename: string
   source: string
+  thumbnail: string
   folder: string
   duration: number
 }

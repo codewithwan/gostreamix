@@ -50,6 +50,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
           id: video.id,
           filename: video.original_name || video.filename,
           source: video.id,
+          thumbnail: video.thumbnail || "",
           folder: video.folder?.trim() || "",
           duration: video.duration,
         }))
