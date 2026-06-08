@@ -1,17 +1,33 @@
 # GoStreamix
 
-![CI](https://github.com/codewithwan/gostreamix/actions/workflows/ci.yml/badge.svg)
-![CodeQL](https://github.com/codewithwan/gostreamix/actions/workflows/codeql.yml/badge.svg)
-![Dependency Review](https://github.com/codewithwan/gostreamix/actions/workflows/dependency-review.yml/badge.svg)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-![Go](https://img.shields.io/badge/Go-1.25-blue.svg)
-![React](https://img.shields.io/badge/React-19-61DAFB.svg)
-
 <p align="center">
   <img src="assets/img/app_icon.png" width="128" alt="GoStreamix Logo">
 </p>
 
+<p align="center">
+  <a href="https://github.com/codewithwan/gostreamix/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/codewithwan/gostreamix/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/codewithwan/gostreamix/actions/workflows/codeql.yml"><img alt="CodeQL" src="https://github.com/codewithwan/gostreamix/actions/workflows/codeql.yml/badge.svg"></a>
+  <a href="https://github.com/codewithwan/gostreamix/actions/workflows/dependency-review.yml"><img alt="Dependency Review" src="https://github.com/codewithwan/gostreamix/actions/workflows/dependency-review.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green.svg"></a>
+  <img alt="Go 1.25" src="https://img.shields.io/badge/Go-1.25-blue.svg">
+  <img alt="React 19" src="https://img.shields.io/badge/React-19-61DAFB.svg">
+</p>
+
 GoStreamix is a self-hosted live streaming control panel for managing streams, platforms, video assets, notifications, and system monitoring from one web interface. The MVP is already usable: the Go backend, embedded React dashboard, SQLite datastore, FFmpeg-powered media workflow, Docker setup, and automated tests are all wired together.
+
+## UI Preview
+
+### Operations Dashboard
+
+![GoStreamix operations dashboard](assets/screeenshot/dashboard.png)
+
+### Stream Editor
+
+![GoStreamix stream editor](assets/screeenshot/stream_editor.png)
+
+### Video Gallery
+
+![GoStreamix video gallery](assets/screeenshot/video_gallery.png)
 
 ## What It Does
 
