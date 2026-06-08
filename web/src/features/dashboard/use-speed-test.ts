@@ -46,7 +46,7 @@ export function useSpeedTest(open: boolean) {
       setPing(measured)
       
       animateGaugeToZero(() => {
-        runDownloadPhase()
+        void runDownloadPhase()
       })
     }, 100)
     timers.current.push(pingInterval)
@@ -71,41 +71,87 @@ export function useSpeedTest(open: boolean) {
     })
   }
 
-  const runDownloadPhase = () => {
+  const runDownloadPhase = async () => {
     setTestState("download")
-    let dlVal = 0
-    const dlTarget = 650.0 + Math.random() * 45.0
-    const dlInterval = setInterval(() => {
-      dlVal = Math.max(0, dlVal + (dlTarget - dlVal) * 0.08 + (Math.random() - 0.5) * 5.0)
-      setDownloadSpeed(dlVal)
-      setGaugeVal(speedToPercent(dlVal))
-    }, 100)
-    timers.current.push(dlInterval)
-    timers.current.push(setTimeout(() => {
-      clearInterval(dlInterval)
-      setDownloadSpeed(Number(dlVal.toFixed(2)))
+    try {
+      const response = await fetch("/api/speedtest/download?size=100", { cache: "no-store" })
+      if (!response.body) throw new Error("No response body")
+      const reader = response.body.getReader()
+      const startTime = performance.now()
+      let loaded = 0
+      let lastSpeed = 0
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        loaded += value.length
+        const elapsed = (performance.now() - startTime) / 1000
+        if (elapsed > 0) {
+          const speedMbps = (loaded * 8) / (elapsed * 1000000)
+          lastSpeed = speedMbps
+          setDownloadSpeed(Number(speedMbps.toFixed(2)))
+          setGaugeVal(speedToPercent(speedMbps))
+        }
+        if (elapsed >= 5) {
+          await reader.cancel()
+          break
+        }
+      }
+      setDownloadSpeed(Number(lastSpeed.toFixed(2)))
       animateGaugeToZero(() => {
-        runUploadPhase(dlVal)
+        runUploadPhase(lastSpeed)
       })
-    }, 5000)) // 5 seconds of download
+    } catch {
+      setDownloadSpeed(0)
+      animateGaugeToZero(() => {
+        runUploadPhase(0)
+      })
+    }
   }
 
-  const runUploadPhase = (dlVal: number) => {
+  const runUploadPhase = (finalDlVal: number) => {
     setTestState("upload")
-    let ulVal = 0
-    const ulTarget = 720.0 + Math.random() * 55.0
-    const ulInterval = setInterval(() => {
-      ulVal = Math.max(0, ulVal + (ulTarget - ulVal) * 0.08 + (Math.random() - 0.5) * 4.0)
-      setUploadSpeed(ulVal)
-      setGaugeVal(speedToPercent(ulVal))
-    }, 100)
-    timers.current.push(ulInterval)
-    timers.current.push(setTimeout(() => {
-      clearInterval(ulInterval)
-      setUploadSpeed(Number(ulVal.toFixed(2)))
+    const data = new Uint8Array(50 * 1024 * 1024)
+    const xhr = new XMLHttpRequest()
+    const startTime = performance.now()
+    let lastSpeed = 0
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const elapsed = (performance.now() - startTime) / 1000
+        if (elapsed > 0) {
+          const speedMbps = (event.loaded * 8) / (elapsed * 1000000)
+          lastSpeed = speedMbps
+          setUploadSpeed(Number(speedMbps.toFixed(2)))
+          setGaugeVal(speedToPercent(speedMbps))
+          if (elapsed >= 5) {
+            xhr.abort()
+          }
+        }
+      }
+    }
+
+    xhr.onload = () => {
+      const elapsed = (performance.now() - startTime) / 1000
+      const speedMbps = (data.length * 8) / (elapsed * 1000000)
+      setUploadSpeed(Number(speedMbps.toFixed(2)))
       setTestState("done")
-      setGaugeVal(speedToPercent(dlVal))
-    }, 5000)) // 5 seconds of upload
+      setGaugeVal(speedToPercent(finalDlVal))
+    }
+
+    xhr.onerror = xhr.onabort = () => {
+      setUploadSpeed(Number(lastSpeed.toFixed(2)))
+      setTestState("done")
+      setGaugeVal(speedToPercent(finalDlVal))
+    }
+
+    xhr.open("POST", "/api/speedtest/upload")
+    xhr.send(data)
+
+    const uploadTimeout = setTimeout(() => {
+      xhr.abort()
+    }, 5500)
+    timers.current.push(uploadTimeout)
   }
 
   return { downloadSpeed, gaugeVal, ping, reset, startSpeedTest, testState, uploadSpeed }

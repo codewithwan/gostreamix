@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bufio"
 	"net/http"
 
 	"github.com/codewithwan/gostreamix/internal/domain/auth"
@@ -41,6 +42,32 @@ func registerWebRoutes(app *fiber.App, log *zap.Logger, hub *ws.Hub) {
 	app.Get("/ws", ws.NewHandler(hub))
 	app.Get("/health", func(c *fiber.Ctx) error { return c.SendStatus(fiber.StatusOK) })
 	app.Get("/", func(c *fiber.Ctx) error { return c.Redirect("/dashboard") })
+
+	app.Get("/api/speedtest/download", func(c *fiber.Ctx) error {
+		c.Set("Content-Type", "application/octet-stream")
+		c.Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		sizeMB := c.QueryInt("size", 10)
+		if sizeMB < 1 {
+			sizeMB = 1
+		} else if sizeMB > 100 {
+			sizeMB = 100
+		}
+		c.Context().SetBodyStreamWriter(func(w *bufio.Writer) {
+			chunk := make([]byte, 64*1024)
+			totalBytes := sizeMB * 1024 * 1024
+			for i := 0; i < totalBytes; i += len(chunk) {
+				if _, err := w.Write(chunk); err != nil {
+					return
+				}
+			}
+		})
+		return nil
+	})
+
+	app.Post("/api/speedtest/upload", func(c *fiber.Ctx) error {
+		c.Set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+		return c.SendStatus(fiber.StatusOK)
+	})
 
 	for _, path := range []string{"/setup", "/login", "/dashboard", "/streams", "/streams/:id/editor", "/videos", "/platforms", "/settings", "/activity"} {
 		app.Get(path, serveSPA(log))
