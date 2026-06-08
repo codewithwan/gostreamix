@@ -80,7 +80,7 @@ export function TrendChartCard({ title, latestValue, colorVar, data, dataKey, de
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />
               <YAxis tickFormatter={(value) => `${value}%`} domain={[0, 100]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} tickLine={false} axisLine={false} />
-              <Tooltip formatter={(value: number | undefined) => `${value ?? 0}%`} labelStyle={{ color: "hsl(var(--foreground))" }} contentStyle={{ borderRadius: 10, borderColor: "hsl(var(--border))", backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground))" }} />
+              <Tooltip formatter={(value) => `${Number(value ?? 0)}%`} labelStyle={{ color: "hsl(var(--foreground))" }} contentStyle={{ borderRadius: 10, borderColor: "hsl(var(--border))", backgroundColor: "hsl(var(--card))", color: "hsl(var(--foreground))" }} />
               <Area type="monotone" dataKey={dataKey} stroke={`hsl(${colorVar})`} fill={`url(#${gradientID})`} strokeWidth={2} dot={false} isAnimationActive={false} />
             </AreaChart>
           </ResponsiveContainer>

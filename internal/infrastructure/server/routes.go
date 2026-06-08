@@ -20,7 +20,6 @@ func registerStatic(app *fiber.App, log *zap.Logger) {
 	app.Static("/assets", "./assets")
 	app.Static("/main/assets", "./assets")
 	app.Static("/thumbnails", "./data/thumbnails")
-	app.Static("/uploads", "./data/uploads")
 
 	frontendFS, err := frontend.StaticFS()
 	if err != nil {

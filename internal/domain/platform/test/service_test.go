@@ -75,6 +75,7 @@ func TestPlatformService_UpdatePlatform(t *testing.T) {
 			Name:         "Old Name",
 			PlatformType: "twitch",
 			UserID:       userID,
+			StreamKey:    "old_key",
 		}
 
 		dto := platform.UpdatePlatformDTO{
@@ -86,7 +87,7 @@ func TestPlatformService_UpdatePlatform(t *testing.T) {
 		mockRepo.On("FindByID", ctx, platformID).Return(existingPlatform, nil)
 		mockRepo.On("Update", ctx, mock.AnythingOfType("*platform.Platform")).Return(nil)
 
-		p, err := service.UpdatePlatform(ctx, platformID, dto)
+		p, err := service.UpdatePlatform(ctx, userID, platformID, dto)
 		assert.NoError(t, err)
 		assert.NotNil(t, p)
 		assert.Equal(t, "New Name", p.Name)
@@ -101,11 +102,27 @@ func TestPlatformService_UpdatePlatform(t *testing.T) {
 
 		mockRepo.On("FindByID", ctx, platformID).Return(nil, platform.ErrPlatformNotFound)
 
-		p, err := service.UpdatePlatform(ctx, platformID, platform.UpdatePlatformDTO{})
+		p, err := service.UpdatePlatform(ctx, userID, platformID, platform.UpdatePlatformDTO{})
 		assert.Error(t, err)
 		assert.Nil(t, p)
 		assert.ErrorIs(t, err, platform.ErrPlatformNotFound)
 
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("Update failed - different owner", func(t *testing.T) {
+		mockRepo := new(MockPlatformRepository)
+		service := platform.NewService(mockRepo)
+
+		mockRepo.On("FindByID", ctx, platformID).Return(&platform.Platform{ID: platformID, UserID: uuid.New()}, nil)
+
+		p, err := service.UpdatePlatform(ctx, userID, platformID, platform.UpdatePlatformDTO{
+			Name:         "New Name",
+			PlatformType: "twitch",
+		})
+		assert.ErrorIs(t, err, platform.ErrPlatformNotFound)
+		assert.Nil(t, p)
+		mockRepo.AssertNotCalled(t, "Update")
 		mockRepo.AssertExpectations(t)
 	})
 }
@@ -113,16 +130,30 @@ func TestPlatformService_UpdatePlatform(t *testing.T) {
 func TestPlatformService_DeletePlatform(t *testing.T) {
 	ctx := context.Background()
 	platformID := uuid.New()
+	userID := uuid.New()
 
 	t.Run("Delete success", func(t *testing.T) {
 		mockRepo := new(MockPlatformRepository)
 		service := platform.NewService(mockRepo)
 
+		mockRepo.On("FindByID", ctx, platformID).Return(&platform.Platform{ID: platformID, UserID: userID}, nil)
 		mockRepo.On("Delete", ctx, platformID).Return(nil)
 
-		err := service.DeletePlatform(ctx, platformID)
+		err := service.DeletePlatform(ctx, userID, platformID)
 		assert.NoError(t, err)
 
+		mockRepo.AssertExpectations(t)
+	})
+
+	t.Run("Delete failed - different owner", func(t *testing.T) {
+		mockRepo := new(MockPlatformRepository)
+		service := platform.NewService(mockRepo)
+
+		mockRepo.On("FindByID", ctx, platformID).Return(&platform.Platform{ID: platformID, UserID: uuid.New()}, nil)
+
+		err := service.DeletePlatform(ctx, userID, platformID)
+		assert.ErrorIs(t, err, platform.ErrPlatformNotFound)
+		mockRepo.AssertNotCalled(t, "Delete")
 		mockRepo.AssertExpectations(t)
 	})
 }

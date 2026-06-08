@@ -44,7 +44,14 @@ func (s *service) GetPlatforms(ctx context.Context, userID uuid.UUID) ([]*Platfo
 	return platforms, nil
 }
 
-func (s *service) DeletePlatform(ctx context.Context, id uuid.UUID) error {
+func (s *service) DeletePlatform(ctx context.Context, userID, id uuid.UUID) error {
+	p, err := s.repo.FindByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("delete platform - find by id: %w", err)
+	}
+	if p.UserID != userID {
+		return ErrPlatformNotFound
+	}
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return fmt.Errorf("delete platform: %w", err)
 	}
@@ -59,15 +66,20 @@ func (s *service) GetPlatform(ctx context.Context, id uuid.UUID) (*Platform, err
 	return p, nil
 }
 
-func (s *service) UpdatePlatform(ctx context.Context, id uuid.UUID, dto UpdatePlatformDTO) (*Platform, error) {
+func (s *service) UpdatePlatform(ctx context.Context, userID, id uuid.UUID, dto UpdatePlatformDTO) (*Platform, error) {
 	p, err := s.repo.FindByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("update platform - find by id: %w", err)
 	}
+	if p.UserID != userID {
+		return nil, ErrPlatformNotFound
+	}
 
 	p.Name = sharedutils.SanitizeStrict(dto.Name)
 	p.PlatformType = dto.PlatformType
-	p.StreamKey = dto.StreamKey
+	if strings.TrimSpace(dto.StreamKey) != "" {
+		p.StreamKey = dto.StreamKey
+	}
 	p.CustomURL = dto.CustomURL
 	p.Color = normalizePlatformColor(dto.PlatformType)
 

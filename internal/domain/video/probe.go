@@ -48,8 +48,10 @@ func ProbeVideo(path string) (*Metadata, error) {
 	b, _ := strconv.Atoi(data.Format.Bitrate)
 	meta.Bitrate = b / 1000
 
+	hasVideo := false
 	for _, s := range data.Streams {
 		if s.CodecType == "video" {
+			hasVideo = true
 			meta.Resolution = fmt.Sprintf("%dx%d", s.Width, s.Height)
 			if s.AvgFPS != "" && s.AvgFPS != "0/0" {
 				parts := strings.Split(s.AvgFPS, "/")
@@ -63,6 +65,9 @@ func ProbeVideo(path string) (*Metadata, error) {
 			}
 			break
 		}
+	}
+	if !hasVideo {
+		return nil, fmt.Errorf("ffprobe found no video stream")
 	}
 
 	return meta, nil

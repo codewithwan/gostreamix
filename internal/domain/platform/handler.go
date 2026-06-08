@@ -38,7 +38,7 @@ func (h *Handler) ApiGetPlatforms(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to retrieve platforms"})
 	}
 
-	return c.JSON(platforms)
+	return c.JSON(ToPlatformResponses(platforms))
 }
 
 func (h *Handler) ApiCreatePlatform(c *fiber.Ctx) error {
@@ -62,7 +62,7 @@ func (h *Handler) ApiCreatePlatform(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to create platform"})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(p)
+	return c.Status(fiber.StatusCreated).JSON(ToPlatformResponse(p))
 }
 
 func (h *Handler) ApiDeletePlatform(c *fiber.Ctx) error {
@@ -76,8 +76,11 @@ func (h *Handler) ApiDeletePlatform(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid id"})
 	}
 
-	if err := h.svc.DeletePlatform(c.Context(), id); err != nil {
+	if err := h.svc.DeletePlatform(c.Context(), u.ID, id); err != nil {
 		h.log.Error("Failed to delete platform", zap.Error(err), zap.String("platformID", id.String()))
+		if err == ErrPlatformNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "platform not found"})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to delete platform"})
 	}
 
@@ -104,11 +107,14 @@ func (h *Handler) ApiUpdatePlatform(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	p, err := h.svc.UpdatePlatform(c.Context(), id, req)
+	p, err := h.svc.UpdatePlatform(c.Context(), u.ID, id, req)
 	if err != nil {
 		h.log.Error("Failed to update platform", zap.Error(err), zap.String("platformID", id.String()))
+		if err == ErrPlatformNotFound {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "platform not found"})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "failed to update platform"})
 	}
 
-	return c.JSON(p)
+	return c.JSON(ToPlatformResponse(p))
 }

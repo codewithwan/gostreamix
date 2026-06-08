@@ -99,10 +99,8 @@ func unauthorizedResponse(c *fiber.Ctx) error {
 
 func isPublicPath(path string) bool {
 	return strings.HasPrefix(path, "/assets") ||
-		strings.HasPrefix(path, "/uploads") ||
 		strings.HasPrefix(path, "/thumbnails") ||
 		strings.HasPrefix(path, "/web") ||
-		strings.HasPrefix(path, "/ws") ||
 		path == "/health" ||
 		path == "/favicon.ico"
 }

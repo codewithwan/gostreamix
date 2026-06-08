@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
-import type { Video } from "@/lib/api"
+import { videoFileURL, type Video } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
 import { bytesLabel } from "./video-utils"
 import type { DeleteTarget, RenameTarget } from "./videos-types"
@@ -72,7 +72,7 @@ export function PreviewDialog(props: {
         {props.video ? (
           <div className="flex min-h-0 flex-1 flex-col bg-black">
             <button type="button" className="flex min-h-0 flex-1 items-center justify-center bg-black" onClick={togglePlayback}>
-              <video ref={props.videoRef} src={`/uploads/${props.video.filename}`} muted={props.muted} playsInline className="max-h-[calc(92dvh-11rem)] w-full bg-black object-contain" onPlay={() => props.onPlayingChange(true)} onPause={() => props.onPlayingChange(false)} onTimeUpdate={(event) => props.onTimeChange(event.currentTarget.currentTime)} onLoadedMetadata={(event) => props.onDurationChange(event.currentTarget.duration)} />
+              <video ref={props.videoRef} src={videoFileURL(props.video.id)} muted={props.muted} playsInline className="max-h-[calc(92dvh-11rem)] w-full bg-black object-contain" onPlay={() => props.onPlayingChange(true)} onPause={() => props.onPlayingChange(false)} onTimeUpdate={(event) => props.onTimeChange(event.currentTarget.currentTime)} onLoadedMetadata={(event) => props.onDurationChange(event.currentTarget.duration)} />
             </button>
             <div className="shrink-0 space-y-3 border-t border-border bg-card p-3 sm:p-4">
               <input type="range" min={0} max={props.duration || 0} step="0.1" value={props.currentTime} onChange={(event) => seek(Number(event.target.value))} className="w-full accent-current" />

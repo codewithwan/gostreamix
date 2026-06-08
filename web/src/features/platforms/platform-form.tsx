@@ -17,6 +17,8 @@ interface PlatformFormProps {
   onToggleShowKey: () => void
   saving: boolean
   submitLabel: string
+  streamKeyPlaceholder?: string
+  streamKeyRequired?: boolean
   t: TranslateFn
 }
 
@@ -28,6 +30,8 @@ export function PlatformForm({
   onToggleShowKey,
   saving,
   submitLabel,
+  streamKeyPlaceholder,
+  streamKeyRequired = true,
   t,
 }: PlatformFormProps) {
   const updateField = <K extends keyof PlatformDraft>(key: K, value: PlatformDraft[K]) => {
@@ -74,11 +78,11 @@ export function PlatformForm({
           </Button>
         </div>
         <Input
-          placeholder={t("platformsStreamKeyPlaceholder")}
+          placeholder={streamKeyPlaceholder || t("platformsStreamKeyPlaceholder")}
           type={showKey ? "text" : "password"}
           value={draft.stream_key}
           onChange={(event) => updateField("stream_key", event.target.value)}
-          required
+          required={streamKeyRequired}
         />
       </div>
 

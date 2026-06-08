@@ -1,5 +1,6 @@
 import { Maximize2, Minimize2, Pause, Play, Volume2, VolumeX } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { videoFileURL } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import type { ClipTransform, EditorVideo } from "./stream-editor-types"
 import { formatTime, getTransformStyle } from "./stream-editor-utils"
@@ -53,7 +54,7 @@ export function PreviewPlayer(props: PreviewPlayerProps) {
             <video
               key={props.selectedVideo.id}
               ref={props.videoRef}
-              src={`/uploads/${props.selectedVideo.source}`}
+              src={videoFileURL(props.selectedVideo.source)}
               muted={props.muted}
               playsInline
               onEnded={props.onEnded}

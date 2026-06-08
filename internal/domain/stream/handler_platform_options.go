@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"strings"
-
 	"github.com/codewithwan/gostreamix/internal/domain/platform"
 	"github.com/google/uuid"
 )
@@ -26,41 +24,10 @@ func toPlatformOptions(plats []*platform.Platform) []platformOption {
 			ID:        p.ID,
 			Name:      p.Name,
 			Type:      p.PlatformType,
-			RTMPURL:   buildRTMPTarget(p.PlatformType, p.CustomURL, p.StreamKey),
+			RTMPURL:   platform.BuildRTMPTarget(p.PlatformType, p.CustomURL, p.StreamKey),
 			Enabled:   p.Enabled,
-			StreamKey: p.StreamKey,
+			StreamKey: platform.MaskStreamKey(p.StreamKey),
 		})
 	}
 	return options
-}
-
-func buildRTMPTarget(platformType, baseURL, streamKey string) string {
-	platformType = strings.ToLower(strings.TrimSpace(platformType))
-	baseURL = strings.TrimSpace(baseURL)
-	streamKey = strings.TrimSpace(streamKey)
-	if baseURL == "" {
-		baseURL = defaultRTMPBase(platformType)
-	}
-	if baseURL == "" || streamKey == "" {
-		return baseURL
-	}
-	if strings.HasSuffix(baseURL, "/") {
-		return baseURL + streamKey
-	}
-	return baseURL + "/" + streamKey
-}
-
-func defaultRTMPBase(platformType string) string {
-	switch platformType {
-	case "youtube":
-		return "rtmp://a.rtmp.youtube.com/live2"
-	case "twitch":
-		return "rtmp://live.twitch.tv/app"
-	case "facebook":
-		return "rtmps://live-api-s.facebook.com:443/rtmp"
-	case "tiktok":
-		return "rtmp://push-rtmp-global.tiktok.com/live"
-	default:
-		return ""
-	}
 }

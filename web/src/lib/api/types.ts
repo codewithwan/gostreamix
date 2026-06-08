@@ -40,6 +40,7 @@ export interface Platform {
   platform_type: string
   stream_key: string
   custom_url: string
+  rtmp_url: string
   color?: string
   enabled: boolean
 }

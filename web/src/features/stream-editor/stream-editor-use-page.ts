@@ -49,7 +49,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
         const loadedVideos = (workspace.videos || []).map((video) => ({
           id: video.id,
           filename: video.original_name || video.filename,
-          source: video.filename,
+          source: video.id,
           folder: video.folder?.trim() || "",
           duration: video.duration,
         }))

@@ -62,7 +62,7 @@ export function buildRTMPTarget(platformType: string, customURL: string, streamK
   return `${base}/${key}`
 }
 
-function maskStreamKey(key: string) {
+export function maskStreamKey(key: string) {
   const trimmed = key.trim()
   if (trimmed.length <= 6) {
     return "***"
@@ -71,14 +71,10 @@ function maskStreamKey(key: string) {
 }
 
 export function buildMaskedTarget(platform: Platform) {
+  if (platform.rtmp_url) {
+    return platform.rtmp_url
+  }
   const target = buildRTMPTarget(platform.platform_type, platform.custom_url, platform.stream_key)
-  if (!target) {
-    return ""
-  }
-
   const key = platform.stream_key.trim()
-  if (!key) {
-    return target
-  }
-  return target.replace(key, maskStreamKey(key))
+  return key ? target.replace(key, maskStreamKey(key)) : target
 }

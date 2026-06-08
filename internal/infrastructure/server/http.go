@@ -76,7 +76,6 @@ func shouldTrackActivityPath(path string) bool {
 	if strings.HasPrefix(path, "/assets") ||
 		strings.HasPrefix(path, "/web/") ||
 		strings.HasPrefix(path, "/ws") ||
-		strings.HasPrefix(path, "/uploads") ||
 		strings.HasPrefix(path, "/thumbnails") {
 		return false
 	}

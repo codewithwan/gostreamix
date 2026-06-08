@@ -20,7 +20,14 @@ func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video
 		return nil, err
 	}
 
-	meta := probeOrDefault(dto.Path)
+	meta := dto.Metadata
+	if meta == nil {
+		var err error
+		meta, err = ProbeVideo(dto.Path)
+		if err != nil {
+			return nil, fmt.Errorf("probe video: %w", err)
+		}
+	}
 	info, err := os.Stat(dto.Path)
 	if err != nil {
 		return nil, fmt.Errorf("stat video file: %w", err)
@@ -46,13 +53,4 @@ func (s *service) ProcessVideo(ctx context.Context, dto ProcessVideoDTO) (*Video
 		return nil, fmt.Errorf("create video record: %w", err)
 	}
 	return v, nil
-}
-
-func probeOrDefault(path string) *Metadata {
-	meta, err := ProbeVideo(path)
-	if err == nil {
-		return meta
-	}
-	fmt.Printf("Warning: failed to probe video: %v\n", err)
-	return &Metadata{Duration: 0, Resolution: "unknown", Bitrate: 0, FPS: 0}
 }

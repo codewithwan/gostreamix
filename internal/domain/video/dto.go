@@ -5,6 +5,7 @@ type ProcessVideoDTO struct {
 	OriginalName string
 	Path         string
 	Folder       string
+	Metadata     *Metadata
 }
 
 type RenameVideoDTO struct {

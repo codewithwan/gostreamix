@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/json"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -34,23 +35,43 @@ func TestPlatformHandler(t *testing.T) {
 	t.Run("GET /api/platforms", func(t *testing.T) {
 		user := &auth.User{ID: userID, Username: "admin"}
 		mockAuthSvc.On("GetUserByID", ctx, userID).Return(user, nil)
-		mockPlatformSvc.On("GetPlatforms", ctx, userID).Return([]*platform.Platform{}, nil)
+		mockPlatformSvc.On("GetPlatforms", ctx, userID).Return([]*platform.Platform{{
+			ID:           uuid.New(),
+			UserID:       userID,
+			Name:         "YouTube",
+			PlatformType: "youtube",
+			StreamKey:    "abc123secret",
+		}}, nil)
 
 		req := httptest.NewRequest("GET", "/api/platforms/", nil)
 		resp, _ := app.Test(req, -1)
 
 		assert.Equal(t, fiber.StatusOK, resp.StatusCode)
+		var body []platform.PlatformResponse
+		assert.NoError(t, json.NewDecoder(resp.Body).Decode(&body))
+		assert.Len(t, body, 1)
+		assert.Equal(t, "****cret", body[0].StreamKey)
+		assert.NotContains(t, body[0].RTMPURL, "abc123secret")
 	})
 
 	t.Run("POST /api/platforms", func(t *testing.T) {
 		mockAuthSvc.On("GetUserByID", ctx, userID).Return(&auth.User{ID: userID}, nil)
-		mockPlatformSvc.On("CreatePlatform", ctx, userID, mock.Anything).Return(&platform.Platform{}, nil)
+		mockPlatformSvc.On("CreatePlatform", ctx, userID, mock.Anything).Return(&platform.Platform{
+			ID:           uuid.New(),
+			UserID:       userID,
+			Name:         "YouTube",
+			PlatformType: "youtube",
+			StreamKey:    "abc123",
+		}, nil)
 
-		body := `{"name":"YouTube","platform_type":"youtube","stream_key":"abc123"}`
-		req := httptest.NewRequest("POST", "/api/platforms/", strings.NewReader(body))
+		payload := `{"name":"YouTube","platform_type":"youtube","stream_key":"abc123"}`
+		req := httptest.NewRequest("POST", "/api/platforms/", strings.NewReader(payload))
 		req.Header.Set("Content-Type", "application/json")
 		resp, _ := app.Test(req, -1)
 
 		assert.Equal(t, fiber.StatusCreated, resp.StatusCode)
+		var response platform.PlatformResponse
+		assert.NoError(t, json.NewDecoder(resp.Body).Decode(&response))
+		assert.NotEqual(t, "abc123", response.StreamKey)
 	})
 }

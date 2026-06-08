@@ -9,9 +9,9 @@ import (
 type Service interface {
 	CreatePlatform(ctx context.Context, userID uuid.UUID, dto CreatePlatformDTO) (*Platform, error)
 	GetPlatforms(ctx context.Context, userID uuid.UUID) ([]*Platform, error)
-	DeletePlatform(ctx context.Context, id uuid.UUID) error
+	DeletePlatform(ctx context.Context, userID, id uuid.UUID) error
 	GetPlatform(ctx context.Context, id uuid.UUID) (*Platform, error)
-	UpdatePlatform(ctx context.Context, id uuid.UUID, dto UpdatePlatformDTO) (*Platform, error)
+	UpdatePlatform(ctx context.Context, userID, id uuid.UUID, dto UpdatePlatformDTO) (*Platform, error)
 }
 
 type Repository interface {

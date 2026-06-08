@@ -66,7 +66,7 @@ export function PlatformsPage() {
     setDraft({
       name: platform.name,
       platform_type: platform.platform_type,
-      stream_key: platform.stream_key,
+      stream_key: "",
       custom_url: platform.custom_url,
     })
     setShowEditKey(false)
@@ -163,6 +163,8 @@ export function PlatformsPage() {
             onToggleShowKey={() => setShowEditKey((current) => !current)}
             saving={saving}
             submitLabel={t("update")}
+            streamKeyPlaceholder={platforms.find((platform) => platform.id === editingID)?.stream_key || t("platformsLeaveKeyUnchanged", "Leave blank to keep current key")}
+            streamKeyRequired={false}
             t={t}
           />
         </DialogContent>

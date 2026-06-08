@@ -1,7 +1,7 @@
 import { CirclePlay, Film, Folder, FolderUp } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { Video } from "@/lib/api"
+import { thumbnailFileURL, videoFileURL, type Video } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
 
 import { ALL_FOLDERS, bytesLabel, normalizeFolder } from "./video-utils"
@@ -123,7 +123,7 @@ export function VideoGrid({
         })}
 
         {filteredVideos.map((video) => {
-          const thumbnailURL = video.thumbnail ? `/thumbnails/${video.thumbnail}` : ""
+          const thumbnailURL = video.thumbnail ? thumbnailFileURL(video.thumbnail) : ""
           const showThumbnailImage = thumbnailURL && !brokenThumbnails[video.id]
           const isSelected = selectedVideoIDs.includes(video.id)
           const folderName = normalizeFolder(video.folder || "")
@@ -166,7 +166,7 @@ export function VideoGrid({
                     />
                   ) : (
                     <>
-                      <video src={`/uploads/${video.filename}`} preload="metadata" muted playsInline className="h-full w-full object-cover" />
+                      <video src={videoFileURL(video.id)} preload="metadata" muted playsInline className="h-full w-full object-cover" />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-xs text-white">
                         <span className="inline-flex items-center gap-1 rounded bg-black/40 px-2 py-1">
                           <Film className="h-3.5 w-3.5" />

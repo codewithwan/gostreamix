@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PlatformIcon } from "@/features/platforms/platform-icon"
-import { buildRTMPTarget } from "@/features/platforms/platform-utils"
 import type { Platform, Stream } from "@/lib/api"
 import { statusVariant } from "./stream-utils"
 
@@ -37,7 +36,7 @@ function StreamCard(props: Omit<StreamListProps, "loading" | "streams"> & { stre
   const isRunning = stream.status === "running"
   const isStarting = stream.status === "starting"
   const isStopping = stream.status === "stopping"
-  const matchedPlatforms = platforms.filter((platform) => stream.rtmp_targets.includes(buildRTMPTarget(platform.platform_type, platform.custom_url, platform.stream_key)))
+  const matchedPlatforms = platforms.filter((platform) => stream.rtmp_targets.includes(platform.rtmp_url))
 
   return (
     <Card>

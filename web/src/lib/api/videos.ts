@@ -2,9 +2,18 @@ import { getCsrfToken, request } from "./client"
 import type { Video } from "./types"
 
 export const MAX_VIDEO_UPLOAD_BYTES = 2 * 1024 * 1024 * 1024
+const VIDEOS_API = "/api/videos"
 
 export async function getVideos() {
-  return request<Video[]>("/api/videos/")
+  return request<Video[]>(`${VIDEOS_API}/`)
+}
+
+export function videoFileURL(videoID: string) {
+  return `${VIDEOS_API}/${encodeURIComponent(videoID)}/file`
+}
+
+export function thumbnailFileURL(filename: string) {
+  return `/thumbnails/${encodeURIComponent(filename)}`
 }
 
 export async function uploadVideo(file: File, folder = "") {
@@ -14,7 +23,7 @@ export async function uploadVideo(file: File, folder = "") {
     formData.append("folder", folder.trim())
   }
 
-  return request<Video>("/api/videos/upload", { method: "POST", body: formData })
+  return request<Video>(`${VIDEOS_API}/upload`, { method: "POST", body: formData })
 }
 
 export function uploadVideoWithProgress(file: File, folder = "", onProgress?: (progress: number) => void) {
@@ -26,7 +35,7 @@ export function uploadVideoWithProgress(file: File, folder = "", onProgress?: (p
 
   return new Promise<Video>((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open("POST", "/api/videos/upload")
+    xhr.open("POST", `${VIDEOS_API}/upload`)
     xhr.withCredentials = true
 
     const csrfToken = getCsrfToken()
@@ -76,25 +85,25 @@ function uploadErrorMessage(data: unknown, status: number) {
 }
 
 export async function deleteVideo(videoID: string) {
-  return request<void>(`/api/videos/${videoID}`, { method: "DELETE" })
+  return request<void>(`${VIDEOS_API}/${encodeURIComponent(videoID)}`, { method: "DELETE" })
 }
 
 export async function renameVideo(videoID: string, name: string) {
-  return request<Video>(`/api/videos/${videoID}/rename`, {
+  return request<Video>(`${VIDEOS_API}/${encodeURIComponent(videoID)}/rename`, {
     method: "PATCH",
     body: JSON.stringify({ name }),
   })
 }
 
 export async function moveVideo(videoID: string, folder: string) {
-  return request<Video>(`/api/videos/${videoID}/move`, {
+  return request<Video>(`${VIDEOS_API}/${encodeURIComponent(videoID)}/move`, {
     method: "PATCH",
     body: JSON.stringify({ folder }),
   })
 }
 
 export async function copyVideo(videoID: string, folder: string) {
-  return request<Video>(`/api/videos/${videoID}/copy`, {
+  return request<Video>(`${VIDEOS_API}/${encodeURIComponent(videoID)}/copy`, {
     method: "POST",
     body: JSON.stringify({ folder }),
   })
