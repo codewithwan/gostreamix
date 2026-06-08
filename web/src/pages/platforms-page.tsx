@@ -32,7 +32,7 @@ export function PlatformsPage() {
   const loadPlatforms = async () => {
     try {
       const data = await getPlatforms()
-      setPlatforms(data)
+      setPlatforms(data || [])
       setError("")
     } catch (err) {
       const message = err instanceof Error ? err.message : t("platformsLoadFailed")

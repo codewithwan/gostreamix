@@ -50,7 +50,7 @@ export function useVideoLibrary(t: TranslateFn) {
     if (showLoader) setLoading(true)
     setError("")
     try {
-      setVideos(await getVideos())
+      setVideos((await getVideos()) || [])
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : t("videosLoadFailed")
       setError(message)

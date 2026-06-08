@@ -40,13 +40,13 @@ export function StreamsPage() {
   }
 
   const loadStreams = async () => {
-    try { setStreams(await getStreams()) }
+    try { setStreams((await getStreams()) || []) }
     catch (err) { showError(err, t("streamsLoadFailed")) }
     finally { setLoading(false) }
   }
 
   const loadDependencies = async () => {
-    try { const [, p] = await Promise.all([getVideos(), getPlatforms()]); setPlatforms(p) }
+    try { const [, p] = await Promise.all([getVideos(), getPlatforms()]); setPlatforms(p || []) }
     catch (err) { showError(err, t("streamsDependencyFailed")) }
   }
 

@@ -1,11 +1,17 @@
-version: '3.8'
 services:
   gostreamix:
-    build: .
-    image: gostreamix:latest
+    image: ghcr.io/codewithwan/gostreamix:latest
     container_name: gostreamix
     ports:
       - "8080:8080"
     volumes:
       - ./data:/app/data
     restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.80'
+          memory: 800M
+        reservations:
+          cpus: '0.25'
+          memory: 256M

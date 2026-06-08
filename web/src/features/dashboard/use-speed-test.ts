@@ -74,9 +74,9 @@ export function useSpeedTest(open: boolean) {
   const runDownloadPhase = () => {
     setTestState("download")
     let dlVal = 0
-    const dlTarget = 17.2 + Math.random() * 1.5
+    const dlTarget = 650.0 + Math.random() * 45.0
     const dlInterval = setInterval(() => {
-      dlVal = Math.max(0, dlVal + (dlTarget - dlVal) * 0.08 + (Math.random() - 0.5) * 0.4)
+      dlVal = Math.max(0, dlVal + (dlTarget - dlVal) * 0.08 + (Math.random() - 0.5) * 5.0)
       setDownloadSpeed(dlVal)
       setGaugeVal(speedToPercent(dlVal))
     }, 100)
@@ -93,9 +93,9 @@ export function useSpeedTest(open: boolean) {
   const runUploadPhase = (dlVal: number) => {
     setTestState("upload")
     let ulVal = 0
-    const ulTarget = 22.1 + Math.random() * 1.5
+    const ulTarget = 720.0 + Math.random() * 55.0
     const ulInterval = setInterval(() => {
-      ulVal = Math.max(0, ulVal + (ulTarget - ulVal) * 0.08 + (Math.random() - 0.5) * 0.3)
+      ulVal = Math.max(0, ulVal + (ulTarget - ulVal) * 0.08 + (Math.random() - 0.5) * 4.0)
       setUploadSpeed(ulVal)
       setGaugeVal(speedToPercent(ulVal))
     }, 100)

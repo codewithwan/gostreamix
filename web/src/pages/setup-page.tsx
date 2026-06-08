@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react"
-import { Moon, Sun } from "lucide-react"
+import { Moon, Sun, Eye, EyeOff } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,8 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
@@ -84,17 +86,43 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
             </label>
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">{t("authPasswordPlaceholder")}</span>
-              <Input value={password} onChange={(event) => setPassword(event.target.value)} placeholder={t("authPasswordPlaceholder")} type="password" required />
+              <div className="relative">
+                <Input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder={t("authPasswordPlaceholder")}
+                  type={showPassword ? "text" : "password"}
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </label>
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">{t("setupConfirmPasswordPlaceholder")}</span>
-              <Input
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder={t("setupConfirmPasswordPlaceholder")}
-                type="password"
-                required
-              />
+              <div className="relative">
+                <Input
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder={t("setupConfirmPasswordPlaceholder")}
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                >
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </label>
             {error ? <p className="text-sm text-danger">{error}</p> : null}
             <Button className="w-full" disabled={loading}>
