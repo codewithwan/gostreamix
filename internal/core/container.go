@@ -5,6 +5,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
 	"github.com/codewithwan/gostreamix/internal/domain/notification"
 	"github.com/codewithwan/gostreamix/internal/domain/platform"
+	"github.com/codewithwan/gostreamix/internal/domain/speedtest"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
@@ -60,6 +61,9 @@ func BuildContainer() *dig.Container {
 	c.Provide(notification.NewRepository)
 	c.Provide(notification.NewService)
 	c.Provide(notification.NewHandler)
+
+	c.Provide(speedtest.NewService)
+	c.Provide(speedtest.NewHandler)
 
 	c.Provide(server.NewServer)
 

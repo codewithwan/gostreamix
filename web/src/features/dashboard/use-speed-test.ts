@@ -9,205 +9,238 @@ export function useSpeedTest(open: boolean) {
   const [downloadSpeed, setDownloadSpeed] = useState(0)
   const [uploadSpeed, setUploadSpeed] = useState(0)
   const [gaugeVal, setGaugeVal] = useState(0)
-  const timers = useRef<Array<ReturnType<typeof setTimeout> | ReturnType<typeof setInterval>>>([])
-  const activeController = useRef<AbortController | null>(null)
-  const activeXhr = useRef<XMLHttpRequest | null>(null)
 
-  const clearTimers = () => {
-    timers.current.forEach((timer) => {
-      clearTimeout(timer)
-      clearInterval(timer)
-    })
-    timers.current = []
+  const [serverName, setServerName] = useState("")
+  const [serverCountry, setServerCountry] = useState("")
+  const [serverSponsor, setServerSponsor] = useState("")
+  const [clientIp, setClientIp] = useState("")
+  const [clientIsp, setClientIsp] = useState("")
+
+  const activeWs = useRef<WebSocket | null>(null)
+  // animated gauge value — driven by rAF loop
+  const gaugeAnimRef = useRef<number | null>(null)
+  const gaugeTarget = useRef(0)
+  const gaugeCurrent = useRef(0)
+
+  // Ping phase: bounce the gauge needle using a sine wave
+  const pingAnimRef = useRef<number | null>(null)
+  const pingPhaseActive = useRef(false)
+
+  const stopGaugeAnim = () => {
+    if (gaugeAnimRef.current !== null) {
+      cancelAnimationFrame(gaugeAnimRef.current)
+      gaugeAnimRef.current = null
+    }
+  }
+
+  const stopPingAnim = () => {
+    if (pingAnimRef.current !== null) {
+      cancelAnimationFrame(pingAnimRef.current)
+      pingAnimRef.current = null
+    }
+    pingPhaseActive.current = false
+  }
+
+  // Smoothly animate gauge toward a target using exponential easing
+  const startGaugeToTarget = (target: number) => {
+    stopGaugeAnim()
+    gaugeTarget.current = target
+    const animate = () => {
+      const diff = gaugeTarget.current - gaugeCurrent.current
+      if (Math.abs(diff) < 0.05) {
+        gaugeCurrent.current = gaugeTarget.current
+        setGaugeVal(gaugeTarget.current)
+        gaugeAnimRef.current = null
+        return
+      }
+      gaugeCurrent.current += diff * 0.12
+      setGaugeVal(gaugeCurrent.current)
+      gaugeAnimRef.current = requestAnimationFrame(animate)
+    }
+    gaugeAnimRef.current = requestAnimationFrame(animate)
+  }
+
+  // Sweep gauge to 0 and call callback when done
+  const sweepToZero = (onDone: () => void) => {
+    stopGaugeAnim()
+    stopPingAnim()
+    gaugeTarget.current = 0
+    const animate = () => {
+      const diff = 0 - gaugeCurrent.current
+      if (Math.abs(diff) < 0.1) {
+        gaugeCurrent.current = 0
+        setGaugeVal(0)
+        gaugeAnimRef.current = null
+        onDone()
+        return
+      }
+      gaugeCurrent.current += diff * 0.18
+      setGaugeVal(gaugeCurrent.current)
+      gaugeAnimRef.current = requestAnimationFrame(animate)
+    }
+    gaugeAnimRef.current = requestAnimationFrame(animate)
+  }
+
+  // Ping phase: bounce needle using a rising sine curve
+  const startPingAnim = () => {
+    stopPingAnim()
+    pingPhaseActive.current = true
+    const startTime = performance.now()
+    const animate = () => {
+      if (!pingPhaseActive.current) return
+      const elapsed = (performance.now() - startTime) / 1000
+      // Slowly ramp up and oscillate — looks like probing
+      const base = Math.min(elapsed * 18, 55)
+      const wave = Math.sin(elapsed * 3.5) * 12
+      const val = Math.max(0, base + wave)
+      gaugeCurrent.current = val
+      setGaugeVal(val)
+      pingAnimRef.current = requestAnimationFrame(animate)
+    }
+    pingAnimRef.current = requestAnimationFrame(animate)
   }
 
   const reset = () => {
-    clearTimers()
-    if (activeController.current) {
-      activeController.current.abort()
-      activeController.current = null
+    stopGaugeAnim()
+    stopPingAnim()
+    if (activeWs.current) {
+      activeWs.current.close()
+      activeWs.current = null
     }
-    if (activeXhr.current) {
-      activeXhr.current.abort()
-      activeXhr.current = null
-    }
+    gaugeCurrent.current = 0
+    gaugeTarget.current = 0
     setTestState("idle")
     setPing(0)
     setDownloadSpeed(0)
     setUploadSpeed(0)
     setGaugeVal(0)
+    setServerName("")
+    setServerCountry("")
+    setServerSponsor("")
+    setClientIp("")
+    setClientIsp("")
   }
 
   useEffect(() => {
     if (!open) reset()
-    return clearTimers
+    return () => {
+      stopGaugeAnim()
+      stopPingAnim()
+      if (activeWs.current) activeWs.current.close()
+    }
   }, [open])
 
   const startSpeedTest = () => {
     reset()
-    setTestState("ping")
-    let count = 0
-    let lastGaugeVal = 0
-    const pingInterval = setInterval(async () => {
-      const gVal = speedToPercent(Math.random() * 4 + 1)
-      lastGaugeVal = gVal
-      setGaugeVal(gVal)
-      count += 1
-      if (count < 50) return // 50 * 100ms = 5 seconds
-      clearInterval(pingInterval)
-      const measured = await measurePing()
-      setPing(measured)
-      
-      animateGaugeToZero(lastGaugeVal, () => {
-        void runDownloadPhase()
-      })
-    }, 100)
-    timers.current.push(pingInterval)
-  }
+    // Small delay so reset state flushes before ping starts
+    setTimeout(() => {
+      setTestState("ping")
+      startPingAnim()
 
-  const animateGaugeToZero = (startVal: number, callback: () => void) => {
-    let val = startVal
-    const steps = 12
-    const stepVal = val / steps
-    const animInterval = setInterval(() => {
-      val = Math.max(0, val - stepVal)
-      setGaugeVal(val)
-      if (val <= 0) {
-        clearInterval(animInterval)
-        setGaugeVal(0)
-        timers.current.push(setTimeout(callback, 400))
-      }
-    }, 30)
-    timers.current.push(animInterval)
-  }
+      const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+      const wsUrl = `${wsProtocol}//${window.location.host}/ws/speedtest`
+      const ws = new WebSocket(wsUrl)
+      activeWs.current = ws
 
-  const runDownloadPhase = async () => {
-    setTestState("download")
-    const controller = new AbortController()
-    activeController.current = controller
-    const downloadTimeout = setTimeout(() => {
-      controller.abort()
-    }, 5000)
-    timers.current.push(downloadTimeout)
-
-    let loaded = 0
-    let lastSpeed = 0
-
-    try {
-      const response = await fetch("/api/speedtest/download?size=100", {
-        cache: "no-store",
-        signal: controller.signal,
-      })
-      if (!response.body) throw new Error("No response body")
-      const reader = response.body.getReader()
-      const startTime = performance.now()
-      let lastUpdate = 0
-      let iterations = 0
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        if (value) {
-          loaded += value.length
-        }
-        
-        iterations++
-        if (iterations % 40 === 0) {
-          await new Promise((resolve) => setTimeout(resolve, 0))
-        }
-
-        const now = performance.now()
-        const elapsed = (now - startTime) / 1000
-        if (elapsed > 0) {
-          const speedMbps = (loaded * 8) / (elapsed * 1000000)
-          lastSpeed = speedMbps
-          if (now - lastUpdate > 100) {
-            setDownloadSpeed(Number(speedMbps.toFixed(2)))
-            setGaugeVal(speedToPercent(speedMbps))
-            lastUpdate = now
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data) as {
+            phase: string
+            ping?: number
+            downloadSpeed?: number
+            uploadSpeed?: number
+            serverName?: string
+            serverCountry?: string
+            serverSponsor?: string
+            clientIp?: string
+            clientIsp?: string
           }
-        }
-      }
-      clearTimeout(downloadTimeout)
-      activeController.current = null
-      setDownloadSpeed(Number(lastSpeed.toFixed(2)))
-      animateGaugeToZero(speedToPercent(lastSpeed), () => {
-        runUploadPhase(lastSpeed)
-      })
-    } catch {
-      clearTimeout(downloadTimeout)
-      activeController.current = null
-      const finalSpeed = loaded > 0 ? (loaded * 8) / (5 * 1000000) : 0
-      setDownloadSpeed(Number(finalSpeed.toFixed(2)))
-      animateGaugeToZero(speedToPercent(finalSpeed), () => {
-        runUploadPhase(finalSpeed)
-      })
-    }
-  }
 
-  const runUploadPhase = (finalDlVal: number) => {
-    setTestState("upload")
-    const data = new Uint8Array(50 * 1024 * 1024)
-    const xhr = new XMLHttpRequest()
-    activeXhr.current = xhr
-    const startTime = performance.now()
-    let lastSpeed = 0
-    let lastUpdate = 0
+          const applyMeta = () => {
+            if (msg.serverName) setServerName(msg.serverName)
+            if (msg.serverCountry) setServerCountry(msg.serverCountry)
+            if (msg.serverSponsor) setServerSponsor(msg.serverSponsor)
+            if (msg.clientIp) setClientIp(msg.clientIp)
+            if (msg.clientIsp) setClientIsp(msg.clientIsp)
+          }
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable) {
-        const now = performance.now()
-        const elapsed = (now - startTime) / 1000
-        if (elapsed > 0) {
-          const speedMbps = (event.loaded * 8) / (elapsed * 1000000)
-          lastSpeed = speedMbps
-          if (now - lastUpdate > 100) {
-            setUploadSpeed(Number(speedMbps.toFixed(2)))
-            setGaugeVal(speedToPercent(speedMbps))
-            lastUpdate = now
+          if (msg.phase === "ping") {
+            setTestState("ping")
+            startPingAnim()
+          } else if (msg.phase === "download") {
+            // First download message = transition from ping → download
+            if (msg.downloadSpeed === undefined || msg.downloadSpeed === 0) {
+              // Ping result arrived → sweep to 0 then transition
+              if (msg.ping !== undefined) setPing(msg.ping)
+              applyMeta()
+              sweepToZero(() => {
+                setTestState("download")
+              })
+            } else {
+              setTestState("download")
+              if (msg.ping !== undefined) setPing(msg.ping)
+              applyMeta()
+              const target = speedToPercent(msg.downloadSpeed)
+              gaugeTarget.current = target
+              startGaugeToTarget(target)
+              setDownloadSpeed(msg.downloadSpeed)
+            }
+          } else if (msg.phase === "upload") {
+            if (msg.uploadSpeed === undefined || msg.uploadSpeed === 0) {
+              // Download finished → lock final download speed → sweep to 0
+              if (msg.downloadSpeed !== undefined) setDownloadSpeed(msg.downloadSpeed)
+              applyMeta()
+              sweepToZero(() => {
+                setTestState("upload")
+              })
+            } else {
+              setTestState("upload")
+              if (msg.ping !== undefined) setPing(msg.ping)
+              applyMeta()
+              const target = speedToPercent(msg.uploadSpeed)
+              gaugeTarget.current = target
+              startGaugeToTarget(target)
+              setUploadSpeed(msg.uploadSpeed)
+            }
+          } else if (msg.phase === "done") {
+            if (msg.downloadSpeed !== undefined) setDownloadSpeed(msg.downloadSpeed)
+            if (msg.uploadSpeed !== undefined) setUploadSpeed(msg.uploadSpeed)
+            applyMeta()
+            sweepToZero(() => {
+              setTestState("done")
+            })
+            ws.close()
+          } else if (msg.phase === "error") {
+            sweepToZero(() => setTestState("done"))
+            ws.close()
           }
-          if (elapsed >= 5) {
-            xhr.abort()
-          }
+        } catch (err) {
+          console.error("failed to parse speedtest ws message", err)
         }
       }
-    }
 
-    xhr.onload = () => {
-      activeXhr.current = null
-      const elapsed = (performance.now() - startTime) / 1000
-      const speedMbps = (data.length * 8) / (elapsed * 1000000)
-      setUploadSpeed(Number(speedMbps.toFixed(2)))
-      setTestState("done")
-      setGaugeVal(speedToPercent(finalDlVal))
-    }
+      ws.onerror = () => {
+        sweepToZero(() => setTestState("done"))
+      }
 
-    xhr.onerror = xhr.onabort = () => {
-      activeXhr.current = null
-      setUploadSpeed(Number(lastSpeed.toFixed(2)))
-      setTestState("done")
-      setGaugeVal(speedToPercent(finalDlVal))
-    }
-
-    xhr.open("POST", "/api/speedtest/upload")
-    xhr.send(data)
-
-    const uploadTimeout = setTimeout(() => {
-      xhr.abort()
-    }, 5500)
-    timers.current.push(uploadTimeout)
+      ws.onclose = () => {
+        if (activeWs.current === ws) activeWs.current = null
+      }
+    }, 50)
   }
 
-  return { downloadSpeed, gaugeVal, ping, reset, startSpeedTest, testState, uploadSpeed }
-}
-
-async function measurePing() {
-  const started = performance.now()
-  try {
-    await fetch("/", { method: "HEAD", cache: "no-store" })
-  } catch {
-    return 19
+  return {
+    downloadSpeed,
+    gaugeVal,
+    ping,
+    reset,
+    startSpeedTest,
+    testState,
+    uploadSpeed,
+    serverName,
+    serverCountry,
+    serverSponsor,
+    clientIp,
+    clientIsp,
   }
-  const elapsed = Math.round(performance.now() - started)
-  return elapsed > 0 ? Math.min(elapsed + 16, 45) : 19
 }

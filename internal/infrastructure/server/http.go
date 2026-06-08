@@ -9,6 +9,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/domain/dashboard"
 	"github.com/codewithwan/gostreamix/internal/domain/notification"
 	"github.com/codewithwan/gostreamix/internal/domain/platform"
+	"github.com/codewithwan/gostreamix/internal/domain/speedtest"
 	"github.com/codewithwan/gostreamix/internal/domain/stream"
 	"github.com/codewithwan/gostreamix/internal/domain/video"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
@@ -34,6 +35,7 @@ func NewServer(
 	streamH *stream.Handler,
 	videoH *video.Handler,
 	platformH *platform.Handler,
+	speedtestH *speedtest.Handler,
 	collector *monitor.Collector,
 ) *Server {
 	fiberConfig := fiber.Config{
@@ -53,7 +55,15 @@ func NewServer(
 	s := &Server{App: app, Config: cfg, Log: log}
 	collector.Start(context.Background())
 
-	registerDomainRoutes(app, domainHandlers{auth: authH, dashboard: dashH, notification: notifH, stream: streamH, video: videoH, platform: platformH})
+	registerDomainRoutes(app, domainHandlers{
+		auth:         authH,
+		dashboard:    dashH,
+		notification: notifH,
+		stream:       streamH,
+		video:        videoH,
+		platform:     platformH,
+		speedtest:    speedtestH,
+	})
 	registerWebRoutes(app, log, hub)
 
 	return s

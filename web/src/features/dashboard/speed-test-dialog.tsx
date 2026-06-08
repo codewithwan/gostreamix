@@ -19,10 +19,39 @@ interface SpeedTestDialogProps {
   t: (key: string, fallback?: string) => string
   testState: SpeedTestState
   uploadSpeed: number
+  serverName?: string
+  serverCountry?: string
+  serverSponsor?: string
+  clientIp?: string
+  clientIsp?: string
 }
 
 export function SpeedTestDialog(props: SpeedTestDialogProps) {
-  const { downloadSpeed, gaugeVal, onOpenChange, onStart, open, ping, t, testState, uploadSpeed } = props
+  const {
+    downloadSpeed,
+    gaugeVal,
+    onOpenChange,
+    onStart,
+    open,
+    ping,
+    t,
+    testState,
+    uploadSpeed,
+    serverName,
+    serverCountry,
+    serverSponsor,
+    clientIp,
+    clientIsp,
+  } = props
+
+  const hasServer = Boolean(serverName)
+  const hasClient = Boolean(clientIp)
+  const showMeta = hasServer || hasClient
+
+  const serverLabel = [serverSponsor, serverName, serverCountry ? `(${serverCountry})` : ""]
+    .filter(Boolean)
+    .join(" ")
+  const clientLabel = [clientIp, clientIsp ? `· ${clientIsp}` : ""].filter(Boolean).join(" ")
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -33,16 +62,50 @@ export function SpeedTestDialog(props: SpeedTestDialogProps) {
             {t("speedtestTitle")}
           </DialogTitle>
         </DialogHeader>
+
         {testState === "done" ? (
           <SpeedTestResult downloadSpeed={downloadSpeed} ping={ping} t={t} uploadSpeed={uploadSpeed} />
         ) : (
-          <SpeedTestRunning downloadSpeed={downloadSpeed} gaugeVal={gaugeVal} ping={ping} t={t} testState={testState} uploadSpeed={uploadSpeed} />
+          <SpeedTestRunning
+            downloadSpeed={downloadSpeed}
+            gaugeVal={gaugeVal}
+            ping={ping}
+            t={t}
+            testState={testState}
+            uploadSpeed={uploadSpeed}
+          />
         )}
-        <div className="flex justify-end gap-2 border-t border-border pt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={testState !== "idle" && testState !== "done"}>
+
+        {/* Metadata strip: left = server, right = IP — fades in when data is available */}
+        <div
+          className="flex items-center justify-between gap-4 border-t border-border/40 pt-3 mb-1"
+          style={{
+            opacity: showMeta ? 1 : 0,
+            transition: "opacity 0.5s ease",
+            minHeight: "1.4rem",
+          }}
+        >
+          <span className="text-[10px] font-mono text-muted-foreground truncate max-w-[55%]">
+            {serverLabel}
+          </span>
+          <span className="text-[10px] font-mono text-muted-foreground truncate text-right max-w-[45%]">
+            {clientLabel}
+          </span>
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-border pt-3">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={testState !== "idle" && testState !== "done"}
+          >
             {t("speedtestClose")}
           </Button>
-          <Button onClick={onStart} disabled={testState !== "idle" && testState !== "done"} className="min-w-[100px]">
+          <Button
+            onClick={onStart}
+            disabled={testState !== "idle" && testState !== "done"}
+            className="min-w-[100px]"
+          >
             {testState === "done" ? t("speedtestTestAgain") : t("speedtestStartTest")}
           </Button>
         </div>
@@ -51,15 +114,24 @@ export function SpeedTestDialog(props: SpeedTestDialogProps) {
   )
 }
 
-function SpeedTestResult({ downloadSpeed, ping, t, uploadSpeed }: Pick<SpeedTestDialogProps, "downloadSpeed" | "ping" | "t" | "uploadSpeed">) {
+function SpeedTestResult({
+  downloadSpeed,
+  ping,
+  t,
+  uploadSpeed,
+}: Pick<SpeedTestDialogProps, "downloadSpeed" | "ping" | "t" | "uploadSpeed">) {
   return (
     <div className="py-6 flex flex-col items-center justify-center gap-6">
       <div className="text-center space-y-2">
         <div className="inline-flex items-center justify-center p-3 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 mb-1">
           <CheckCircle2 className="h-10 w-10" />
         </div>
-        <h3 className="text-2xl font-black tracking-widest text-emerald-500 uppercase">{t("speedtestExcellent")}</h3>
-        <p className="text-xs text-muted-foreground max-w-[280px] leading-relaxed mx-auto text-center">{t("speedtestResultDesc")}</p>
+        <h3 className="text-2xl font-black tracking-widest text-emerald-500 uppercase">
+          {t("speedtestExcellent")}
+        </h3>
+        <p className="text-xs text-muted-foreground max-w-[280px] leading-relaxed mx-auto text-center">
+          {t("speedtestResultDesc")}
+        </p>
       </div>
       <div className="grid grid-cols-3 gap-4 w-full bg-muted/30 border border-border p-4 rounded-xl text-center">
         <Metric label={t("speedtestPing")} value={String(ping)} unit="ms" />
@@ -70,21 +142,40 @@ function SpeedTestResult({ downloadSpeed, ping, t, uploadSpeed }: Pick<SpeedTest
   )
 }
 
-function SpeedTestRunning(props: Pick<SpeedTestDialogProps, "downloadSpeed" | "gaugeVal" | "ping" | "t" | "testState" | "uploadSpeed">) {
+function SpeedTestRunning(
+  props: Pick<SpeedTestDialogProps, "downloadSpeed" | "gaugeVal" | "ping" | "t" | "testState" | "uploadSpeed">,
+) {
   const { downloadSpeed, gaugeVal, ping, t, testState, uploadSpeed } = props
-  const reading = testState === "download" ? downloadSpeed.toFixed(2) : testState === "upload" ? uploadSpeed.toFixed(2) : testState === "ping" ? "..." : "0.00"
+  const reading =
+    testState === "download"
+      ? downloadSpeed.toFixed(2)
+      : testState === "upload"
+        ? uploadSpeed.toFixed(2)
+        : testState === "ping"
+          ? "..."
+          : "0.00"
 
   return (
     <div className="py-6 flex flex-col items-center gap-6">
       <div className="grid grid-cols-3 gap-1 w-full text-center border-b border-border/60 pb-4">
         <HeaderMetric active={testState === "ping"} label={t("speedtestPing")} value={ping > 0 ? `${ping} ms` : "-"} />
-        <HeaderMetric active={testState === "download"} label={t("speedtestDownload")} value={downloadSpeed > 0 ? `${downloadSpeed.toFixed(2)} Mbps` : "-"} />
-        <HeaderMetric active={testState === "upload"} label={t("speedtestUpload")} value={uploadSpeed > 0 ? `${uploadSpeed.toFixed(2)} Mbps` : "-"} />
+        <HeaderMetric
+          active={testState === "download"}
+          label={t("speedtestDownload")}
+          value={downloadSpeed > 0 ? `${downloadSpeed.toFixed(2)} Mbps` : "-"}
+        />
+        <HeaderMetric
+          active={testState === "upload"}
+          label={t("speedtestUpload")}
+          value={uploadSpeed > 0 ? `${uploadSpeed.toFixed(2)} Mbps` : "-"}
+        />
       </div>
       <SpeedDial gaugeVal={gaugeVal} />
       <div className="flex flex-col items-center -mt-4">
         <span className="text-4xl font-black font-mono tracking-tight text-foreground">{reading}</span>
-        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">{stateLabel(testState, t)}</span>
+        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">
+          {stateLabel(testState, t)}
+        </span>
       </div>
     </div>
   )
@@ -103,7 +194,9 @@ function HeaderMetric({ active, label, value }: { active: boolean; label: string
 function Metric({ border, label, unit, value }: { border?: boolean; label: string; unit: string; value: string }) {
   return (
     <div className={border ? "space-y-0.5 border-x border-border/85 px-2" : "space-y-0.5"}>
-      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block text-center">{label}</span>
+      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block text-center">
+        {label}
+      </span>
       <span className="text-lg font-extrabold font-mono text-primary block text-center leading-none">{value}</span>
       <span className="text-[9px] font-semibold text-muted-foreground block text-center mt-0.5">{unit}</span>
     </div>
@@ -111,13 +204,49 @@ function Metric({ border, label, unit, value }: { border?: boolean; label: strin
 }
 
 function SpeedDial({ gaugeVal }: { gaugeVal: number }) {
+  const clamped = Math.max(0, Math.min(100, gaugeVal))
+  const angleRad = Math.PI * (1 - clamped / 100)
+  const needleX = 50 + 38 * Math.cos(angleRad)
+  const needleY = 48 - 38 * Math.sin(angleRad)
+  const dashOffset = 126 - (clamped / 100) * 126
+
   return (
     <div className="w-72 h-44 flex flex-col items-center justify-center relative select-none">
       <svg className="w-full h-full" viewBox="0 0 100 52">
-        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="currentColor" strokeWidth="5.5" className="text-muted/20" strokeLinecap="butt" />
-        {ticks.map((tick) => <DialTick key={tick.val} pct={tick.pct} val={tick.val} />)}
-        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="currentColor" strokeWidth="6.5" strokeDasharray="126" strokeDashoffset={126 - (gaugeVal / 100) * 126} strokeLinecap="butt" className="text-primary transition-all duration-150 ease-out" />
-        <line x1="50" y1="48" x2={50 + 38 * Math.cos(Math.PI * (1 - gaugeVal / 100))} y2={48 - 38 * Math.sin(Math.PI * (1 - gaugeVal / 100))} stroke="currentColor" strokeWidth="2" strokeLinecap="butt" className="text-primary transition-all duration-150 ease-out" />
+        {/* Track */}
+        <path
+          d="M 10 48 A 40 40 0 0 1 90 48"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="5.5"
+          className="text-muted/20"
+          strokeLinecap="butt"
+        />
+        {ticks.map((tick) => (
+          <DialTick key={tick.val} pct={tick.pct} val={tick.val} />
+        ))}
+        {/* Fill arc — no CSS transition, rAF drives gaugeVal at ~60fps */}
+        <path
+          d="M 10 48 A 40 40 0 0 1 90 48"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="6.5"
+          strokeDasharray="126"
+          strokeDashoffset={dashOffset}
+          strokeLinecap="butt"
+          className="text-primary"
+        />
+        {/* Needle — same gaugeVal, always in sync with arc */}
+        <line
+          x1="50"
+          y1="48"
+          x2={needleX}
+          y2={needleY}
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="butt"
+          className="text-primary"
+        />
         <circle cx="50" cy="48" r="2.5" className="fill-card stroke-primary stroke-[1.5]" />
       </svg>
     </div>
@@ -130,8 +259,26 @@ function DialTick({ pct, val }: { pct: number; val: string }) {
   const sin = Math.sin(angleRad)
   return (
     <g className="text-muted-foreground/30">
-      <line x1={50 + 37 * cos} y1={48 - 37 * sin} x2={50 + 40 * cos} y2={48 - 40 * sin} stroke="currentColor" strokeWidth="0.5" />
-      <text x={50 + 26 * cos} y={48 - 26 * sin} fill="currentColor" fontSize="4.2" fontWeight="700" textAnchor="middle" dominantBaseline="central" className="fill-muted-foreground/60 font-sans tracking-tighter">{val}</text>
+      <line
+        x1={50 + 37 * cos}
+        y1={48 - 37 * sin}
+        x2={50 + 40 * cos}
+        y2={48 - 40 * sin}
+        stroke="currentColor"
+        strokeWidth="0.5"
+      />
+      <text
+        x={50 + 26 * cos}
+        y={48 - 26 * sin}
+        fill="currentColor"
+        fontSize="4.2"
+        fontWeight="700"
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-muted-foreground/60 font-sans tracking-tighter"
+      >
+        {val}
+      </text>
     </g>
   )
 }
