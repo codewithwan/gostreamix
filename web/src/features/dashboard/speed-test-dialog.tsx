@@ -112,12 +112,12 @@ function Metric({ border, label, unit, value }: { border?: boolean; label: strin
 
 function SpeedDial({ gaugeVal }: { gaugeVal: number }) {
   return (
-    <div className="w-56 h-36 flex flex-col items-center justify-center relative">
+    <div className="w-72 h-44 flex flex-col items-center justify-center relative select-none">
       <svg className="w-full h-full" viewBox="0 0 100 52">
-        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="currentColor" strokeWidth="5" className="text-muted/20" strokeLinecap="round" />
+        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="currentColor" strokeWidth="5.5" className="text-muted/20" strokeLinecap="butt" />
         {ticks.map((tick) => <DialTick key={tick.val} pct={tick.pct} val={tick.val} />)}
-        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="currentColor" strokeWidth="5.5" strokeDasharray="126" strokeDashoffset={126 - (gaugeVal / 100) * 126} strokeLinecap="round" className="text-primary transition-all duration-150 ease-out" />
-        <line x1="50" y1="48" x2={50 + 38 * Math.cos(Math.PI * (1 - gaugeVal / 100))} y2={48 - 38 * Math.sin(Math.PI * (1 - gaugeVal / 100))} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-primary transition-all duration-150 ease-out" />
+        <path d="M 10 48 A 40 40 0 0 1 90 48" fill="none" stroke="currentColor" strokeWidth="6.5" strokeDasharray="126" strokeDashoffset={126 - (gaugeVal / 100) * 126} strokeLinecap="butt" className="text-primary transition-all duration-150 ease-out" />
+        <line x1="50" y1="48" x2={50 + 38 * Math.cos(Math.PI * (1 - gaugeVal / 100))} y2={48 - 38 * Math.sin(Math.PI * (1 - gaugeVal / 100))} stroke="currentColor" strokeWidth="2" strokeLinecap="butt" className="text-primary transition-all duration-150 ease-out" />
         <circle cx="50" cy="48" r="2.5" className="fill-card stroke-primary stroke-[1.5]" />
       </svg>
     </div>

@@ -18,29 +18,51 @@ GoStreamix is a self-hosted live streaming control panel for managing streams, p
 ## UI Preview
 
 ### Operations Dashboard
-
 ![GoStreamix operations dashboard](assets/screeenshot/dashboard.png)
 
-### Stream Editor
+### Speed Test Diagnostic
+![GoStreamix speedtest](assets/screeenshot/speedtest.png)
 
+### Stream Editor
 ![GoStreamix stream editor](assets/screeenshot/stream_editor.png)
 
 ### Video Gallery
-
 ![GoStreamix video gallery](assets/screeenshot/video_gallery.png)
 
-## What It Does
+### Notification Channels
+![GoStreamix notification channels](assets/screeenshot/notification.png)
 
-- Secure setup and administrator login with JWT-based sessions.
-- Dashboard with system stats, stream overview, activity data, and speed-test utilities.
-- Stream management for creating, starting, stopping, renaming, deleting, and monitoring live channels.
-- Platform management for RTMP targets and masked stream keys.
-- Video library with upload, preview, rename, move, copy, delete, folder organization, and thumbnail/file routes.
-- Stream editor UI for arranging media and applying stream programs.
-- Notification settings for Telegram and Discord-style webhook flows.
-- Activity page for operational logs and audit-style history.
-- Responsive React UI with English and Indonesian translations.
-- Docker development and production paths with persistent local data.
+## Features & Capabilities
+
+Here is a detailed breakdown of what GoStreamix offers to help you manage your streaming workflow:
+
+### 📊 Operations Dashboard
+* **System Metrics:** Real-time monitoring of host CPU, Memory, and Disk utilization, complete with visual chart history.
+* **Speedtest Utility:** Built-in connection speed diagnostics (Ping, Download, and Upload speeds) with a vintage dial gauge and fluid transition timing to test your stream server's network bandwidth.
+* **Overview Statistics:** A quick snapshot of active streams, video assets, configured platforms, and recent stream logs.
+
+### 🎬 Stream Program Editor
+* **Media Library Integration:** Drag-and-drop or click to easily insert local video files from your galleries.
+* **Interactive Timeline Strip:** Add, duplicate, re-order, and delete clips directly on the timeline.
+* **Preview Player:** Built-in video player supporting live playback preview, mute control, and transition tests.
+* **Output Stream Configuration:** Edit bitrate, resolution, FPS, and bind to target streaming platforms.
+
+### 📁 Smart Video Library
+* **Media Management:** Upload video assets, generate high-definition thumbnails automatically, preview clips, and delete files.
+* **Folder Explorer:** Group your streaming assets using sub-directories and nested paths.
+* **Batch Operations:** Multi-select files and folders to delete or move them in one click.
+
+### 🚀 Platform Presets & RTMP Targets
+* **Direct RTMP Streaming:** Configure presets for Facebook, YouTube, Twitch, TikTok, or custom server RTMP targets.
+* **Secure Access:** Protect your streaming keys with automatic frontend masking.
+
+### 🔔 System Notifications
+* **Alert Notifications:** Get notified immediately on start, stop, or failed stream events.
+* **Discord Webhook:** Instant logs sent to your Discord server channels.
+* **Telegram Bot:** Automatic chat-id detection to wire logs directly to your Telegram chat or groups.
+
+### 📋 Activity Logs & Auditing
+* **Operational History:** Searchable logs displaying requests, events, status codes, HTTP methods, and IP logs for full transparency.
 
 ## Tech Stack
 

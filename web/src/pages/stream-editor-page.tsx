@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { EditorHeader } from "@/features/stream-editor/stream-editor-header"
 import { MonitorDialog, SettingsDialog, TargetsDialog } from "@/features/stream-editor/stream-editor-dialogs"
 import { MediaLibraryPanel } from "@/features/stream-editor/stream-editor-media-library"
@@ -83,7 +84,31 @@ export function StreamEditorPage() {
       <EditorHeader name={editor.name} status={editor.status} dirty={editor.dirty} isLive={editor.isLive} saving={editor.saving} onBack={() => navigate("/streams")} onToggleLibrary={() => setLibraryOpen((open) => !open)} onOpenSettings={() => setSettingsOpen(true)} onOpenTargets={() => setTargetsOpen(true)} onOpenMonitor={() => setMonitorOpen(true)} onOpenSave={handleSave} t={t} />
       {editor.error ? <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20 text-xs text-red-600 dark:text-red-400 flex items-center justify-between shrink-0"><span className="truncate mr-4">{editor.error}</span><Button variant="subtle" size="sm" onClick={() => editor.setError("")} className="h-7 text-[10px] px-2">Dismiss</Button></div> : null}
       {editor.loading ? (
-        <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">{t("streamEditorLoading")}</div>
+        <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+          {/* Sidebar skeleton */}
+          <div className="w-full lg:w-80 shrink-0 border-r border-border p-4 space-y-4">
+            <Skeleton className="h-9 w-full" />
+            <Skeleton className="h-8 w-24" />
+            <div className="space-y-2 pt-2">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+            </div>
+          </div>
+          {/* Main preview & timeline skeleton */}
+          <div className="flex-1 flex flex-col p-4 space-y-4">
+            <div className="flex-1 flex items-center justify-center bg-muted/10 rounded-lg border border-border border-dashed p-4">
+              <Skeleton className="aspect-video w-full max-w-2xl" />
+            </div>
+            <div className="h-28 border border-border rounded-lg p-3">
+              <div className="flex gap-2">
+                <Skeleton className="h-20 w-32" />
+                <Skeleton className="h-20 w-32" />
+                <Skeleton className="h-20 w-32" />
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <form className="flex-1 flex flex-col lg:flex-row overflow-hidden" onSubmit={(event) => event.preventDefault()}>
           <div className="grid grid-cols-2 gap-1 border-b border-border bg-muted/30 p-1 lg:hidden shrink-0">

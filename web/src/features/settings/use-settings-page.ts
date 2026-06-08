@@ -20,6 +20,8 @@ export function useSettingsPage(t: (key: string, fallback?: string, values?: Rec
   const [detectingTelegramChats, setDetectingTelegramChats] = useState(false)
   const [telegramChatCandidates, setTelegramChatCandidates] = useState<TelegramChatCandidate[]>([])
 
+  const [loading, setLoading] = useState(true)
+
   const channelRows = useMemo(
     () => [
       {
@@ -59,6 +61,8 @@ export function useSettingsPage(t: (key: string, fallback?: string, values?: Rec
         const message = err instanceof Error ? err.message : t("settingsLoadFailed")
         setError(message)
         toast.error(message)
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
     void loadData()
@@ -139,7 +143,7 @@ export function useSettingsPage(t: (key: string, fallback?: string, values?: Rec
 
   return {
     activeChannel, channelRows, detectChats, detectingTelegramChats, dialogOpen, discordWebhookDraft, email, error,
-    openChannelDialog, saveChannel, savingChannel, setDialogOpen, setDiscordWebhookDraft, setTelegramChatDraft,
+    loading, openChannelDialog, saveChannel, savingChannel, setDialogOpen, setDiscordWebhookDraft, setTelegramChatDraft,
     setTelegramStep, setTelegramTokenDraft, telegramChatCandidates, telegramChatDraft, telegramStep, telegramTokenDraft,
     testChannel, testingChannel, username,
   }

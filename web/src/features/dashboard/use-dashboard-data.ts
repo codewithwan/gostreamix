@@ -13,6 +13,7 @@ export function useDashboardData(t: (key: string, fallback?: string) => string) 
   const [videosCount, setVideosCount] = useState(0)
   const [platformsCount, setPlatformsCount] = useState(0)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let mounted = true
@@ -36,6 +37,8 @@ export function useDashboardData(t: (key: string, fallback?: string) => string) 
         setError("")
       } catch (err) {
         if (mounted) setError(err instanceof Error ? err.message : t("dashboardNoMetrics"))
+      } finally {
+        if (mounted) setLoading(false)
       }
     }
     void load()
@@ -58,5 +61,5 @@ export function useDashboardData(t: (key: string, fallback?: string) => string) 
     [series],
   )
 
-  return { activeStreams, chartData, cpu, disk, error, memory, platformsCount, streams, videosCount }
+  return { activeStreams, chartData, cpu, disk, error, loading, memory, platformsCount, streams, videosCount }
 }

@@ -6,6 +6,7 @@ import type { Platform } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
 
 import { PlatformIcon } from "./platform-icon"
+import { Skeleton } from "@/components/ui/skeleton"
 import { buildMaskedTarget, platformTypeLabel } from "./platform-utils"
 
 interface PlatformListProps {
@@ -18,7 +19,13 @@ interface PlatformListProps {
 
 export function PlatformList({ loading, platforms, onEdit, onDelete, t }: PlatformListProps) {
   if (loading) {
-    return <p className="text-sm text-muted-foreground">{t("platformsLoading")}</p>
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    )
   }
 
   if (platforms.length === 0) {

@@ -40,12 +40,35 @@ export function useSpeedTest(open: boolean) {
     const pingInterval = setInterval(async () => {
       setGaugeVal(speedToPercent(Math.random() * 4 + 1))
       count += 1
-      if (count < 100) return
+      if (count < 50) return // 50 * 100ms = 5 seconds
       clearInterval(pingInterval)
-      setPing(await measurePing())
-      runDownloadPhase()
+      const measured = await measurePing()
+      setPing(measured)
+      
+      animateGaugeToZero(() => {
+        runDownloadPhase()
+      })
     }, 100)
     timers.current.push(pingInterval)
+  }
+
+  const animateGaugeToZero = (callback: () => void) => {
+    setGaugeVal((currentVal) => {
+      let val = currentVal
+      const steps = 12
+      const stepVal = val / steps
+      const animInterval = setInterval(() => {
+        val = Math.max(0, val - stepVal)
+        setGaugeVal(val)
+        if (val <= 0) {
+          clearInterval(animInterval)
+          setGaugeVal(0)
+          timers.current.push(setTimeout(callback, 400))
+        }
+      }, 30)
+      timers.current.push(animInterval)
+      return currentVal
+    })
   }
 
   const runDownloadPhase = () => {
@@ -61,8 +84,10 @@ export function useSpeedTest(open: boolean) {
     timers.current.push(setTimeout(() => {
       clearInterval(dlInterval)
       setDownloadSpeed(Number(dlVal.toFixed(2)))
-      runUploadPhase(dlVal)
-    }, 10000))
+      animateGaugeToZero(() => {
+        runUploadPhase(dlVal)
+      })
+    }, 5000)) // 5 seconds of download
   }
 
   const runUploadPhase = (dlVal: number) => {
@@ -80,7 +105,7 @@ export function useSpeedTest(open: boolean) {
       setUploadSpeed(Number(ulVal.toFixed(2)))
       setTestState("done")
       setGaugeVal(speedToPercent(dlVal))
-    }, 10000))
+    }, 5000)) // 5 seconds of upload
   }
 
   return { downloadSpeed, gaugeVal, ping, reset, startSpeedTest, testState, uploadSpeed }

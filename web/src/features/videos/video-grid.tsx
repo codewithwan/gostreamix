@@ -1,6 +1,7 @@
 import { CirclePlay, Film, Folder, FolderUp } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { thumbnailFileURL, videoFileURL, type Video } from "@/lib/api"
 import type { TranslateFn } from "@/lib/i18n"
 
@@ -54,6 +55,15 @@ export function VideoGrid({
   return (
     <div className="space-y-3">
       <div className="grid min-h-56 grid-cols-[repeat(auto-fill,minmax(142px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] xl:grid-cols-[repeat(auto-fill,minmax(136px,1fr))]" onContextMenu={onEmptyContextMenu}>
+        {loading ? (
+          <>
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+            <Skeleton className="h-40 w-full" />
+          </>
+        ) : null}
+
         {!loading && parentFolder === null && folders.length === 0 && filteredVideos.length === 0 ? (
           <p className="text-sm text-muted-foreground">{selectedFolder === ALL_FOLDERS ? t("videosEmpty") : t("videosFolderEmpty")}</p>
         ) : null}

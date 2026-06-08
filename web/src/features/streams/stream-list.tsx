@@ -4,6 +4,7 @@ import { SquarePen, Trash2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { PlatformIcon } from "@/features/platforms/platform-icon"
 import type { Platform, Stream } from "@/lib/api"
 import { statusVariant } from "./stream-utils"
@@ -22,9 +23,14 @@ interface StreamListProps {
 export function StreamList(props: StreamListProps) {
   return (
     <div className="grid gap-3">
-      {props.loading ? <p className="text-sm text-muted-foreground">{props.t("streamsLoading")}</p> : null}
+      {props.loading ? (
+        <>
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-28 w-full" />
+        </>
+      ) : null}
       {!props.loading && props.streams.length === 0 ? <p className="text-sm text-muted-foreground">{props.t("streamsEmpty")}</p> : null}
-      {props.streams.map((stream) => (
+      {!props.loading && props.streams.map((stream) => (
         <StreamCard key={stream.id} {...props} stream={stream} />
       ))}
     </div>

@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useSearchParams } from "react-router-dom"
+import { Skeleton } from "@/components/ui/skeleton"
 import { NotificationsCard } from "@/features/settings/notifications-card"
 import { NotificationDialog } from "@/features/settings/notification-dialog"
 import { ProfileCard } from "@/features/settings/profile-card"
@@ -19,6 +20,25 @@ export function SettingsPage() {
   const handleTabChange = (tab: "profile" | "notifications" | "activity") => {
     setActiveTab(tab)
     setSearchParams({ tab })
+  }
+
+  if (settings.loading) {
+    return (
+      <section className="space-y-5">
+        <div>
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-72 mt-2" />
+        </div>
+
+        <div className="flex gap-1.5 border-b border-border pb-1">
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-24" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+
+        <Skeleton className="h-64 w-full" />
+      </section>
+    )
   }
 
   return (

@@ -57,7 +57,6 @@ export function VideosPage() {
       {/* hidden input at bottom — avoids adding phantom space-y-5 top margin */}
       <VideosToolbar createFolderOpen={library.createFolderOpen} onCreateFolderOpenChange={library.setCreateFolderOpen} newFolderName={library.newFolderName} onNewFolderNameChange={library.setNewFolderName} createFolderBaseLabel={library.createFolderBaseLabel} onCreateFolder={library.createFolder} uploading={library.uploading} onOpenFileDialog={() => library.fileInputRef.current?.click()} onRefresh={handleRefresh} isRefreshing={isRefreshing} t={t} />
       {library.error ? <p className="text-sm text-danger">{library.error}</p> : null}
-      {library.loading ? <p className="text-sm text-muted-foreground">{t("videosLoading")}</p> : null}
       <div className="space-y-3">
         <div className="rounded-md border border-border bg-muted/25 px-3 py-2">
           <div className="flex flex-wrap items-center justify-between gap-3">

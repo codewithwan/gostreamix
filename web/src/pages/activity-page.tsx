@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ActivityFeed } from "@/features/activity/activity-feed"
 import { getActivityLogs, type ActivityLogsResponse } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
@@ -119,7 +120,14 @@ export function ActivityPage({ embed = false }: { embed?: boolean }) {
         </div>
 
         {error ? <p className="text-sm text-danger">{error}</p> : null}
-        {loading ? <p className="text-sm text-muted-foreground">{t("activityLoading")}</p> : null}
+        {loading ? (
+          <div className="space-y-2.5">
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
+        ) : null}
 
         {!loading && filtered.length === 0 ? <p className="text-sm text-muted-foreground">{t("activityNoData")}</p> : null}
 
