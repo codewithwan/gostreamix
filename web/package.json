@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "build:embed": "vite build",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:unit": "vitest run tests/unit",
-    "test:e2e": "vitest run tests/e2e"
+    "test": "vitest run --config vitest.config.ts",
+    "test:unit": "vitest run --config vitest.config.ts tests/unit",
+    "test:e2e": "vitest run --config vitest.config.ts tests/e2e"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.3",
