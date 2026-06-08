@@ -28,8 +28,8 @@ export function FolderExplorer({ folderItems, folderCounts, selectedFolder, onSe
       <CardContent className="space-y-1">
         <button
           type="button"
-          className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm ${
-            selectedFolder === ALL_FOLDERS ? "bg-foreground text-background" : "bg-muted/50"
+          className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors ${
+            selectedFolder === ALL_FOLDERS ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           }`}
           onClick={() => onSelectFolder(ALL_FOLDERS)}
         >
@@ -42,8 +42,8 @@ export function FolderExplorer({ folderItems, folderCounts, selectedFolder, onSe
 
         <button
           type="button"
-          className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm ${
-            selectedFolder === ROOT_FOLDER ? "bg-foreground text-background" : "bg-muted/50"
+          className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors ${
+            selectedFolder === ROOT_FOLDER ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           }`}
           onClick={() => onSelectFolder(ROOT_FOLDER)}
         >
@@ -62,8 +62,8 @@ export function FolderExplorer({ folderItems, folderCounts, selectedFolder, onSe
             <button
               key={folder.path}
               type="button"
-              className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm ${
-                isActive ? "bg-foreground text-background" : "bg-muted/50"
+              className={`flex w-full items-center justify-between rounded-md px-2 py-2 text-left text-sm transition-colors ${
+                isActive ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               }`}
               style={{ paddingLeft: `${0.65 + folder.depth * 0.8}rem` }}
               onClick={() => onSelectFolder(folder.path)}

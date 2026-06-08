@@ -27,7 +27,7 @@ export function MobileNavPopover({ open, onNavigate, t }: MobileNavPopoverProps)
               className={({ isActive }) =>
                 cn(
                   "flex min-w-0 items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors",
-                  isActive ? "bg-foreground text-background" : "bg-muted/45 text-foreground hover:bg-muted",
+                  isActive ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
                 )
               }
             >

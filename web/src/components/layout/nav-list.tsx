@@ -23,7 +23,7 @@ export function NavList({ mobile = false, onNavigate, t }: NavListProps) {
               cn(
                 "flex min-w-0 items-center gap-2 rounded-md text-sm transition-colors",
                 mobile ? "px-3 py-2.5" : "px-3 py-2",
-                isActive ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
+                isActive ? "bg-muted text-foreground font-medium" : "text-muted-foreground hover:bg-muted/50 hover:text-foreground",
               )
             }
           >

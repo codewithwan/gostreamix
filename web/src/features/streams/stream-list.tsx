@@ -31,12 +31,28 @@ export function StreamList(props: StreamListProps) {
   )
 }
 
+function targetMatchesPlatform(target: string, platformRtmpUrl: string): boolean {
+  if (!target || !platformRtmpUrl) return false
+  if (target === platformRtmpUrl) return true
+
+  const maskIndex = platformRtmpUrl.indexOf("****")
+  if (maskIndex !== -1) {
+    const prefix = platformRtmpUrl.substring(0, maskIndex)
+    const suffix = platformRtmpUrl.substring(maskIndex + 4)
+    return target.startsWith(prefix) && target.endsWith(suffix)
+  }
+
+  return false
+}
+
 function StreamCard(props: Omit<StreamListProps, "loading" | "streams"> & { stream: Stream }) {
   const { onDelete, onRename, onStart, onStop, platforms, stream, t } = props
   const isRunning = stream.status === "running"
   const isStarting = stream.status === "starting"
   const isStopping = stream.status === "stopping"
-  const matchedPlatforms = platforms.filter((platform) => stream.rtmp_targets.includes(platform.rtmp_url))
+  const matchedPlatforms = platforms.filter((platform) =>
+    stream.rtmp_targets.some((target) => targetMatchesPlatform(target, platform.rtmp_url)),
+  )
 
   return (
     <Card>
