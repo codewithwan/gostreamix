@@ -147,7 +147,7 @@ jobs:
 
       - name: Extract Docker metadata (Production)
         id: meta-prod
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -168,7 +168,7 @@ jobs:
 
       - name: Extract Docker metadata (Development)
         id: meta-dev
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}-dev
           tags: |
