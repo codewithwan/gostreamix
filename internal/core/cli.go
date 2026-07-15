@@ -12,6 +12,7 @@ import (
 	"github.com/codewithwan/gostreamix/internal/infrastructure/database"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/logger"
 	"github.com/codewithwan/gostreamix/internal/shared/jwt"
+	"github.com/codewithwan/gostreamix/internal/shared/validator"
 	"golang.org/x/term"
 )
 
@@ -74,8 +75,8 @@ func resetPassword(setPwd string) error {
 		}
 	}
 
-	if len(password) < 8 {
-		return fmt.Errorf("password must be at least 8 characters")
+	if err := validator.Password(password); err != nil {
+		return err
 	}
 
 	if err := svc.ResetPassword(context.Background(), user.Username, password); err != nil {

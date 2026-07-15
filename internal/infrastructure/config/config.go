@@ -56,7 +56,7 @@ func NewConfig() *Config {
 		AppURL:       appURL,
 		DemoMode:     demoMode,
 		DemoUsername: getEnv("DEMO_USERNAME", "demo"),
-		DemoPassword: getEnv("DEMO_PASSWORD", "demostream123"),
+		DemoPassword: getEnv("DEMO_PASSWORD", "DemoStream123"),
 		CORSOrigins:  corsOrigins,
 	}
 }

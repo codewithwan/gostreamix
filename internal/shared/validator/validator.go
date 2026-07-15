@@ -24,12 +24,19 @@ func init() {
 }
 
 func Password(p string) error {
-	err := validate.Var(p, "required,min=8,password")
+	// max=72: bcrypt only hashes the first 72 bytes, so reject longer passwords
+	// with a clear message instead of a bcrypt error or silent truncation.
+	err := validate.Var(p, "required,min=8,max=72,password")
 	if err != nil {
-		if strings.Contains(err.Error(), "password") {
+		msg := err.Error()
+		switch {
+		case strings.Contains(msg, "'max'"):
+			return errors.New("password must be at most 72 characters")
+		case strings.Contains(msg, "'password'"):
 			return errors.New("password must contain uppercase, lowercase, and number")
+		default:
+			return errors.New("password must be at least 8 characters")
 		}
-		return errors.New("password must be at least 8 characters")
 	}
 	return nil
 }

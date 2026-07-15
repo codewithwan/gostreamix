@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 
+	"github.com/codewithwan/gostreamix/internal/shared/validator"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
@@ -25,8 +26,8 @@ func (h *Handler) ApiChangePassword(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
 	}
 
-	if len(req.NewPassword) < 8 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "new password must be at least 8 characters"})
+	if err := validator.Password(req.NewPassword); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 	if req.CurrentPassword == req.NewPassword {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "new password must be different from current password"})

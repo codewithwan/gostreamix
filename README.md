@@ -185,7 +185,7 @@ Available settings:
 | `CORS_ORIGINS` | value of `APP_URL` | Allowed cross-origin origins for the API (comma-separated list, or `*`). Defaults to same-origin only. |
 | `DEMO_MODE` | `false` | Serve a read-only public demo. Blocks every mutating request server-side and auto-seeds a demo account. See [Demo Mode](#demo-mode). |
 | `DEMO_USERNAME` | `demo` | Username for the auto-seeded demo account (used only when `DEMO_MODE=true`). |
-| `DEMO_PASSWORD` | `demostream123` | Password for the auto-seeded demo account (used only when `DEMO_MODE=true`). |
+| `DEMO_PASSWORD` | `DemoStream123` | Password for the auto-seeded demo account (used only when `DEMO_MODE=true`). |
 
 Runtime data is stored under `data/` by default. Production Docker Compose mounts `./data:/app/data` so uploads, thumbnails, database files, and generated secrets survive container restarts.
 
