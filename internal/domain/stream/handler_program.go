@@ -35,6 +35,7 @@ func parseApplyProgramPayload(body []byte) (SaveProgramDTO, error) {
 		Bitrate     int      `json:"bitrate"`
 		Resolution  string   `json:"resolution"`
 		FPS         int      `json:"fps"`
+		Loop        bool     `json:"loop"`
 		ApplyLive   bool     `json:"apply_live_now"`
 	}
 	if err := json.Unmarshal(body, &payload); err != nil {
@@ -57,6 +58,7 @@ func parseApplyProgramPayload(body []byte) (SaveProgramDTO, error) {
 		Bitrate:      payload.Bitrate,
 		Resolution:   payload.Resolution,
 		FPS:          payload.FPS,
+		Loop:         payload.Loop,
 		ApplyLiveNow: payload.ApplyLive,
 	}, nil
 }

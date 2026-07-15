@@ -1,6 +1,7 @@
 import { X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { PlatformIcon } from "@/features/platforms/platform-icon"
@@ -19,6 +20,8 @@ interface SettingsDialogProps {
   onBitrateChange: (value: number) => void
   onResolutionChange: (value: string) => void
   onFpsChange: (value: number) => void
+  loop: boolean
+  onLoopChange: (value: boolean) => void
   t: (key: string, fallback?: string) => string
 }
 
@@ -45,6 +48,13 @@ export function SettingsDialog(props: SettingsDialogProps) {
             <InputBlock label={props.t("streamEditorFpsPlaceholder", "FPS")} value={String(props.fps)} type="number" onChange={(value) => props.onFpsChange(Number(value))} />
           </div>
           <InputBlock label={props.t("streamEditorResolutionPlaceholder", "Resolution")} value={props.resolution} onChange={props.onResolutionChange} />
+          <label className="flex items-start gap-2.5 rounded-lg border border-border bg-background/50 p-3 cursor-pointer">
+            <Checkbox checked={props.loop} onCheckedChange={(value) => props.onLoopChange(value === true)} className="mt-0.5" />
+            <span className="space-y-0.5">
+              <span className="block text-xs font-semibold">{props.t("streamEditorLoopLabel", "Loop playlist")}</span>
+              <span className="block text-[10px] text-muted-foreground leading-snug">{props.t("streamEditorLoopHint", "Restart the queue automatically for continuous 24/7 streaming.")}</span>
+            </span>
+          </label>
         </div>
         <DialogFooter><Button type="button" onClick={() => props.onOpenChange(false)}>Done</Button></DialogFooter>
       </DialogContent>

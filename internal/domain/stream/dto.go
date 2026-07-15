@@ -33,5 +33,6 @@ type SaveProgramDTO struct {
 	Bitrate      int         `json:"bitrate"`
 	Resolution   string      `json:"resolution"`
 	FPS          int         `json:"fps"`
+	Loop         bool        `json:"loop"`
 	ApplyLiveNow bool        `json:"apply_live_now"`
 }

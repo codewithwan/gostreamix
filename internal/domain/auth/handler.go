@@ -27,6 +27,7 @@ func (h *Handler) Routes(app *fiber.App) {
 	api.Post("/setup", h.ApiSetup)
 	api.Post("/login", h.ApiLogin)
 	api.Post("/logout", h.ApiLogout)
+	api.Post("/change-password", h.ApiChangePassword)
 	api.Post("/refresh", h.PostRefresh)
 }
 

@@ -127,7 +127,7 @@ export function StreamEditorPage() {
           </div>
         </form>
       )}
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} name={editor.name} bitrate={editor.bitrate} resolution={editor.resolution} fps={editor.fps} onNameChange={editor.setName} onBitrateChange={editor.setBitrate} onResolutionChange={editor.setResolution} onFpsChange={editor.setFps} t={t} />
+      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} name={editor.name} bitrate={editor.bitrate} resolution={editor.resolution} fps={editor.fps} loop={editor.loop} onNameChange={editor.setName} onBitrateChange={editor.setBitrate} onResolutionChange={editor.setResolution} onFpsChange={editor.setFps} onLoopChange={editor.setLoop} t={t} />
       <TargetsDialog open={targetsOpen} onOpenChange={setTargetsOpen} targets={editor.targets} platforms={editor.platforms} draft={editor.targetDraft} onDraftChange={editor.setTargetDraft} onAddTarget={editor.addTarget} onRemoveTarget={(target) => editor.setTargets((current) => current.filter((item) => item !== target))} t={t} />
       <MonitorDialog open={monitorOpen} onOpenChange={setMonitorOpen} status={editor.status} stats={editor.stats} onActivity={() => navigate("/settings?tab=activity")} t={t} />
       <ProgramSaveDialog open={saveOpen} onOpenChange={setSaveOpen} name={editor.name} bitrate={editor.bitrate} resolution={editor.resolution} fps={editor.fps} targets={editor.targets} platforms={editor.platforms} saving={editor.saving} onNameChange={editor.setName} onBitrateChange={editor.setBitrate} onResolutionChange={editor.setResolution} onFpsChange={editor.setFps} onSetTargets={editor.setTargets} onSave={() => editor.saveProgram(false)} t={t} />
