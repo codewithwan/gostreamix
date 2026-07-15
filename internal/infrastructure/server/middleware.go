@@ -21,7 +21,7 @@ func registerMiddleware(app *fiber.App, cfg *config.Config) {
 	app.Use(recover.New())
 	app.Use(helmet.New())
 	app.Use(trackActivity)
-	app.Use(cors.New(cors.Config{AllowOrigins: "*", AllowHeaders: "Origin, Content-Type, Accept, Authorization"}))
+	app.Use(cors.New(cors.Config{AllowOrigins: cfg.CORSOrigins, AllowHeaders: "Origin, Content-Type, Accept, Authorization"}))
 	app.Use(globalLimiter())
 	if cfg.DemoMode {
 		app.Use(demoGuard())

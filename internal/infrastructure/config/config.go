@@ -16,6 +16,10 @@ type Config struct {
 	DemoMode     bool
 	DemoUsername string
 	DemoPassword string
+
+	// CORSOrigins restricts cross-origin API access. Defaults to the app's own
+	// origin (AppURL); set to a comma-separated list (or "*") to override.
+	CORSOrigins string
 }
 
 func NewConfig() *Config {
@@ -23,6 +27,12 @@ func NewConfig() *Config {
 	dataDir := filepath.Dir(dbPath)
 
 	demoMode, _ := strconv.ParseBool(getEnv("DEMO_MODE", "false"))
+	appURL := getEnv("APP_URL", "http://localhost:8080")
+
+	corsOrigins := getEnv("CORS_ORIGINS", "")
+	if corsOrigins == "" {
+		corsOrigins = appURL
+	}
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -43,10 +53,11 @@ func NewConfig() *Config {
 		LogLevel:     getEnv("LOG_LEVEL", "info"),
 		Secret:       secret,
 		ProxyHeader:  os.Getenv("PROXY_HEADER"),
-		AppURL:       getEnv("APP_URL", "http://localhost:8080"),
+		AppURL:       appURL,
 		DemoMode:     demoMode,
 		DemoUsername: getEnv("DEMO_USERNAME", "demo"),
 		DemoPassword: getEnv("DEMO_PASSWORD", "demostream123"),
+		CORSOrigins:  corsOrigins,
 	}
 }
 
