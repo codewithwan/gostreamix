@@ -182,8 +182,39 @@ Available settings:
 | `DB_PATH` | `data/db/gostreamix.sqlite` | SQLite database location. |
 | `JWT_SECRET` | generated if empty | Secret used for JWT sessions. If empty, the app creates and reuses `app.key` beside the database. |
 | `PROXY_HEADER` | empty | Optional proxy header configuration for deployments behind a proxy. |
+| `CORS_ORIGINS` | value of `APP_URL` | Allowed cross-origin origins for the API (comma-separated list, or `*`). Defaults to same-origin only. |
+| `DEMO_MODE` | `false` | Serve a read-only public demo. Blocks every mutating request server-side and auto-seeds a demo account. See [Demo Mode](#demo-mode). |
+| `DEMO_USERNAME` | `demo` | Username for the auto-seeded demo account (used only when `DEMO_MODE=true`). |
+| `DEMO_PASSWORD` | `demostream123` | Password for the auto-seeded demo account (used only when `DEMO_MODE=true`). |
 
 Runtime data is stored under `data/` by default. Production Docker Compose mounts `./data:/app/data` so uploads, thumbnails, database files, and generated secrets survive container restarts.
+
+## Password Reset
+
+GoStreamix is self-hosted and single-admin, so password resets run on the server rather than through email. The reset command is built into the main binary, so it works in the production image too:
+
+```bash
+# Production (Docker Compose)
+docker compose exec gostreamix ./gostreamix --reset-password
+
+# Production (standalone binary)
+./gostreamix --reset-password
+
+# Development (Docker dev stack)
+make reset-password
+```
+
+Add `--set-password='newpassword'` to any of the above to skip the interactive prompt (useful for automation). The command resets the primary administrator account. The login page also has a **Forgot password?** link that shows these commands.
+
+## Demo Mode
+
+Set `DEMO_MODE=true` to serve a public, look-but-don't-touch instance — ideal for showcasing the UI without exposing a real deployment:
+
+- Every mutating request (`POST`/`PUT`/`PATCH`/`DELETE`) and the speedtest are rejected with `403` **at the server**, not just hidden in the UI — a direct API call cannot change anything either.
+- A fixed demo account (`DEMO_USERNAME` / `DEMO_PASSWORD`) is auto-seeded on first boot, so the demo skips the setup screen.
+- The login page shows a one-click **Try the live demo** auto-fill card, and a persistent **Demo mode — read only** banner appears inside the app.
+
+Provide demo content (videos, platforms) by seeding the mounted `data/` volume before enabling demo mode.
 
 ## Production Docker
 
@@ -291,9 +322,44 @@ Runtime routes:
 - FFmpeg is required for media probing, stream processing, and thumbnail-related workflows.
 - Do not commit local database files, uploads, generated thumbnails, secrets, or runtime logs.
 
+## Self-Hosting Checklist
+
+Before exposing an instance to the internet:
+
+- [ ] Set a strong, unique `JWT_SECRET` (or let the app generate `app.key` and keep it private).
+- [ ] Serve over HTTPS via a reverse proxy; set `APP_URL` to the public URL and `PROXY_HEADER` if behind a proxy.
+- [ ] Complete the `/setup` wizard immediately so nobody else can claim the admin account.
+- [ ] Keep `CORS_ORIGINS` at its same-origin default unless you have a separate front-end origin.
+- [ ] Persist the `data/` volume (uploads, thumbnails, database, `app.key`) with regular backups.
+- [ ] Ensure FFmpeg is available and the host has bandwidth/CPU headroom for your bitrate and target count.
+- [ ] Know the password-reset command for your deployment (see [Password Reset](#password-reset)).
+
+## Local Development Checklist
+
+- [ ] Docker installed (recommended), or Go 1.25+, Node.js, npm, and FFmpeg on `PATH`.
+- [ ] `docker compose -f docker-compose.dev.yml up --build` (or `make dev`) — hot reload via Air.
+- [ ] Backend tests: `go test ./...`; frontend tests: `npm test --prefix ./web`.
+- [ ] Type-check the frontend: `npx tsc --noEmit -p web/tsconfig.app.json`.
+- [ ] Build the embedded frontend before a Go-only build: `npm run build --prefix ./web`.
+
+## Roadmap
+
+GoStreamix is under active development. Planned work includes:
+
+- Native desktop packaging (Tauri).
+- Additional streaming targets and richer scheduling.
+- Broader test coverage and documentation.
+
+Ideas and pull requests toward these are welcome.
+
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
+GoStreamix is open source (MIT) and contributions are welcome — bug reports, feature requests, docs, and pull requests all help. If you want to change or extend it for your own use, go ahead; that is what the license is for.
+
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
+2. Keep changes focused and include tests where practical (`go test ./...` and `npm test --prefix ./web` must pass).
+3. Run `go vet ./...` and the frontend type-check before submitting.
+4. Describe the change and how you verified it in the PR.
 
 ## License
 
