@@ -5,6 +5,10 @@ import (
 )
 
 func main() {
+	if core.RunCLI() {
+		return
+	}
+
 	c := core.BuildContainer()
 	if err := core.Bootstrap(c); err != nil {
 		panic(err)
