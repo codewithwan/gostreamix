@@ -95,6 +95,7 @@ export async function applyProgram(
     bitrate: number
     resolution: string
     fps: number
+    loop: boolean
     apply_live_now: boolean
   },
 ) {

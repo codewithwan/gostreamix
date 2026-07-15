@@ -5,16 +5,19 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { BrandMark } from "@/components/brand/app-brand"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { LanguageSelect } from "@/components/language-select"
 import { login } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { useTheme } from "@/lib/theme"
 
 interface LoginPageProps {
   onLoginComplete: () => Promise<void>
+  demo?: { username: string; password: string } | null
 }
 
-export function LoginPage({ onLoginComplete }: LoginPageProps) {
+export function LoginPage({ onLoginComplete, demo }: LoginPageProps) {
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang, t } = useI18n()
 
@@ -23,6 +26,7 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [forgotOpen, setForgotOpen] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -49,14 +53,7 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
           <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={toggleTheme} title={theme === "dark" ? t("light") : t("dark")}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <select
-            className="h-8 rounded-md border border-border bg-card px-2 text-xs"
-            value={lang}
-            onChange={(event) => setLang(event.target.value as "en" | "id")}
-          >
-            <option value="en">EN</option>
-            <option value="id">ID</option>
-          </select>
+          <LanguageSelect lang={lang} setLang={setLang} label={t("language", "Language")} />
         </div>
       </div>
 
@@ -67,6 +64,19 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
           <CardDescription>{t("authLoginDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
+          {demo ? (
+            <button
+              type="button"
+              onClick={() => { setUsername(demo.username); setPassword(demo.password) }}
+              className="mb-4 flex w-full items-center gap-3 rounded-lg border border-primary/40 bg-primary/5 p-3 text-left transition hover:bg-primary/10"
+            >
+              <span className="text-lg">🎬</span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">{t("authDemoTitle", "Try the live demo")}</span>
+                <span className="block text-xs text-muted-foreground">{t("authDemoHint", "Click to auto-fill the read-only demo account, then sign in.")}</span>
+              </span>
+            </button>
+          ) : null}
           <form onSubmit={handleSubmit} className="space-y-3">
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">{t("authUsernamePlaceholder")}</span>
@@ -77,8 +87,17 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
                 required
               />
             </label>
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium">{t("authPasswordPlaceholder")}</span>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium">{t("authPasswordPlaceholder")}</span>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(true)}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition"
+                >
+                  {t("authForgotPassword", "Forgot password?")}
+                </button>
+              </div>
               <div className="relative">
                 <Input
                   value={password}
@@ -96,7 +115,7 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            </label>
+            </div>
             {error ? <p className="text-sm text-danger">{error}</p> : null}
             <Button className="w-full" disabled={loading}>
               {loading ? t("authSigningIn") : t("authSignIn")}
@@ -104,6 +123,55 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
           </form>
         </CardContent>
       </Card>
+
+      <ForgotPasswordDialog open={forgotOpen} onOpenChange={setForgotOpen} t={t} />
+    </div>
+  )
+}
+
+function ForgotPasswordDialog({ open, onOpenChange, t }: { open: boolean; onOpenChange: (open: boolean) => void; t: (key: string, fallback?: string) => string }) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg bg-card">
+        <DialogHeader>
+          <DialogTitle>{t("authForgotTitle", "Reset your password")}</DialogTitle>
+          <DialogDescription>
+            {t("authForgotDescription", "GoStreamix is self-hosted, so password resets run on the server for security. Run one of these commands where GoStreamix is installed, then follow the prompt.")}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-1 text-sm">
+          <CommandBlock label={t("authForgotProduction", "Production (Docker)")} command="docker compose exec gostreamix ./gostreamix --reset-password" />
+          <CommandBlock label={t("authForgotBinary", "Production (binary)")} command="./gostreamix --reset-password" />
+          <CommandBlock label={t("authForgotDev", "Development")} command="make reset-password" />
+          <p className="text-xs text-muted-foreground">
+            {t("authForgotHint", "This resets the primary administrator account. Add --set-password='newpass' to skip the interactive prompt.")}
+          </p>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CommandBlock({ label, command }: { label: string; command: string }) {
+  const [copied, setCopied] = useState(false)
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(command)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setCopied(false)
+    }
+  }
+  return (
+    <div className="space-y-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <div className="flex items-center gap-2 rounded-lg border border-border bg-background/60 p-2">
+        <code className="flex-1 overflow-x-auto whitespace-nowrap font-mono text-xs text-foreground">{command}</code>
+        <button type="button" onClick={copy} className="shrink-0 rounded-md border border-border px-2 py-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition">
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
     </div>
   )
 }

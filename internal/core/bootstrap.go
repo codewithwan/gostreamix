@@ -1,10 +1,13 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/codewithwan/gostreamix/internal/domain/auth"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/monitor"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/server"
 	"github.com/codewithwan/gostreamix/internal/infrastructure/ws"
@@ -13,6 +16,10 @@ import (
 )
 
 func Bootstrap(c *dig.Container) error {
+	if err := seedDemoUser(c); err != nil {
+		return err
+	}
+
 	return c.Invoke(func(s *server.Server, l *zap.Logger, hub *ws.Hub) {
 		appURL := s.Config.AppURL
 		if appURL == "http://localhost:8080" && s.Config.Host == "0.0.0.0" {
@@ -41,6 +48,25 @@ func Bootstrap(c *dig.Container) error {
 		if err := s.Start(); err != nil {
 			l.Fatal("server failed to start", zap.Error(err))
 		}
+	})
+}
+
+// seedDemoUser provisions the fixed demo account on boot when DEMO_MODE is on
+// and no user exists yet, so a public demo skips the setup screen.
+func seedDemoUser(c *dig.Container) error {
+	return c.Invoke(func(cfg *config.Config, svc auth.Service, l *zap.Logger) {
+		if !cfg.DemoMode {
+			return
+		}
+		ctx := context.Background()
+		if ok, _ := svc.IsSetup(ctx); ok {
+			return
+		}
+		if err := svc.Setup(ctx, cfg.DemoUsername, "demo@gostreamix.local", cfg.DemoPassword); err != nil {
+			l.Warn("failed to seed demo user", zap.Error(err))
+			return
+		}
+		l.Info("demo user seeded", zap.String("username", cfg.DemoUsername))
 	})
 }
 

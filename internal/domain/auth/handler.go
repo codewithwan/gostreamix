@@ -7,15 +7,25 @@ import (
 	"go.uber.org/zap"
 )
 
+// DemoInfo carries public demo-mode settings surfaced to the login page so it
+// can offer a one-click auto-fill card. The password here is intentionally a
+// shared, read-only demo credential.
+type DemoInfo struct {
+	Enabled  bool
+	Username string
+	Password string
+}
+
 type Handler struct {
 	svc   Service
 	jwt   *jwt.JWTService
 	guard Guard
 	log   *zap.Logger
+	demo  DemoInfo
 }
 
-func NewHandler(svc Service, jwt *jwt.JWTService, guard Guard, log *zap.Logger) *Handler {
-	return &Handler{svc: svc, jwt: jwt, guard: guard, log: log}
+func NewHandler(svc Service, jwt *jwt.JWTService, guard Guard, log *zap.Logger, demo DemoInfo) *Handler {
+	return &Handler{svc: svc, jwt: jwt, guard: guard, log: log, demo: demo}
 }
 
 func (h *Handler) Routes(app *fiber.App) {
@@ -27,6 +37,7 @@ func (h *Handler) Routes(app *fiber.App) {
 	api.Post("/setup", h.ApiSetup)
 	api.Post("/login", h.ApiLogin)
 	api.Post("/logout", h.ApiLogout)
+	api.Post("/change-password", h.ApiChangePassword)
 	api.Post("/refresh", h.PostRefresh)
 }
 
@@ -42,6 +53,11 @@ func (h *Handler) ApiSession(c *fiber.Ctx) error {
 		"setup":         setup,
 		"authenticated": false,
 		"csrf_token":    csrfToken,
+		"demo":          h.demo.Enabled,
+	}
+	if h.demo.Enabled {
+		res["demo_username"] = h.demo.Username
+		res["demo_password"] = h.demo.Password
 	}
 
 	if !setup {

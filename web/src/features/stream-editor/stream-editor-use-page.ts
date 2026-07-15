@@ -27,6 +27,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
   const [bitrate, setBitrate] = useState(3000)
   const [resolution, setResolution] = useState("1280x720")
   const [fps, setFps] = useState(30)
+  const [loop, setLoop] = useState(true)
   const [status, setStatus] = useState("stopped")
   const [stats, setStats] = useState<StreamStats | null>(null)
   const [snapshot, setSnapshot] = useState("")
@@ -76,6 +77,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
         setBitrate(workspace.program.bitrate)
         setResolution(workspace.program.resolution)
         setFps(workspace.program.fps || workspace.stream.fps || 30)
+        setLoop(workspace.stream.loop ?? true)
         setSnapshot(
           JSON.stringify({
             name: workspace.stream.name,
@@ -84,6 +86,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
             bitrate: workspace.program.bitrate,
             resolution: workspace.program.resolution,
             fps: workspace.program.fps || workspace.stream.fps || 30,
+            loop: workspace.stream.loop ?? true,
           }),
         )
       } catch (cause) {
@@ -115,7 +118,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
   }, [videos, folderFilter, search])
   const selectedVideo = selectedVideoID ? videoByID.get(selectedVideoID) : undefined
   const totalDuration = timelineVideos.reduce((total, video) => total + video.duration, 0)
-  const currentSnapshot = useMemo(() => JSON.stringify({ name, timeline, targets, bitrate, resolution, fps }), [name, timeline, targets, bitrate, resolution, fps])
+  const currentSnapshot = useMemo(() => JSON.stringify({ name, timeline, targets, bitrate, resolution, fps, loop }), [name, timeline, targets, bitrate, resolution, fps, loop])
   const dirty = snapshot !== "" && currentSnapshot !== snapshot
   const isLive = status === "running" || status === "starting"
 
@@ -155,7 +158,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
     try {
       if (timeline.length === 0) throw new Error(t("streamEditorQueueRequired"))
       if (targets.length === 0) throw new Error(t("streamEditorTargetRequired"))
-      await applyProgram(streamID, { name, video_ids: timeline, rtmp_targets: targets, bitrate, resolution, fps, apply_live_now: applyLive })
+      await applyProgram(streamID, { name, video_ids: timeline, rtmp_targets: targets, bitrate, resolution, fps, loop, apply_live_now: applyLive })
       setSnapshot(currentSnapshot)
       toast.success(t("streamEditorSaveSuccess", "Draft saved"))
     } catch (cause) {
@@ -166,7 +169,7 @@ export function useStreamEditor({ streamID, t }: UseStreamEditorOptions) {
       setSaving(false)
       setApplying(false)
     }
-  }, [bitrate, currentSnapshot, fps, name, resolution, streamID, t, targets, timeline])
+  }, [bitrate, currentSnapshot, fps, loop, name, resolution, streamID, t, targets, timeline])
 
-  return { videoRef, loading, saving, applying, error, setError, name, setName, timeline, setTimeline, videos, platforms, targets, setTargets, targetDraft, setTargetDraft, search, setSearch, folderFilter, setFolderFilter, bitrate, setBitrate, resolution, setResolution, fps, setFps, status, stats, selectedVideoID, setSelectedVideoID, activeIndex, setActiveIndex, transforms, setTransforms, playing, setPlaying, muted, setMuted, currentTime, setCurrentTime, duration, setDuration, videoByID, timelineVideos, folders, filteredVideos, selectedVideo, totalDuration, dirty, isLive, addTarget, addToTimeline, removeFromTimeline, moveClip, saveProgram, defaultTransform: DEFAULT_TRANSFORM }
+  return { videoRef, loading, saving, applying, error, setError, name, setName, timeline, setTimeline, videos, platforms, targets, setTargets, targetDraft, setTargetDraft, search, setSearch, folderFilter, setFolderFilter, bitrate, setBitrate, resolution, setResolution, fps, setFps, loop, setLoop, status, stats, selectedVideoID, setSelectedVideoID, activeIndex, setActiveIndex, transforms, setTransforms, playing, setPlaying, muted, setMuted, currentTime, setCurrentTime, duration, setDuration, videoByID, timelineVideos, folders, filteredVideos, selectedVideo, totalDuration, dirty, isLive, addTarget, addToTimeline, removeFromTimeline, moveClip, saveProgram, defaultTransform: DEFAULT_TRANSFORM }
 }

@@ -124,4 +124,5 @@ func applyProgramToStream(streamData *Stream, dto SaveProgramDTO) {
 	streamData.Bitrate = dto.Bitrate
 	streamData.Resolution = dto.Resolution
 	streamData.FPS = dto.FPS
+	streamData.Loop = dto.Loop
 }

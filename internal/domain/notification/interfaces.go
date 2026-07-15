@@ -13,4 +13,5 @@ type Service interface {
 	SaveSettings(ctx context.Context, dto SaveSettingsDTO) (*Settings, error)
 	SendTest(ctx context.Context, dto SendTestDTO) (*TestResult, error)
 	DetectTelegramChats(ctx context.Context, dto DetectTelegramChatsDTO) ([]TelegramChatCandidate, error)
+	NotifyStreamEvent(ctx context.Context, streamName, status, event, detail string)
 }

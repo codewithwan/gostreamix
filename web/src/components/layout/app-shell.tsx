@@ -15,10 +15,11 @@ import { navItems } from "./nav-items"
 interface AppShellProps {
   username: string
   email: string
+  demo?: boolean
   onLogout: () => Promise<void>
 }
 
-export function AppShell({ username, email, onLogout }: AppShellProps) {
+export function AppShell({ username, email, demo, onLogout }: AppShellProps) {
   const { lang, setLang, t } = useI18n()
   const { theme, setTheme } = useTheme()
   const location = useLocation()
@@ -138,6 +139,12 @@ export function AppShell({ username, email, onLogout }: AppShellProps) {
               : "px-4 py-5 pb-24 md:h-screen md:overflow-y-auto md:px-6 md:py-6 lg:px-8 lg:py-8",
           )}
         >
+          {demo && !isStudio ? (
+            <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-300">
+              <span aria-hidden>👁️</span>
+              <span>{t("demoBanner", "Demo mode — read only. Creating, editing, and deleting are disabled.")}</span>
+            </div>
+          ) : null}
           <Outlet />
         </main>
       </div>

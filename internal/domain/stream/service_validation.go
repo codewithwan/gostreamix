@@ -78,6 +78,13 @@ func cleanRTMPTargets(targets []string) ([]string, error) {
 		if target == "" {
 			continue
 		}
+		// The target is interpolated into an ffmpeg `-f tee` output list joined
+		// by "|" with "[...]" option blocks. Reject the characters that could
+		// break out of that syntax to inject an extra output (e.g. an arbitrary
+		// file write). Legitimate rtmp URLs never contain them.
+		if strings.ContainsAny(target, "|[]{}'\" \t\r\n\\") {
+			return nil, fmt.Errorf("RTMP target contains invalid characters")
+		}
 		parsed, err := url.Parse(target)
 		if err != nil || parsed.Host == "" {
 			return nil, fmt.Errorf("invalid RTMP target: %s", target)

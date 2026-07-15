@@ -13,19 +13,30 @@ import (
 )
 
 type pipeline struct {
-	pm   *ProcessManager
-	hub  *ws.Hub
-	log  *zap.Logger
-	repo Repository
+	pm       *ProcessManager
+	hub      *ws.Hub
+	log      *zap.Logger
+	repo     Repository
+	notifier Notifier
 }
 
-func NewPipeline(pm *ProcessManager, hub *ws.Hub, log *zap.Logger, repo Repository) Pipeline {
+func NewPipeline(pm *ProcessManager, hub *ws.Hub, log *zap.Logger, repo Repository, notifier Notifier) Pipeline {
 	return &pipeline{
-		pm:   pm,
-		hub:  hub,
-		log:  log,
-		repo: repo,
+		pm:       pm,
+		hub:      hub,
+		log:      log,
+		repo:     repo,
+		notifier: notifier,
 	}
+}
+
+// notify sends a stream lifecycle event to configured channels without
+// blocking the pipeline (webhooks can be slow) and tolerates a nil notifier.
+func (p *pipeline) notify(streamName, status, event, detail string) {
+	if p.notifier == nil {
+		return
+	}
+	go p.notifier.NotifyStreamEvent(context.Background(), streamName, status, event, detail)
 }
 
 func (p *pipeline) Start(ctx context.Context, s *Stream, videoPaths []string) error {
@@ -99,6 +110,7 @@ func (p *pipeline) Start(ctx context.Context, s *Stream, videoPaths []string) er
 		"status":    "running",
 	})
 	p.emitLog("info", "pipeline_running", s.ID, "Pipeline is live")
+	p.notify(s.Name, "running", "stream_started", "Pipeline is live")
 
 	go p.monitorProcess(proc, s.ID, stderr, cleanup)
 

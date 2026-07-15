@@ -101,4 +101,8 @@ export const streamsId = {
   streamEditorPlay: "Putar",
   streamEditorPause: "Jeda",
   streamEditorSelectPreview: "Pilih item timeline untuk pratinjau",
+  streamEditorLoopLabel: "Ulang playlist",
+  streamEditorLoopHint: "Mulai ulang antrean otomatis untuk streaming 24/7 tanpa henti.",
+  streamEditorAddToQueue: "Tambah ke antrean",
+  streamsStopConfirmDesc: "Ini akan menghentikan siaran langsung untuk \"{name}\".",
 } as const

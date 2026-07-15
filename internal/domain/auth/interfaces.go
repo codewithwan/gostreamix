@@ -26,6 +26,7 @@ type Service interface {
 	Authenticate(ctx context.Context, u, p string) (*User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
 	ResetPassword(ctx context.Context, username, password string) error
+	ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error
 	GetPrimaryUser(ctx context.Context) (*User, error)
 	CreateSession(ctx context.Context, userID uuid.UUID, ip, userAgent string) (string, string, error)
 	RefreshSession(ctx context.Context, refreshToken, ip, userAgent string) (string, string, error)

@@ -100,4 +100,8 @@ export const mediaEn = {
   platformsDeleteFailed: "Failed to delete platform",
   platformsLoadFailed: "Failed to load platforms",
   platformsDeleteConfirm: "Delete platform {name}?",
+  platformsDeleteConfirmDesc: "This will permanently remove \"{name}\" and cannot be undone.",
+  platformsLeaveKeyUnchanged: "Leave blank to keep current key",
+  videosDeleteFolderConfirm: "Delete this folder and all videos inside it?",
+  videosRenameFolderDescription: "Rename this folder and update contained videos.",
 } as const

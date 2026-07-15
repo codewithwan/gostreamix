@@ -101,4 +101,8 @@ export const streamsEn = {
   streamEditorPlay: "Play",
   streamEditorPause: "Pause",
   streamEditorSelectPreview: "Select a timeline item to preview",
+  streamEditorLoopLabel: "Loop playlist",
+  streamEditorLoopHint: "Restart the queue automatically for continuous 24/7 streaming.",
+  streamEditorAddToQueue: "Add to queue",
+  streamsStopConfirmDesc: "This will stop the live broadcast for \"{name}\".",
 } as const

@@ -100,4 +100,8 @@ export const mediaId = {
   platformsDeleteFailed: "Gagal menghapus platform",
   platformsLoadFailed: "Gagal memuat platform",
   platformsDeleteConfirm: "Hapus platform {name}?",
+  platformsDeleteConfirmDesc: "Ini akan menghapus \"{name}\" secara permanen dan tidak dapat dibatalkan.",
+  platformsLeaveKeyUnchanged: "Kosongkan untuk mempertahankan key saat ini",
+  videosDeleteFolderConfirm: "Hapus folder ini dan semua video di dalamnya?",
+  videosRenameFolderDescription: "Ganti nama folder ini dan perbarui video di dalamnya.",
 } as const

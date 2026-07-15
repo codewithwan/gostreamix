@@ -35,3 +35,10 @@ type Pipeline interface {
 	Stop(ctx context.Context, s *Stream) error
 	Reload(ctx context.Context, s *Stream, videoPaths []string) error
 }
+
+// Notifier delivers stream lifecycle events to external channels
+// (Discord/Telegram). It is satisfied by the notification service and kept
+// local so the pipeline stays decoupled from the notification package.
+type Notifier interface {
+	NotifyStreamEvent(ctx context.Context, streamName, status, event, detail string)
+}

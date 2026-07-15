@@ -39,6 +39,9 @@ func BuildContainer() *dig.Container {
 	c.Provide(auth.NewService)
 	c.Provide(jwt.NewJWTService)
 	c.Provide(middleware.NewAuthGuard)
+	c.Provide(func(cfg *config.Config) auth.DemoInfo {
+		return auth.DemoInfo{Enabled: cfg.DemoMode, Username: cfg.DemoUsername, Password: cfg.DemoPassword}
+	})
 	c.Provide(auth.NewHandler)
 
 	c.Provide(stream.NewRepository)
@@ -46,6 +49,9 @@ func BuildContainer() *dig.Container {
 	c.Provide(stream.NewProcessManager)
 	c.Provide(stream.NewPipeline)
 	c.Provide(stream.NewHandler)
+	// Bridge the notification service into the stream pipeline so lifecycle
+	// events (start/stop/failure) reach Discord/Telegram.
+	c.Provide(func(s notification.Service) stream.Notifier { return s })
 
 	c.Provide(video.NewRepository)
 	c.Provide(video.NewService)

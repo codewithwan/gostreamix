@@ -38,6 +38,11 @@ func (m *MockAuthService) ResetPassword(ctx context.Context, username, password 
 	return args.Error(0)
 }
 
+func (m *MockAuthService) ChangePassword(ctx context.Context, userID uuid.UUID, currentPassword, newPassword string) error {
+	args := m.Called(ctx, userID, currentPassword, newPassword)
+	return args.Error(0)
+}
+
 func (m *MockAuthService) GetPrimaryUser(ctx context.Context) (*auth.User, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {

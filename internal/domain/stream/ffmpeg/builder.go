@@ -79,7 +79,10 @@ func (b *CommandBuilder) Build() ([]string, error) {
 	args := []string{"-re"}
 
 	if b.loop {
-		args = append(args, "-stream_loop", "-1")
+		// Regenerate presentation timestamps so the DTS stays monotonic across
+		// loop boundaries; otherwise long-running looped streams can emit
+		// non-monotonic timestamps that RTMP ingests (e.g. YouTube) reject.
+		args = append(args, "-fflags", "+genpts", "-stream_loop", "-1")
 	}
 
 	args = append(args, "-thread_queue_size", "1024")

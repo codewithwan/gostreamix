@@ -1,4 +1,4 @@
-.PHONY: dev up down logs shell clean restart
+.PHONY: dev up down logs shell clean restart reset-password
 
 dev:
 	docker-compose -f docker-compose.dev.yml up --build
@@ -20,3 +20,6 @@ clean:
 
 restart:
 	docker-compose -f docker-compose.dev.yml restart
+
+reset-password:
+	docker-compose -f docker-compose.dev.yml exec gostreamix go run . --reset-password

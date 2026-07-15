@@ -9,6 +9,9 @@ export interface SessionResponse {
   authenticated: boolean
   csrf_token: string
   user?: SessionUser
+  demo?: boolean
+  demo_username?: string
+  demo_password?: string
 }
 
 export interface Stream {
