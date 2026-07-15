@@ -50,7 +50,7 @@ func NewServer(
 
 	app := fiber.New(fiberConfig)
 	registerStatic(app, log)
-	registerMiddleware(app, cfg.AppURL)
+	registerMiddleware(app, cfg)
 
 	s := &Server{App: app, Config: cfg, Log: log}
 	collector.Start(context.Background())

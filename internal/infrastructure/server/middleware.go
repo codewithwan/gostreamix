@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/codewithwan/gostreamix/internal/infrastructure/activity"
+	"github.com/codewithwan/gostreamix/internal/infrastructure/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/csrf"
@@ -16,13 +17,16 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
-func registerMiddleware(app *fiber.App, appURL string) {
+func registerMiddleware(app *fiber.App, cfg *config.Config) {
 	app.Use(recover.New())
 	app.Use(helmet.New())
 	app.Use(trackActivity)
 	app.Use(cors.New(cors.Config{AllowOrigins: "*", AllowHeaders: "Origin, Content-Type, Accept, Authorization"}))
 	app.Use(globalLimiter())
-	app.Use(csrfMiddleware(appURL))
+	if cfg.DemoMode {
+		app.Use(demoGuard())
+	}
+	app.Use(csrfMiddleware(cfg.AppURL))
 	registerAuthLimiters(app)
 	app.Use(logger.New(logger.Config{
 		Format:     "${time}	INFO	http request	{\"status\": ${status}, \"method\": \"${method}\", \"path\": \"${path}\", \"latency\": \"${latency}\", \"ip\": \"${ip}\"}\n",
@@ -117,6 +121,41 @@ func rateLimitResponse(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{"error": "Too many requests. Please try again later."})
 	}
 	return c.Status(fiber.StatusTooManyRequests).SendString("Too many requests. Please try again later.")
+}
+
+// demoGuard enforces the read-only public demo at the server level: any request
+// that would mutate state (or trigger real work like the speedtest) is rejected
+// with 403, regardless of what the UI allows. Only the auth flows the demo needs
+// stay open.
+func demoGuard() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		if isDemoBlocked(c.Method(), c.Path()) {
+			if wantsJSON(c) {
+				return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "This action is disabled in demo mode"})
+			}
+			return c.Status(fiber.StatusForbidden).SendString("This action is disabled in demo mode")
+		}
+		return c.Next()
+	}
+}
+
+func isDemoBlocked(method, path string) bool {
+	// Read-style endpoints that still perform real work are blocked explicitly.
+	if path == "/ws/speedtest" {
+		return true
+	}
+
+	switch method {
+	case fiber.MethodGet, fiber.MethodHead, fiber.MethodOptions:
+		return false
+	}
+
+	// Mutating methods: allow only the auth flows the demo login needs.
+	switch path {
+	case "/api/auth/login", "/api/auth/logout", "/api/auth/session", "/api/auth/refresh":
+		return false
+	}
+	return true
 }
 
 func languageMiddleware(c *fiber.Ctx) error {

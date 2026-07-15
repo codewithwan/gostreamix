@@ -5,15 +5,24 @@ import (
 	"encoding/hex"
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 type Config struct {
 	Port, Host, DBPath, LogLevel, Secret, ProxyHeader, AppURL string
+
+	// DemoMode serves a read-only public instance: all mutating requests are
+	// rejected server-side and a demo account is auto-seeded on boot.
+	DemoMode     bool
+	DemoUsername string
+	DemoPassword string
 }
 
 func NewConfig() *Config {
 	dbPath := getEnv("DB_PATH", "data/db/gostreamix.sqlite")
 	dataDir := filepath.Dir(dbPath)
+
+	demoMode, _ := strconv.ParseBool(getEnv("DEMO_MODE", "false"))
 
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -28,13 +37,16 @@ func NewConfig() *Config {
 	}
 
 	return &Config{
-		Port:        getEnv("PORT", "8080"),
-		Host:        getEnv("HOST", "0.0.0.0"),
-		DBPath:      dbPath,
-		LogLevel:    getEnv("LOG_LEVEL", "info"),
-		Secret:      secret,
-		ProxyHeader: os.Getenv("PROXY_HEADER"),
-		AppURL:      getEnv("APP_URL", "http://localhost:8080"),
+		Port:         getEnv("PORT", "8080"),
+		Host:         getEnv("HOST", "0.0.0.0"),
+		DBPath:       dbPath,
+		LogLevel:     getEnv("LOG_LEVEL", "info"),
+		Secret:       secret,
+		ProxyHeader:  os.Getenv("PROXY_HEADER"),
+		AppURL:       getEnv("APP_URL", "http://localhost:8080"),
+		DemoMode:     demoMode,
+		DemoUsername: getEnv("DEMO_USERNAME", "demo"),
+		DemoPassword: getEnv("DEMO_PASSWORD", "demostream123"),
 	}
 }
 

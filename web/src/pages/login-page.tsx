@@ -13,9 +13,10 @@ import { useTheme } from "@/lib/theme"
 
 interface LoginPageProps {
   onLoginComplete: () => Promise<void>
+  demo?: { username: string; password: string } | null
 }
 
-export function LoginPage({ onLoginComplete }: LoginPageProps) {
+export function LoginPage({ onLoginComplete, demo }: LoginPageProps) {
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang, t } = useI18n()
 
@@ -69,6 +70,19 @@ export function LoginPage({ onLoginComplete }: LoginPageProps) {
           <CardDescription>{t("authLoginDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
+          {demo ? (
+            <button
+              type="button"
+              onClick={() => { setUsername(demo.username); setPassword(demo.password) }}
+              className="mb-4 flex w-full items-center gap-3 rounded-lg border border-primary/40 bg-primary/5 p-3 text-left transition hover:bg-primary/10"
+            >
+              <span className="text-lg">🎬</span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold">{t("authDemoTitle", "Try the live demo")}</span>
+                <span className="block text-xs text-muted-foreground">{t("authDemoHint", "Click to auto-fill the read-only demo account, then sign in.")}</span>
+              </span>
+            </button>
+          ) : null}
           <form onSubmit={handleSubmit} className="space-y-3">
             <label className="block space-y-1.5">
               <span className="text-sm font-medium">{t("authUsernamePlaceholder")}</span>

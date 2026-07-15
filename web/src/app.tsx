@@ -48,7 +48,7 @@ function AuthenticatedRouter({ session, refreshSession }: { session: SessionResp
 
   return (
     <Routes>
-      <Route element={<AppShell username={session.user.username} email={session.user.email} onLogout={handleLogout} />}>
+      <Route element={<AppShell username={session.user.username} email={session.user.email} demo={Boolean(session.demo)} onLogout={handleLogout} />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/streams" element={<StreamsPage />} />
         <Route path="/streams/:streamID/editor" element={<StreamEditorPage />} />
@@ -118,7 +118,7 @@ export function App() {
 
           {session.setup && !session.authenticated ? (
             <Routes>
-              <Route path="/login" element={<LoginPage onLoginComplete={refreshSession} />} />
+              <Route path="/login" element={<LoginPage onLoginComplete={refreshSession} demo={session.demo ? { username: session.demo_username ?? "", password: session.demo_password ?? "" } : null} />} />
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
           ) : null}

@@ -39,6 +39,9 @@ func BuildContainer() *dig.Container {
 	c.Provide(auth.NewService)
 	c.Provide(jwt.NewJWTService)
 	c.Provide(middleware.NewAuthGuard)
+	c.Provide(func(cfg *config.Config) auth.DemoInfo {
+		return auth.DemoInfo{Enabled: cfg.DemoMode, Username: cfg.DemoUsername, Password: cfg.DemoPassword}
+	})
 	c.Provide(auth.NewHandler)
 
 	c.Provide(stream.NewRepository)
