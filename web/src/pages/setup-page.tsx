@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { BrandMark } from "@/components/brand/app-brand"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { LanguageSelect } from "@/components/language-select"
 import { setup } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { useTheme } from "@/lib/theme"
@@ -57,14 +58,7 @@ export function SetupPage({ onSetupComplete }: SetupPageProps) {
           <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={toggleTheme} title={theme === "dark" ? t("light") : t("dark")}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <select
-            className="h-8 rounded-md border border-border bg-card px-2 text-xs"
-            value={lang}
-            onChange={(event) => setLang(event.target.value as "en" | "id")}
-          >
-            <option value="en">EN</option>
-            <option value="id">ID</option>
-          </select>
+          <LanguageSelect lang={lang} setLang={setLang} label={t("language", "Language")} />
         </div>
       </div>
 

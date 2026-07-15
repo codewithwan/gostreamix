@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Languages, LogOut, Monitor, Moon, Sun } from "lucide-react"
+import { Globe, LogOut, Monitor, Moon, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
@@ -28,11 +28,11 @@ export function UserMenuPanel({ lang, onLogoutClick, setLang, setTheme, t, theme
         <p className="text-xs font-medium text-muted-foreground">{t("language")}</p>
         <div className="grid grid-cols-2 gap-1">
           <Button size="sm" variant={lang === "en" ? "default" : "outline"} className="h-8 px-2 text-[11px]" onClick={() => setLang("en")}>
-            <Languages className="h-3.5 w-3.5" />
+            <Globe className="h-3.5 w-3.5" />
             EN
           </Button>
           <Button size="sm" variant={lang === "id" ? "default" : "outline"} className="h-8 px-2 text-[11px]" onClick={() => setLang("id")}>
-            <Languages className="h-3.5 w-3.5" />
+            <Globe className="h-3.5 w-3.5" />
             ID
           </Button>
         </div>

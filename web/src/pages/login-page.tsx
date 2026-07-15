@@ -7,6 +7,7 @@ import { BrandMark } from "@/components/brand/app-brand"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { LanguageSelect } from "@/components/language-select"
 import { login } from "@/lib/api"
 import { useI18n } from "@/lib/i18n"
 import { useTheme } from "@/lib/theme"
@@ -52,14 +53,7 @@ export function LoginPage({ onLoginComplete, demo }: LoginPageProps) {
           <Button size="sm" variant="outline" className="h-8 w-8 px-0" onClick={toggleTheme} title={theme === "dark" ? t("light") : t("dark")}>
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
-          <select
-            className="h-8 rounded-md border border-border bg-card px-2 text-xs"
-            value={lang}
-            onChange={(event) => setLang(event.target.value as "en" | "id")}
-          >
-            <option value="en">EN</option>
-            <option value="id">ID</option>
-          </select>
+          <LanguageSelect lang={lang} setLang={setLang} label={t("language", "Language")} />
         </div>
       </div>
 
@@ -93,8 +87,17 @@ export function LoginPage({ onLoginComplete, demo }: LoginPageProps) {
                 required
               />
             </label>
-            <label className="block space-y-1.5">
-              <span className="text-sm font-medium">{t("authPasswordPlaceholder")}</span>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-medium">{t("authPasswordPlaceholder")}</span>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(true)}
+                  className="text-xs font-medium text-muted-foreground hover:text-foreground transition"
+                >
+                  {t("authForgotPassword", "Forgot password?")}
+                </button>
+              </div>
               <div className="relative">
                 <Input
                   value={password}
@@ -112,19 +115,12 @@ export function LoginPage({ onLoginComplete, demo }: LoginPageProps) {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-            </label>
+            </div>
             {error ? <p className="text-sm text-danger">{error}</p> : null}
             <Button className="w-full" disabled={loading}>
               {loading ? t("authSigningIn") : t("authSignIn")}
             </Button>
           </form>
-          <button
-            type="button"
-            onClick={() => setForgotOpen(true)}
-            className="mt-3 block w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground transition"
-          >
-            {t("authForgotPassword", "Forgot password?")}
-          </button>
         </CardContent>
       </Card>
 
