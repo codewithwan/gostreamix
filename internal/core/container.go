@@ -46,6 +46,9 @@ func BuildContainer() *dig.Container {
 	c.Provide(stream.NewProcessManager)
 	c.Provide(stream.NewPipeline)
 	c.Provide(stream.NewHandler)
+	// Bridge the notification service into the stream pipeline so lifecycle
+	// events (start/stop/failure) reach Discord/Telegram.
+	c.Provide(func(s notification.Service) stream.Notifier { return s })
 
 	c.Provide(video.NewRepository)
 	c.Provide(video.NewService)

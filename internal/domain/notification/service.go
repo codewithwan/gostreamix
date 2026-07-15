@@ -116,6 +116,71 @@ func (s *service) SendTest(ctx context.Context, dto SendTestDTO) (*TestResult, e
 	}
 }
 
+// NotifyStreamEvent delivers a stream lifecycle event (start/stop/failure) to
+// every configured channel. It is best-effort: missing configuration or a
+// failing webhook is ignored so it never blocks or breaks the stream pipeline.
+func (s *service) NotifyStreamEvent(ctx context.Context, streamName, status, event, detail string) {
+	settings, err := s.GetSettings(ctx)
+	if err != nil || settings == nil {
+		return
+	}
+	if settings.DiscordWebhook == "" && settings.TelegramBotToken == "" {
+		return
+	}
+
+	message := buildStreamEventMessage(streamName, status, event, detail)
+
+	if settings.DiscordWebhook != "" {
+		_ = s.sendDiscord(ctx, settings.DiscordWebhook, message)
+	}
+	if settings.TelegramBotToken != "" && settings.TelegramChatID != "" {
+		_ = s.sendTelegram(ctx, settings.TelegramBotToken, settings.TelegramChatID, message)
+	}
+}
+
+// buildStreamEventMessage renders the field-based message format understood by
+// parseMessage (Header line followed by "Key: value" lines).
+func buildStreamEventMessage(streamName, status, event, detail string) string {
+	sanitize := func(v string) string {
+		v = strings.ReplaceAll(v, "\n", " ")
+		v = strings.TrimSpace(v)
+		if len(v) > 300 {
+			v = v[:300] + "…"
+		}
+		return v
+	}
+
+	var b strings.Builder
+	b.WriteString("[GoStreamix] " + streamEventHeadline(status) + "\n")
+	if streamName != "" {
+		b.WriteString("Stream: " + sanitize(streamName) + "\n")
+	}
+	if status != "" {
+		b.WriteString("Status: " + sanitize(status) + "\n")
+	}
+	if event != "" {
+		b.WriteString("Trigger: " + sanitize(event) + "\n")
+	}
+	if detail != "" {
+		b.WriteString("Detail: " + sanitize(detail) + "\n")
+	}
+	b.WriteString("Time: " + time.Now().Local().Format("2006-01-02 15:04:05 MST"))
+	return b.String()
+}
+
+func streamEventHeadline(status string) string {
+	switch strings.ToLower(strings.TrimSpace(status)) {
+	case "running", "started", "active":
+		return "Stream Started"
+	case "error":
+		return "Stream Failed"
+	case "stopped", "stopping":
+		return "Stream Stopped"
+	default:
+		return "Stream Update"
+	}
+}
+
 func (s *service) DetectTelegramChats(ctx context.Context, dto DetectTelegramChatsDTO) ([]TelegramChatCandidate, error) {
 	botToken := strings.TrimSpace(dto.BotToken)
 	if err := validateTelegramBotToken(botToken); err != nil {
