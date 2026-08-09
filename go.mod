@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/showwin/speedtest-go v1.7.10
+	github.com/showwin/speedtest-go v1.7.11
 	github.com/stretchr/testify v1.11.1
 	github.com/uptrace/bun v1.2.18
 	github.com/uptrace/bun/dialect/sqlitedialect v1.2.18
